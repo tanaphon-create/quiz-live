@@ -18,6 +18,18 @@ $('#nameIn').value = saved.name || '';
 $('#sidIn').value = sid;
 const goSid = (title) => { $('#roomTitle').textContent = title; $('#roomTitle2').textContent = title; show('sid'); $('#sidIn').focus(); };
 
+// INTRO: แสดงก่อนเข้าหน้ากรอกข้อมูลทุกครั้ง
+const introDone = new Promise((res) => {
+  const segs = 'Segmenter' in Intl ? [...new Intl.Segmenter('th', { granularity: 'grapheme' }).segment('ฟลุ๊กถูก')].map((x) => x.segment) : ['ฟ', 'ลุ๊', 'ก', 'ถู', 'ก'];
+  $('#introTitle').innerHTML = segs.map((c, i) => `<span class="${i >= 3 ? 'gold' : ''}" style="--i:${i}">${c}</span>`).join('');
+  $('#introCrowd').innerHTML = Array.from({ length: 5 }, (_, i) => `<div class="ic" style="--i:${i}">${renderAvatar(randomAvatar(), { bg: false })}</div>`).join('');
+  $('#introGo').onclick = () => {
+    unlock(); sfx.intro();
+    $('#intro').classList.add('leave');
+    setTimeout(res, 650);
+  };
+});
+
 const ready = connect().then((d) => {
   DB = d;
   if (d.mode === 'local') $('#modeHint').textContent = '🟡 โหมดทดลอง (ใช้ได้เฉพาะเครื่องเดียวกับจอครู)';
@@ -25,12 +37,13 @@ const ready = connect().then((d) => {
 }).catch((e) => { console.error(e); toast('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองรีเฟรชอีกครั้ง', 6000); });
 
 // กลับเข้าห้องเดิมอัตโนมัติ (เช่น เผลอรีเฟรช)
-ready.then(async () => {
+Promise.all([ready, introDone]).then(async () => {
   const p = qs.get('pin') || saved.pin;
-  if (!p || !DB) return;
+  if (!p || !DB) return show('pin');
   const [m, pl] = await Promise.all([DB.get(`quiz/rooms/${p}/meta`), DB.get(`quiz/rooms/${p}/players/${DB.uid}`)]);
   if (m && m.state !== 'end' && pl) { pin = p; R = `quiz/rooms/${pin}`; me = pl; avatar = pl.avatar || avatar; enterRoom(); }
   else if (qs.get('pin') && m && m.state !== 'end') { pin = p; R = `quiz/rooms/${pin}`; goSid(m.title); }
+  else { if (qs.get('pin')) toast(m ? 'เกมนี้จบไปแล้ว' : 'ไม่พบห้องนี้ — ใส่ PIN ใหม่'); show('pin'); }
 });
 
 $('#pinForm').onsubmit = async (e) => {

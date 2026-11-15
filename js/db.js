@@ -1,16 +1,19 @@
 // ชั้นเชื่อมต่อข้อมูลแบบ realtime — ใช้ API เดียวกันทั้ง Firebase และโหมดทดลอง (local)
-import { FIREBASE } from './config.js';
+import { FIREBASE, TEACHER_EMAILS } from './config.js';
 
 const FB_V = '10.12.2';
 export const TS = { '.sv': 'timestamp' }; // เวลาเซิร์ฟเวอร์ (Firebase เข้าใจ object นี้โดยตรง)
 
-export async function connect() {
+export const isTeacher = (u) => !!u && !u.isAnonymous && u.emailVerified !== false && TEACHER_EMAILS.includes((u.email || '').toLowerCase());
+
+// host = true → ไม่ล็อกอินแบบไม่ระบุตัวตนให้อัตโนมัติ (ครูต้องล็อกอินด้วย Google)
+export async function connect({ host = false } = {}) {
   const forceLocal = new URLSearchParams(location.search).has('local');
-  if (!forceLocal && FIREBASE && FIREBASE.databaseURL) return firebaseDB();
+  if (!forceLocal && FIREBASE && FIREBASE.databaseURL) return firebaseDB(host);
   return localDB();
 }
 
-async function firebaseDB() {
+async function firebaseDB(host) {
   const base = `https://www.gstatic.com/firebasejs/${FB_V}/`;
   const [{ initializeApp }, A, D] = await Promise.all([
     import(base + 'firebase-app.js'),
@@ -20,14 +23,22 @@ async function firebaseDB() {
   const app = initializeApp(FIREBASE, 'quizlive');
   const auth = A.getAuth(app);
   await auth.authStateReady();
-  if (!auth.currentUser) await A.signInAnonymously(auth);
+  if (!host && !auth.currentUser) await A.signInAnonymously(auth);
   const db = D.getDatabase(app);
   const r = (p) => D.ref(db, p);
   let offset = 0;
   D.onValue(r('.info/serverTimeOffset'), (s) => (offset = s.val() || 0));
   return {
     mode: 'firebase',
-    uid: auth.currentUser.uid,
+    get uid() { return auth.currentUser?.uid; },
+    user: () => auth.currentUser,
+    onUser: (cb) => A.onAuthStateChanged(auth, cb),
+    signIn: async () => {
+      const prov = new A.GoogleAuthProvider();
+      prov.setCustomParameters({ prompt: 'select_account', login_hint: TEACHER_EMAILS[0] });
+      await A.signInWithPopup(auth, prov);
+    },
+    signOut: () => A.signOut(auth),
     now: () => Date.now() + offset,
     get: async (p) => (await D.get(r(p))).val(),
     set: (p, v) => D.set(r(p), v),
@@ -114,6 +125,11 @@ function localDB() {
   return {
     mode: 'local',
     uid,
+    // โหมดทดลองในเครื่อง: ถือว่าเป็นครูอัตโนมัติ (ไม่มีข้อมูลจริงให้ป้องกัน)
+    user: () => ({ uid, email: TEACHER_EMAILS[0], isAnonymous: false }),
+    onUser: (cb) => { queueMicrotask(() => cb({ uid, email: TEACHER_EMAILS[0], isAnonymous: false })); return () => {}; },
+    signIn: async () => {},
+    signOut: async () => {},
     now: () => Date.now(),
     get: async (p) => { tree = load(); return JSON.parse(JSON.stringify(getAt(tree, p))); },
     set: (p, v) => commit(() => setAt(p, resolve(v))),

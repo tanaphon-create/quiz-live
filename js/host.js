@@ -1,18 +1,37 @@
-import { connect, TS } from './db.js';
+import { connect, TS, isTeacher } from './db.js';
 import { renderAvatar } from './avatar.js';
 import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock } from './sound.js';
 import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js';
 import { SAMPLE } from './sample.js';
 
-/* ───────────── ชุดคำถาม (เก็บในเครื่องครู) ───────────── */
-const LS = 'quizlive:quizzes';
+/* ───────────── ชุดคำถาม (เก็บใน Firebase เฉพาะบัญชีครู) ───────────── */
+const LS = 'quizlive:quizzes'; // ที่เก็บเดิมในเครื่อง — ย้ายขึ้นคลาวด์ครั้งแรกแล้วลบทิ้ง
 const uid8 = () => Math.random().toString(36).slice(2, 10);
-let quizzes = (() => { try { return JSON.parse(localStorage.getItem(LS)); } catch { return null; } })();
-if (!Array.isArray(quizzes)) quizzes = [structuredClone(SAMPLE)];
+let quizzes = [], bankPath = '', saveH = null;
+const arr = (v) => (Array.isArray(v) ? v : v && typeof v === 'object' ? Object.keys(v).sort((a, b) => a - b).map((k) => v[k]) : []);
+function normQuiz(q) {
+  q.questions = arr(q.questions).map((x) => ({ ...x, choices: [...arr(x.choices), '', '', '', ''].slice(0, 4).map((c) => c ?? ''), image: x.image || '', text: x.text || '' }));
+  return q;
+}
+async function loadBank(uid) {
+  bankPath = `quiz/banks/${uid}/quizzes`;
+  const v = await DB.get(bankPath);
+  if (v) { quizzes = Object.values(v).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map(normQuiz); return; }
+  let old = null;
+  try { old = JSON.parse(localStorage.getItem(LS)); } catch {}
+  quizzes = (Array.isArray(old) && old.length ? old : [structuredClone(SAMPLE)]).map(normQuiz);
+  await writeBank();
+  localStorage.removeItem(LS);
+}
+const writeBank = () => DB.set(bankPath, Object.fromEntries(quizzes.map((q, i) => [q.id, JSON.parse(JSON.stringify({ ...q, order: i }))])));
 const save = () => {
-  localStorage.setItem(LS, JSON.stringify(quizzes));
   const m = $('#savedMark');
-  m.classList.remove('flash'); void m.offsetWidth; m.classList.add('flash');
+  m.textContent = 'กำลังบันทึก…';
+  clearTimeout(saveH);
+  saveH = setTimeout(async () => {
+    try { await writeBank(); m.textContent = 'บันทึกบนคลาวด์ ✓'; m.classList.remove('flash'); void m.offsetWidth; m.classList.add('flash'); }
+    catch (e) { console.error(e); m.textContent = '⚠ บันทึกไม่สำเร็จ'; toast('บันทึกไม่สำเร็จ — ตรวจอินเทอร์เน็ต'); }
+  }, 600);
 };
 const blankQ = () => ({ type: 'mc', text: '', image: '', choices: ['', '', '', ''], correct: 0, time: 20, points: 1000 });
 const TIMES = [5, 10, 15, 20, 30, 45, 60, 90, 120];
@@ -189,15 +208,47 @@ $('#bulkOk').onclick = () => {
 
 /* ───────────── เชื่อมต่อ ───────────── */
 let DB = null;
-const dbReady = connect().then((d) => {
+const dbReady = connect({ host: true }).then((d) => {
   DB = d;
-  $('#modeBadge').innerHTML = d.mode === 'firebase' ? '🟢 ออนไลน์ (Firebase)' : '🟡 โหมดทดลอง — เปิดหลายแท็บในเครื่องนี้';
+  $('#modeBadge').innerHTML = d.mode === 'firebase' ? '🟢 ออนไลน์' : '🟡 โหมดทดลอง — เปิดหลายแท็บในเครื่องนี้';
+  d.onUser(onUser);
   return d;
 }).catch((e) => {
   console.error(e);
   $('#modeBadge').textContent = '🔴 เชื่อมต่อไม่ได้';
   toast('เชื่อมต่อ Firebase ไม่ได้ — ตรวจ js/config.js และเปิด Anonymous Auth', 6000);
 });
+
+/* ───────────── ล็อกอินครู ───────────── */
+let authed = '';
+async function onUser(u) {
+  if (u && isTeacher(u)) {
+    if (authed === u.uid) return;
+    authed = u.uid;
+    $('#who').textContent = u.email;
+    $('#loginMsg').textContent = 'กำลังโหลดชุดคำถาม…';
+    try { await loadBank(u.uid); } catch (e) { console.error(e); $('#loginMsg').textContent = 'โหลดชุดคำถามไม่ได้ — ลองรีเฟรช'; return; }
+    renderHome(); show('home');
+    return;
+  }
+  authed = ''; quizzes = []; bankPath = '';
+  if (phase) leave();
+  show('login');
+  const wrong = u && !u.isAnonymous;
+  $('#loginMsg').innerHTML = wrong ? `⛔ อีเมล <b>${esc(u.email)}</b> ไม่มีสิทธิ์เข้าหน้าครู` : '';
+  $('#loginBtn').hidden = !!wrong;
+  $('#switchBtn').hidden = !wrong;
+}
+$('#loginBtn').onclick = async () => {
+  if (!(await dbReady)) return;
+  $('#loginMsg').textContent = '';
+  try { await DB.signIn(); } catch (e) {
+    console.error(e);
+    $('#loginMsg').textContent = e.code === 'auth/popup-blocked' ? 'เบราว์เซอร์บล็อกหน้าต่างล็อกอิน — อนุญาตป๊อปอัปแล้วลองใหม่' : e.code === 'auth/popup-closed-by-user' ? '' : 'ล็อกอินไม่สำเร็จ ลองใหม่อีกครั้ง';
+  }
+};
+$('#switchBtn').onclick = () => DB.signOut();
+$('#logoutBtn').onclick = async () => { if (confirm('ออกจากระบบ?')) await DB.signOut(); };
 
 /* ───────────── โฮสต์เกม ───────────── */
 let R = '', pin = '', quiz = null, order = [], qi = -1, phase = '', players = {};
@@ -701,4 +752,3 @@ async function finish() {
   };
 }
 
-renderHome();

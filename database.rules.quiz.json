@@ -1,10 +1,16 @@
 {
   "rules": {
     "quiz": {
+      "banks": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid && auth.token.email === 'tanaphon@wangchan.ac.th' && auth.token.email_verified === true",
+          ".write": "auth != null && auth.uid === $uid && auth.token.email === 'tanaphon@wangchan.ac.th' && auth.token.email_verified === true"
+        }
+      },
       "rooms": {
         "$pin": {
           ".read": "auth != null",
-          ".write": "auth != null && (!data.exists() || data.child('meta/hostUid').val() === auth.uid)",
+          ".write": "auth != null && ((!data.exists() && auth.token.email === 'tanaphon@wangchan.ac.th' && auth.token.email_verified === true) || (data.exists() && data.child('meta/hostUid').val() === auth.uid))",
           "players": {
             "$uid": {
               ".write": "auth != null && auth.uid === $uid"

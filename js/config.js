@@ -17,3 +17,6 @@ export const FIREBASE = {
   appId: '1:898045012173:web:06a1ac1c42db1128d52184',
   databaseURL: 'https://quizlive-wcw-default-rtdb.asia-southeast1.firebasedatabase.app',
 };
+
+// อีเมลครูที่เข้าหน้าจอครูได้ (คนอื่นเข้าไม่ได้ — ตรวจทั้งในหน้าเว็บและในกฎฐานข้อมูล)
+export const TEACHER_EMAILS = ['tanaphon@wangchan.ac.th'];

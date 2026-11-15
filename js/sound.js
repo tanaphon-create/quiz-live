@@ -153,6 +153,13 @@ export const sfx = {
     cheer(t + 0.4, 3);
   },
   cheer: () => cheer(),
+  intro: () => {
+    const t = T();
+    [60, 64, 67, 72, 76, 79, 84].forEach((n, i) => note(NOTE(n), 0.16, { t: t + i * 0.055, type: 'square', vol: 0.05, filter: 3500 }));
+    kick(t + 0.42, 0.65); crash(t + 0.42, 0.3);
+    chord([60, 64, 67, 72], t + 0.42, 0.9, 'sawtooth', 0.06);
+    hiss(0.5, { t, vol: 0.12, type: 'bandpass', freq: 500, sweep: 6000, q: 1.2, attack: 0.3 });
+  },
 };
 
 export function setMuted(m) { muted = m; if (m) music(null); }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#241A63">
-<title>Quiz Live — เข้าร่วม</title>
+<title>ฟลุ๊กถูก — เข้าร่วม</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -12,10 +12,22 @@
 </head>
 <body class="sky">
 
+<!-- INTRO -->
+<section class="screen on" id="scr-intro">
+  <div class="intro" id="intro">
+    <div class="rays"></div>
+    <div class="intro-float" aria-hidden="true"><i>?</i><i>!</i><i>★</i><i>?</i><i>♥</i><i>!</i></div>
+    <h1 class="intro-title" id="introTitle" aria-label="ฟลุ๊กถูก">ฟลุ๊กถูก</h1>
+    <p class="intro-tag">ตอบไว · ตอบถูก · ลุ้นฟลุ๊ก!</p>
+    <div class="intro-crowd" id="introCrowd"></div>
+    <button class="btn gold big intro-go" id="introGo">แตะเพื่อเริ่ม ▶</button>
+  </div>
+</section>
+
 <!-- ขั้นที่ 1: ใส่ PIN -->
-<section class="screen on" id="scr-pin">
+<section class="screen" id="scr-pin">
   <div class="center-box">
-    <div class="logo big"><span class="mark"></span>Quiz<b>Live</b></div>
+    <div class="logo big"><span class="mark"></span>ฟลุ๊ก<b>ถูก</b></div>
     <form class="join-form card" id="pinForm">
       <input class="input huge" id="pinIn" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" placeholder="รหัสห้อง (PIN)" autocomplete="off" aria-label="รหัสห้อง">
       <button class="btn big" type="submit">ถัดไป ›</button>
