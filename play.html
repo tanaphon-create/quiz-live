@@ -24,19 +24,34 @@
   </div>
 </section>
 
-<!-- ขั้นที่ 2: ตั้งชื่อ -->
+<!-- ขั้นที่ 2: เลขประจำตัว -->
+<section class="screen" id="scr-sid">
+  <div class="center-box">
+    <div class="big-ico">🪪</div>
+    <form class="join-form card" id="sidForm">
+      <div class="room-title" id="roomTitle2"></div>
+      <label class="sid-label" for="sidIn">เลขประจำตัวนักเรียน</label>
+      <input class="input huge" id="sidIn" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="เช่น 12345" autocomplete="off">
+      <button class="btn big" type="submit">ถัดไป ›</button>
+    </form>
+    <p class="hint">ครูจะใช้เลขนี้บันทึกคะแนนเข้าสมุดคะแนน</p>
+  </div>
+</section>
+
+<!-- ขั้นที่ 3: ตั้งชื่อ -->
 <section class="screen" id="scr-name">
   <div class="center-box">
     <div class="name-av avatar-box" id="nameAv"></div>
     <form class="join-form card" id="nameForm">
       <div class="room-title" id="roomTitle"></div>
+      <span class="sid-chip" id="sidChip"></span>
       <input class="input huge" id="nameIn" maxlength="16" placeholder="ชื่อเล่น / ชื่อที่จะแสดง" autocomplete="off" aria-label="ชื่อ">
       <button class="btn big green" type="submit">เข้าห้องล็อกเกอร์ 🚪</button>
     </form>
   </div>
 </section>
 
-<!-- ขั้นที่ 3: ห้องล็อกเกอร์ แต่งตัวรอ -->
+<!-- ขั้นที่ 4: ห้องล็อกเกอร์ แต่งตัวรอ -->
 <section class="screen" id="scr-locker">
   <header class="topbar">
     <span class="pill">PIN <b id="lkPin"></b></span>

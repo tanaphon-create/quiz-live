@@ -201,3 +201,20 @@
 .hall-empty[hidden] { display: none; }
 .buddy { width: 124px; } .buddy .avatar-box { width: 112px; }
 .podium { overflow: hidden; padding-top: 50px; }
+
+/* เปิดอันดับทีละคน */
+.rk { animation: none; opacity: 0; transform: translateX(-80px) scale(.92); transition: transform .55s cubic-bezier(.3,1.5,.5,1), opacity .3s; }
+.rk.show { opacity: 1; transform: none; }
+.rk.tease { opacity: .35; transform: none; filter: blur(6px); }
+.rk.tease .rk-name, .rk.tease .rk-s { visibility: hidden; }
+.rk .gain { animation: none; opacity: 0; }
+.rk.show .gain { opacity: 1; animation: popIn .5s .35s both; }
+.rk:first-child.show { animation: champ 1s .1s; }
+@keyframes champ { 30% { transform: scale(1.06); } }
+/* ลุ้นก่อนเฉลย */
+.reveal.suspense .bar-col i { animation: none; height: 0; }
+.reveal.suspense .ans.dim { opacity: 1; filter: none; }
+.reveal.suspense .ans.right { transform: none; outline: none; }
+.reveal.suspense .tick, .reveal.suspense .bar-n, .reveal.suspense .bar-ico b { visibility: hidden; }
+.reveal.suspense .bar.dim { opacity: 1; }
+.conv input { width: 54px; border: 0; border-radius: 8px; padding: 2px 6px; text-align: center; font: inherit; color: var(--ink); }

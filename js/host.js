@@ -1,6 +1,6 @@
 import { connect, TS } from './db.js';
 import { renderAvatar } from './avatar.js';
-import { sfx, music, musicOn, setMuted, isMuted, unlock } from './sound.js';
+import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock } from './sound.js';
 import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores } from './ui.js';
 import { SAMPLE } from './sample.js';
 
@@ -224,7 +224,7 @@ async function hostGame(q) {
   if (window.QRCode) new QRCode($('#qr'), { text: url.href, width: 168, height: 168, colorDark: '#2B2350', colorLight: '#ffffff' });
   $('#crowd').innerHTML = '';
   show('lobby');
-  music(true); $('#musicBtn').classList.add('on');
+  music('lobby'); $('#musicBtn').classList.add('on');
   unsubs.push(DB.on(R + '/players', (v) => { players = v || {}; onPlayers(); }));
 }
 
@@ -263,13 +263,13 @@ $('#crowd').onclick = (e) => {
   const p = players[b.dataset.uid];
   if (p && confirm(`นำ “${p.name}” ออกจากห้อง?`)) DB.remove(`${R}/players/${b.dataset.uid}`);
 };
-$('#musicBtn').onclick = () => { const on = !musicOn(); music(on); $('#musicBtn').classList.toggle('on', on); };
+$('#musicBtn').onclick = () => { const on = !musicOn(); music(on ? 'lobby' : null); $('#musicBtn').classList.toggle('on', on); };
 $('#lobbyCancel').onclick = async () => { if (confirm('ยกเลิกห้องนี้?')) { await DB.update(R, { 'meta/state': 'end', 'meta/cancelled': true }); leave(); } };
 $('#muteBtn').onclick = () => { setMuted(!isMuted()); $('#muteBtn').textContent = isMuted() ? '🔇' : '🔊'; };
 $('#endGameBtn').onclick = () => { if (confirm('จบเกมตอนนี้และแสดงผลสรุป?')) finish(); };
 
 function leave() {
-  unsubs.forEach((u) => u && u()); unsubs = []; clearInterval(tickH); music(false);
+  unsubs.forEach((u) => u && u()); unsubs = []; clearInterval(tickH); music(null);
   phase = ''; renderHome(); show('home');
 }
 
@@ -278,7 +278,7 @@ $('#startBtn').onclick = async () => {
   order = quiz.questions.map((_, i) => i);
   if (opts.shuffle) order.sort(() => Math.random() - 0.5);
   await DB.update(R, { 'meta/showQ': opts.showQ, 'meta/streak': opts.streak });
-  music(false);
+  music(null);
   show('game');
   goQuestion(0);
 };
@@ -302,6 +302,7 @@ async function goQuestion(i) {
       <div class="ready-bar"><i></i></div>
     </div>`;
   sfx.whoosh();
+  [3, 2, 1].forEach((n, k) => setTimeout(() => phase === 'ready' && qi === i && sfx.count(n), 1000 * (k + 1)));
   await wait(4000);
   if (phase !== 'ready' || qi !== i) return;
   beginAnswering();
@@ -314,6 +315,7 @@ async function beginAnswering() {
   await DB.update(R, { 'meta/state': 'question', 'meta/qStartAt': TS });
   qStart = (await DB.get(R + '/meta/qStartAt')) || DB.now();
   sfx.go();
+  music('question');
   stage().innerHTML = `
     <div class="qscreen">
       <h1 class="q-title">${esc(q.text)}</h1>
@@ -338,7 +340,7 @@ async function beginAnswering() {
     if (sec !== lastSec) {
       lastSec = sec;
       const t = $('#tNum'); if (t) { t.textContent = sec; t.parentElement.classList.toggle('hurry', sec <= 5); }
-      if (sec <= 5 && sec > 0) sfx.urgent(); else if (sec > 0) sfx.tick();
+      if (sec <= 5 && sec > 0) { sfx.urgent(); hurry(true); }
     }
     if (left <= 0) endQuestion();
   }, 100);
@@ -358,6 +360,7 @@ async function endQuestion() {
   if (phase !== 'question') return;
   phase = 'scoring';
   clearInterval(tickH);
+  music(null); sfx.timeUp();
   const q = Q();
   q._ua && q._ua();
   await wait(500); // รอคำตอบที่กำลังส่งมา
@@ -406,7 +409,7 @@ function renderReveal() {
   const fastest = Object.entries(res).filter(([, r]) => r.correct).sort((a, b) => a[1].ms - b[1].ms)[0];
   sfx.reveal();
   stage().innerHTML = `
-    <div class="reveal">
+    <div class="reveal suspense">
       <h1 class="q-title sm">${esc(q.text)}</h1>
       <div class="bars n${n}">${counts.map((c, k) => `
         <div class="bar a${k} ${k === q.correct ? 'right' : 'dim'}">
@@ -423,63 +426,95 @@ function renderReveal() {
       </div>
     </div>`;
   $('#toBoard').onclick = showBoard;
+  setTimeout(() => $('.reveal')?.classList.remove('suspense'), 1100);
 }
 
+// อันดับ: ค่อย ๆ เปิดจากอันดับ 5 → 1 บนจอครูก่อน แล้วจึงส่งให้มือถือนักเรียน
 async function showBoard() {
   phase = 'board';
-  await DB.update(R, { 'meta/state': 'board' });
+  const myQ = qi;
+  await DB.update(R, { 'meta/state': 'board', 'meta/rankShown': -1 });
   const { res } = lastReveal;
   const top = Object.entries(res).sort((a, b) => a[1].rank - b[1].rank).slice(0, 5);
   const last = qi >= order.length - 1;
   stage().innerHTML = `
     <div class="board">
       <h1 class="board-h">🏆 อันดับคะแนน</h1>
-      <ol class="rank-list">${top.map(([uid, r], i) => {
+      <ol class="rank-list">${top.map(([uid, r]) => {
         const p = players[uid] || {};
         const mv = (prevRanks[uid] || r.rank) - r.rank;
-        return `<li class="rk" style="--i:${i}">
+        const g = r.gained + r.bonus;
+        return `<li class="rk">
           <span class="rk-n">${r.rank}</span>
           <span class="rk-av">${renderAvatar(p.avatar)}</span>
           <span class="rk-name">${esc(p.name)} ${r.streak >= 2 ? `<span class="fire">🔥${r.streak}</span>` : ''}</span>
           ${mv > 0 && qi > 0 ? `<span class="mv up">▲${mv}</span>` : ''}
-          ${r.gained + r.bonus > 0 ? `<span class="gain">+${(r.gained + r.bonus).toLocaleString('th-TH')}</span>` : ''}
-          <b class="rk-s" data-from="${r.score - r.gained - r.bonus}" data-to="${r.score}">${(r.score - r.gained - r.bonus).toLocaleString('th-TH')}</b>
+          ${g > 0 ? `<span class="gain">+${g.toLocaleString('th-TH')}</span>` : ''}
+          <b class="rk-s" data-from="${r.score - g}" data-to="${r.score}">${(r.score - g).toLocaleString('th-TH')}</b>
         </li>`;
       }).join('')}</ol>
-      <div class="rev-foot"><span class="sp"></span>
-        <button class="btn gold big" id="nextBtn">${last ? '🎉 ประกาศผล' : 'ข้อต่อไป ›'}</button></div>
+      <div class="rev-foot"><span class="pill" id="boardNote">🥁 กำลังประกาศอันดับ…</span><span class="sp"></span>
+        <button class="btn gold big" id="nextBtn" disabled>${last ? '🎉 ประกาศผล' : 'ข้อต่อไป ›'}</button></div>
     </div>`;
-  setTimeout(() => $$('.rk-s').forEach((b) => countUp(b, +b.dataset.from, +b.dataset.to)), 500);
   $('#nextBtn').onclick = () => (last ? finish() : goQuestion(qi + 1));
+  const rows = $$('.rk');
+  const alive = () => phase === 'board' && qi === myQ;
+  await wait(500);
+  for (let k = rows.length - 1; k >= 0 && alive(); k--) {
+    if (k === 0 && rows.length > 1) { sfx.drumroll(1.6); rows[0].classList.add('tease'); await wait(1700); if (!alive()) return; }
+    rows[k].classList.remove('tease');
+    rows[k].classList.add('show');
+    k === 0 ? sfx.first() : sfx.rankStep(rows.length - 1 - k);
+    const b = rows[k].querySelector('.rk-s');
+    countUp(b, +b.dataset.from, +b.dataset.to, 900);
+    if (k === 0) confetti(80, 2500);
+    await wait(k === 0 ? 1000 : 950);
+  }
+  if (!alive()) return;
+  await DB.update(R, { 'meta/rankShown': myQ });
+  $('#boardNote').textContent = '📱 ส่งอันดับไปที่มือถือนักเรียนแล้ว';
+  $('#nextBtn').disabled = false;
 }
 
 async function finish() {
-  phase = 'end'; clearInterval(tickH);
-  await DB.update(R, { 'meta/state': 'end' });
+  phase = 'end'; clearInterval(tickH); music(null);
+  const total = Math.max(1, qi + 1); // นับเฉพาะข้อที่เล่นจริง (กรณีจบเกมก่อน)
+  await DB.update(R, { 'meta/state': 'end', 'meta/podiumDone': false, 'meta/played': total });
   const list = rankScores(players);
   const podium = [list[1], list[0], list[2]];
+  const T3 = 0.4, T2 = 2.0, T1 = 5.0; // วินาทีที่แต่ละอันดับขึ้น
   stage().innerHTML = `
     <div class="end">
       <h1 class="board-h">🎉 ${esc(quiz.title)}</h1>
       <div class="podium">${podium.map((p, k) => {
         const place = [2, 1, 3][k];
-        return p ? `<div class="pod p${place}" style="--delay:${[1.6, 3.2, 0][k]}s">
+        return p ? `<div class="pod p${place}" style="--delay:${[T2, T1, T3][k]}s">
           <div class="pod-av">${place === 1 ? '<span class="crown">👑</span>' : ''}${renderAvatar(p.avatar, { bg: false })}</div>
           <div class="pod-name">${esc(p.name)}</div>
           <div class="pod-col"><span>${place}</span><small>${p.score.toLocaleString('th-TH')}</small></div>
         </div>` : '<div class="pod empty-pod"></div>';
       }).join('')}</div>
       <details class="all-rank card"><summary>ดูคะแนนทุกคน (${list.length} คน)</summary>
-        <table><thead><tr><th>อันดับ</th><th>ชื่อ</th><th>ตอบถูก</th><th>คะแนน</th></tr></thead><tbody>
-        ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.name)}</td><td>${p.correct || 0}/${order.length || quiz.questions.length}</td><td>${p.score.toLocaleString('th-TH')}</td></tr>`).join('')}
+        <table><thead><tr><th>อันดับ</th><th>เลขประจำตัว</th><th>ชื่อ</th><th>ตอบถูก</th><th>คะแนน</th></tr></thead><tbody>
+        ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.sid || '-')}</td><td>${esc(p.name)}</td><td>${p.correct || 0}/${total}</td><td>${p.score.toLocaleString('th-TH')}</td></tr>`).join('')}
         </tbody></table></details>
-      <div class="rev-foot"><button class="btn light" id="csvBtn">⤓ ดาวน์โหลดคะแนน (CSV)</button><span class="sp"></span><button class="btn gold" id="homeBtn">กลับหน้าหลัก</button></div>
+      <div class="rev-foot">
+        <label class="pill conv">แปลงเป็นคะแนนเก็บ เต็ม <input type="number" id="fullPts" value="10" min="1" max="100"> คะแนน</label>
+        <button class="btn light" id="csvBtn">⤓ ดาวน์โหลดคะแนน (CSV)</button><span class="sp"></span><button class="btn gold" id="homeBtn">กลับหน้าหลัก</button></div>
     </div>`;
-  sfx.drum();
-  setTimeout(() => { sfx.fanfare(); confetti(); }, 3300);
+  const at = (s, fn) => setTimeout(() => phase === 'end' && fn(), s * 1000);
+  if (list[2]) at(T3, () => sfx.rankStep(0));
+  if (list[1]) at(T2, () => sfx.rankStep(2));
+  at(T1 - 2.2, () => sfx.drumroll(2.2));
+  at(T1, () => { sfx.fanfare(); confetti(220, 6000); });
+  at(T1 + 1.2, () => DB.update(R, { 'meta/podiumDone': true }));
   $('#homeBtn').onclick = leave;
   $('#csvBtn').onclick = () => {
-    const rows = [['อันดับ', 'ชื่อ', 'ตอบถูก', 'จำนวนข้อ', 'คะแนน'], ...list.map((p, i) => [i + 1, p.name, p.correct || 0, order.length, p.score])];
+    const full = Math.max(1, +$('#fullPts').value || 10);
+    const bySid = list.map((p, i) => ({ ...p, rank: i + 1 }))
+      .sort((a, b) => String(a.sid || '').localeCompare(String(b.sid || ''), 'th', { numeric: true }));
+    const rows = [['เลขประจำตัว', 'ชื่อ', 'อันดับ', 'ตอบถูก', 'จำนวนข้อ', 'คะแนนเกม', `คะแนนเก็บ (เต็ม ${full})`],
+      ...bySid.map((p) => [p.sid || '', p.name, p.rank, p.correct || 0, total, p.score, Math.round(((p.correct || 0) / total) * full * 100) / 100])];
     const csv = '﻿' + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));

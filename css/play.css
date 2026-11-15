@@ -106,3 +106,9 @@ body.flash-bad { background: linear-gradient(160deg, #C83A50, #7A1C2E); }
 @media (min-width: 760px) {
   .pans .ans { font-size: 1.5rem; }
 }
+
+.sid-label { font-weight: 600; color: var(--ink2); margin-bottom: -6px; }
+.sid-chip { justify-self: center; background: var(--soft); color: var(--ink2); padding: 2px 12px; border-radius: 99px; font-size: .9rem; }
+.sid-chip:empty { display: none; }
+.drum { font-size: 5rem; animation: drum .25s infinite alternate; }
+@keyframes drum { from { transform: rotate(-8deg) scale(1); } to { transform: rotate(8deg) scale(1.08); } }

@@ -6,14 +6,16 @@ import { $, $$, esc, SHAPES, show, toast, countUp, confetti, rankScores } from '
 const ME_KEY = 'quizlive:me';
 const saved = (() => { try { return JSON.parse(localStorage.getItem(ME_KEY)) || {}; } catch { return {}; } })();
 let avatar = saved.avatar || randomAvatar();
-let DB, pin = '', R = '', meta = null, cur = null, me = null, joined = false;
+let DB, pin = '', R = '', meta = null, cur = null, me = null, joined = false, sid = saved.sid || '';
 let resUnsub = null, timerH = null, answeredQ = -1, lastState = '', prevScore = 0;
-const remember = () => localStorage.setItem(ME_KEY, JSON.stringify({ pin, name: me?.name || saved.name || '', avatar }));
+const remember = () => localStorage.setItem(ME_KEY, JSON.stringify({ pin, sid, name: me?.name || saved.name || '', avatar }));
 
 const qs = new URLSearchParams(location.search);
 $('#pinIn').value = qs.get('pin') || '';
 $('#nameAv').innerHTML = renderAvatar(avatar);
 $('#nameIn').value = saved.name || '';
+$('#sidIn').value = sid;
+const goSid = (title) => { $('#roomTitle').textContent = title; $('#roomTitle2').textContent = title; show('sid'); $('#sidIn').focus(); };
 
 const ready = connect().then((d) => {
   DB = d;
@@ -27,7 +29,7 @@ ready.then(async () => {
   if (!p || !DB) return;
   const [m, pl] = await Promise.all([DB.get(`quiz/rooms/${p}/meta`), DB.get(`quiz/rooms/${p}/players/${DB.uid}`)]);
   if (m && m.state !== 'end' && pl) { pin = p; R = `quiz/rooms/${pin}`; me = pl; avatar = pl.avatar || avatar; enterRoom(); }
-  else if (qs.get('pin') && m && m.state !== 'end') { pin = p; R = `quiz/rooms/${pin}`; $('#roomTitle').textContent = m.title; show('name'); $('#nameIn').focus(); }
+  else if (qs.get('pin') && m && m.state !== 'end') { pin = p; R = `quiz/rooms/${pin}`; goSid(m.title); }
 });
 
 $('#pinForm').onsubmit = async (e) => {
@@ -39,7 +41,17 @@ $('#pinForm').onsubmit = async (e) => {
   if (!m) return toast('ไม่พบห้องนี้ — ตรวจรหัสอีกครั้ง');
   if (m.state === 'end') return toast('เกมนี้จบไปแล้ว');
   pin = p; R = `quiz/rooms/${pin}`;
-  $('#roomTitle').textContent = m.title;
+  goSid(m.title);
+};
+
+$('#sidForm').onsubmit = async (e) => {
+  e.preventDefault(); unlock();
+  const v = $('#sidIn').value.replace(/\s/g, '');
+  if (!/^\d{1,10}$/.test(v)) return toast('ใส่เลขประจำตัวเป็นตัวเลขเท่านั้น');
+  const others = (await DB.get(`${R}/players`)) || {};
+  if (Object.entries(others).some(([u, p]) => u !== DB.uid && String(p.sid) === v)) return toast('เลขประจำตัวนี้เข้าห้องแล้ว — ตรวจอีกครั้ง');
+  sid = v; sfx.tap();
+  $('#sidChip').textContent = '🪪 ' + sid;
   show('name'); $('#nameIn').focus();
 };
 
@@ -51,7 +63,8 @@ $('#nameForm').onsubmit = async (e) => {
   if (Object.entries(others).some(([u, p]) => u !== DB.uid && p.name?.toLowerCase() === name.toLowerCase())) return toast('ชื่อนี้มีคนใช้แล้ว ลองชื่ออื่น');
   const meta0 = await DB.get(`${R}/meta`);
   if (!meta0 || meta0.state === 'end') { show('pin'); return toast('ห้องนี้ปิดแล้ว'); }
-  me = { name, avatar, score: 0, streak: 0, correct: 0, online: true, joinedAt: TS };
+  if (!sid) { show('sid'); return toast('ใส่เลขประจำตัวก่อนนะ'); }
+  me = { sid, name, avatar, score: 0, streak: 0, correct: 0, online: true, joinedAt: TS };
   await DB.set(`${R}/players/${DB.uid}`, me);
   sfx.pop();
   enterRoom();
@@ -85,7 +98,7 @@ function kicked() {
 /* ───────── ห้องล็อกเกอร์: แต่งตัว ───────── */
 let tab = 'shape';
 const ITEM_LABEL = {
-  round: 'กลม', bean: 'ถั่ว', square: 'เหลี่ยม', ghost: 'ผี', cat: 'แมว', none: 'ไม่มี',
+  round: 'กลม', bear: 'หมี', bunny: 'กระต่าย', cat: 'แมว', chick: 'ลูกเจี๊ยบ', dino: 'ไดโน', bean: 'ถั่ว', ghost: 'ผี', none: 'ไม่มี',
 };
 function renderCloset() {
   $('#lkAv').innerHTML = renderAvatar(avatar, { bg: false });
@@ -107,7 +120,7 @@ $('#randBtn').onclick = () => { avatar = randomAvatar(); sfx.whoosh(); renderClo
 $('#leaveBtn').onclick = async () => {
   if (!confirm('ออกจากห้องนี้?')) return;
   joined = false; await DB.remove(`${R}/players/${DB.uid}`);
-  localStorage.setItem(ME_KEY, JSON.stringify({ avatar, name: me?.name })); location.href = 'play.html';
+  localStorage.setItem(ME_KEY, JSON.stringify({ avatar, sid, name: me?.name })); location.href = 'play.html';
 };
 function bounce() { const a = $('#lkAv'); a.classList.remove('jump'); void a.offsetWidth; a.classList.add('jump'); }
 let pushH;
@@ -122,7 +135,8 @@ const stage = () => $('#pstage');
 async function route() {
   if (!meta || !joined) return;
   const st = meta.state, qi = meta.qIndex;
-  const key = `${st}|${qi}|${meta.qStartAt ? 1 : 0}|${cur ? cur.idx : '-'}`;
+  const shown = st === 'board' ? meta.rankShown === qi : st === 'end' ? !!meta.podiumDone : 0;
+  const key = `${st}|${qi}|${meta.qStartAt ? 1 : 0}|${cur ? cur.idx : '-'}|${shown}`;
   if (key === lastState) return;
   lastState = key;
   if (st !== 'reveal') document.body.classList.remove('flash-ok', 'flash-bad');
@@ -147,12 +161,17 @@ async function route() {
   } else if (st === 'reveal') {
     stage().innerHTML = `<div class="msg"><div class="spinner"></div><h2>กำลังตรวจคำตอบ…</h2></div>`;
     resUnsub = DB.on(`${R}/results/${qi}/${DB.uid}`, (r) => r && resultScreen(r));
+  } else if (st === 'board' && !shown) {
+    drumWait('🏆 ครูกำลังประกาศอันดับบนจอใหญ่…');
   } else if (st === 'board') {
     const r = await DB.get(`${R}/results/${qi}/${DB.uid}`);
     stage().innerHTML = `<div class="msg"><div class="avatar-box hero">${renderAvatar(me?.avatar)}</div>
       ${r ? `<div class="rank-big">อันดับ <b>${r.rank}</b><small> จาก ${r.of}</small></div>
       ${r.ahead ? `<p class="soft">ตามหลัง <b>${esc(r.ahead.name)}</b> อยู่ ${r.ahead.gap.toLocaleString('th-TH')} คะแนน สู้ๆ!</p>` : '<p class="soft">🥇 นำอยู่ตอนนี้!</p>'}` : '<h2>ดูอันดับบนจอใหญ่</h2>'}
       </div>`;
+    r && r.rank <= 3 ? sfx.correct() : sfx.pop();
+  } else if (st === 'end' && !meta.cancelled && !shown) {
+    drumWait('🎉 ประกาศผลบนจอใหญ่ ดูที่จอเลย!');
   } else if (st === 'end') {
     joined = !meta.cancelled;
     if (meta.cancelled) { stage().innerHTML = `<div class="msg"><div class="big-ico">🚪</div><h2>ครูปิดห้องแล้ว</h2><a class="btn" href="play.html">กลับ</a></div>`; return; }
@@ -161,15 +180,19 @@ async function route() {
     const p = list[i] || me || {};
     const medal = ['🥇', '🥈', '🥉'][i] || '🎖️';
     stage().innerHTML = `<div class="msg final">
-      <div class="medal">${medal}</div>
+      <div class="medal" style="animation-delay:.3s">${medal}</div>
       <div class="avatar-box hero">${renderAvatar(p.avatar)}</div>
       <div class="rank-big">อันดับ <b>${i + 1}</b><small> จาก ${list.length}</small></div>
       <div class="final-score">${(p.score || 0).toLocaleString('th-TH')} <small>คะแนน</small></div>
-      <p class="soft">ตอบถูก ${p.correct || 0} จาก ${meta.total} ข้อ</p>
+      <p class="soft">ตอบถูก ${p.correct || 0} จาก ${meta.played || meta.total} ข้อ</p>
       <a class="btn light" href="play.html">เล่นเกมใหม่</a></div>`;
-    localStorage.setItem(ME_KEY, JSON.stringify({ avatar, name: p.name }));
-    if (i >= 0 && i < 3) setTimeout(() => { confetti(); sfx.fanfare(); }, 3400);
+    localStorage.setItem(ME_KEY, JSON.stringify({ avatar, sid, name: p.name }));
+    if (i >= 0 && i < 3) { confetti(); sfx.fanfare(); } else sfx.correct();
   }
+}
+
+function drumWait(msg) {
+  stage().innerHTML = `<div class="msg"><div class="drum">🥁</div><h2>${msg}</h2><span class="dots"><i></i><i></i><i></i></span></div>`;
 }
 
 function answerScreen() {
@@ -223,7 +246,7 @@ function resultScreen(r) {
     ${ok ? `<div class="plus">+<b id="plusN">0</b></div>` : `<p class="soft">คำตอบที่ถูก: <b>${esc(cur?.choices?.[cur.correct] ?? '')}</b></p>`}
     ${ok && r.ms != null ? `<p class="soft">ตอบใน ${(r.ms / 1000).toFixed(1)} วินาที</p>` : ''}
     ${r.bonus ? `<div class="streak">🔥 ถูกติดกัน ${r.streak} ข้อ · โบนัส +${r.bonus}</div>` : r.streak >= 2 ? `<div class="streak">🔥 ถูกติดกัน ${r.streak} ข้อ</div>` : ''}
-    <div class="rank-chip">อันดับตอนนี้ <b>${r.rank}</b> / ${r.of}</div>
+    <p class="soft">👀 ดูอันดับบนจอใหญ่</p>
   </div>`;
   if (ok) { sfx.correct(); countUp($('#plusN'), 0, pts, 900); } else sfx.wrong();
 }
