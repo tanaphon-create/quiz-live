@@ -137,3 +137,4 @@ img { max-width: 100%; }
 /* ตัวละครกะพริบตา */
 .av .eyes { transform-box: fill-box; transform-origin: center; animation: blink 4.2s infinite; }
 @keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.12); } }
+[hidden] { display: none !important; }
