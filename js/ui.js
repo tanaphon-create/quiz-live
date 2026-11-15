@@ -94,3 +94,20 @@ export function sortPlayers(list, mode) {
     return (b.score || 0) - (a.score || 0) || (a.name || '').localeCompare(b.name || '', 'th');
   });
 }
+
+// โหมดทีมโหวต: นักเรียนใส่เลขทีมเอง สมาชิกโหวต เสียงข้างมากคือคำตอบทีม
+MODES.vote = { icon: '🗳️', name: 'ทีมโหวต', desc: 'ใส่เลขทีมเอง สมาชิกโหวต เสียงข้างมากคือคำตอบทีม' };
+export const VCOLORS = ['#FF5D73', '#3BA3FF', '#F5A524', '#22C58B', '#A66BFF', '#FF8A3D', '#14B8A6', '#EC4899'];
+const NUM_E = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣'];
+export const teamInfo = (mode, k) => (mode === 'vote' ? { name: `ทีม ${k + 1}`, c: VCOLORS[k % 8], e: NUM_E[k] || '#' } : TEAMS[k]);
+// votes = [{ choice, at }] — คืนตัวเลือกที่ได้เสียงมากที่สุด ถ้าเสมอ เลือกตัวที่ได้เสียงครบจำนวนนั้นก่อน (เร็วกว่า)
+export function teamDecision(votes) {
+  if (!votes.length) return null;
+  const sorted = [...votes].sort((a, b) => a.at - b.at);
+  const cnt = {}, reach = {};
+  for (const v of sorted) { cnt[v.choice] = (cnt[v.choice] || 0) + 1; (reach[v.choice] ||= []).push(v.at); }
+  const max = Math.max(...Object.values(cnt));
+  const tied = Object.keys(cnt).filter((c) => cnt[c] === max).sort((a, b) => reach[a][max - 1] - reach[b][max - 1]);
+  const c = +tied[0];
+  return { choice: c, count: max, at: reach[c][max - 1], counts: cnt, tie: tied.length > 1 };
+}

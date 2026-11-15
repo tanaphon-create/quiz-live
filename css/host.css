@@ -263,3 +263,15 @@
 .team-icon { width: 100%; aspect-ratio: 1; border-radius: 50%; background: var(--tc); display: grid; place-items: center; font-size: 4rem; box-shadow: inset 0 -8px 0 rgba(0,0,0,.18); }
 .mode-tag { font-size: 1rem; background: rgba(255,255,255,.15); padding: 4px 14px; border-radius: 99px; vertical-align: middle; font-weight: 500; }
 .qr-big-card .muted { color: var(--ink2); }
+
+/* ─── ทีมโหวต ─── */
+.modes { grid-template-columns: repeat(2, 1fr); }
+.team-prog { flex: 1; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.team-prog span { background: var(--tc); padding: 3px 12px; border-radius: 99px; font-weight: 600; font-size: .9rem; }
+.q-tools { align-items: center; gap: 10px; }
+.vote-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.vchip { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: var(--ink); border-left: 8px solid var(--tc); border-radius: 14px; padding: 6px 12px; font-size: 1rem; }
+.vchip i { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--c); }
+.vchip i svg { width: 18px; fill: #fff; }
+.vchip em { font-style: normal; font-weight: 800; }
+.vchip.ok em { color: var(--c3d); } .vchip.no em { color: var(--c0d); } .vchip.no { opacity: .75; }
