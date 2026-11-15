@@ -9,11 +9,11 @@
 //  และต้องเปิด Authentication → Anonymous ไว้ด้วย
 // ─────────────────────────────────────────────────────────────
 export const FIREBASE = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '',
-  databaseURL: '',
+  apiKey: 'AIzaSyAtzOh4utxj9-ry2PNWH7YrqMb_UjuaNOs',
+  authDomain: 'quizlive-wcw.firebaseapp.com',
+  projectId: 'quizlive-wcw',
+  storageBucket: 'quizlive-wcw.firebasestorage.app',
+  messagingSenderId: '898045012173',
+  appId: '1:898045012173:web:06a1ac1c42db1128d52184',
+  databaseURL: 'https://quizlive-wcw-default-rtdb.asia-southeast1.firebasedatabase.app',
 };
