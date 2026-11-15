@@ -112,3 +112,12 @@ body.flash-bad { background: linear-gradient(160deg, #C83A50, #7A1C2E); }
 .sid-chip:empty { display: none; }
 .drum { font-size: 5rem; animation: drum .25s infinite alternate; }
 @keyframes drum { from { transform: rotate(-8deg) scale(1); } to { transform: rotate(8deg) scale(1.08); } }
+
+.mode-badge { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 2; background: rgba(10,6,40,.75); padding: 6px 14px; border-radius: 99px; font-size: .92rem; white-space: nowrap; max-width: calc(100% - 24px); overflow: hidden; text-overflow: ellipsis; }
+.mode-badge b { color: #fff; padding: 1px 10px; border-radius: 99px; }
+.mode-badge:empty { display: none; }
+.locker-scene { padding-top: 54px; }
+.team-chip { color: #fff; font-weight: 600; padding: 6px 16px; border-radius: 99px; box-shadow: 0 4px 0 rgba(0,0,0,.2); }
+.team-chip.big { font-size: 1.3rem; padding: 8px 22px; }
+.hp-line { font-size: 1.6rem; letter-spacing: 2px; }
+.streak.out { background: #E8E4F5; color: var(--ink); }

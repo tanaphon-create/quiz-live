@@ -69,3 +69,28 @@ export function rankScores(players) {
     .map(([uid, p]) => ({ uid, ...p, score: p.score || 0 }))
     .sort((a, b) => b.score - a.score || (a.name || '').localeCompare(b.name || '', 'th'));
 }
+
+// โหมดเกม
+export const MODES = {
+  classic: { icon: '🏆', name: 'แข่งเดี่ยว', desc: 'ตอบถูก + เร็ว ได้คะแนนมาก' },
+  team: { icon: '👥', name: 'แข่งเป็นทีม', desc: 'แบ่งทีมอัตโนมัติ คะแนนทีม = ค่าเฉลี่ยสมาชิก' },
+  survival: { icon: '❤️', name: 'เอาตัวรอด', desc: 'ตอบผิดเสียหัวใจ หมดหัวใจตกรอบ คนรอดสุดท้ายชนะ' },
+};
+export const TEAMS = [
+  { name: 'ทีมแดง', c: '#FF5D73', e: '🔥' },
+  { name: 'ทีมฟ้า', c: '#3BA3FF', e: '🌊' },
+  { name: 'ทีมเหลือง', c: '#F5A524', e: '⚡' },
+  { name: 'ทีมเขียว', c: '#22C58B', e: '🍀' },
+];
+export const hearts = (n, max = 3) => '❤️'.repeat(Math.max(0, n)) + '🤍'.repeat(Math.max(0, max - n));
+// เรียงผู้เล่นตามโหมด: เอาตัวรอด = ผู้ที่ยังรอดก่อน แล้วผู้ที่ตกรอบทีหลังก่อน
+export function sortPlayers(list, mode) {
+  return list.sort((a, b) => {
+    if (mode === 'survival') {
+      const A = (a.hearts ?? 1) > 0, B = (b.hearts ?? 1) > 0;
+      if (A !== B) return A ? -1 : 1;
+      if (!A && a.outAt !== b.outAt) return (b.outAt ?? -1) - (a.outAt ?? -1);
+    }
+    return (b.score || 0) - (a.score || 0) || (a.name || '').localeCompare(b.name || '', 'th');
+  });
+}

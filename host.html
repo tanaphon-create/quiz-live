@@ -63,7 +63,13 @@
         <div class="muted" style="margin-top:6px">รหัสห้อง (PIN)</div>
         <div class="pin" id="pinBig">------</div>
       </div>
-      <div class="qr" id="qr"></div>
+      <button class="qr" id="qr" title="คลิกเพื่อขยาย QR" aria-label="ขยาย QR"></button>
+    </div>
+    <div class="mode-card card">
+      <div class="mode-h">เลือกโหมด</div>
+      <div class="modes" id="modes"></div>
+      <div class="mode-opt" id="modeOpt"></div>
+      <div class="team-sum" id="teamSum"></div>
     </div>
   </div>
   <div class="hall">
@@ -98,6 +104,20 @@
   </header>
   <div class="stage" id="stage"></div>
 </section>
+
+<!-- ═══ QR ขยายเต็มจอ ═══ -->
+<div class="qr-big" id="qrBig" hidden>
+  <div class="qr-big-card">
+    <div class="qr-big-img" id="qrBigImg"></div>
+    <div class="qr-big-info">
+      <div class="muted">สแกนเพื่อเข้าร่วม หรือเข้าเว็บ</div>
+      <div class="join-url" id="qrBigUrl"></div>
+      <div class="muted">PIN</div>
+      <div class="pin" id="qrBigPin"></div>
+      <button class="btn" id="qrClose">ปิด ✕</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ หน้าต่างวางข้อความ ═══ -->
 <dialog id="bulkDlg" class="dlg card">

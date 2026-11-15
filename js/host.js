@@ -1,7 +1,7 @@
 import { connect, TS } from './db.js';
 import { renderAvatar } from './avatar.js';
 import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock } from './sound.js';
-import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores } from './ui.js';
+import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers } from './ui.js';
 import { SAMPLE } from './sample.js';
 
 /* ───────────── ชุดคำถาม (เก็บในเครื่องครู) ───────────── */
@@ -201,7 +201,8 @@ const dbReady = connect().then((d) => {
 
 /* ───────────── โฮสต์เกม ───────────── */
 let R = '', pin = '', quiz = null, order = [], qi = -1, phase = '', players = {};
-let opts = { showQ: true, streak: true, shuffle: false };
+let opts = { showQ: true, streak: true, shuffle: false, mode: 'classic', teams: 2, hearts: 3 };
+let joinHref = '';
 let unsubs = [], tickH = null, qStart = 0, liveAnswers = {}, lastReveal = null, prevRanks = {};
 
 async function hostGame(q) {
@@ -221,7 +222,9 @@ async function hostGame(q) {
   $('#pinBig').textContent = pin.replace(/(\d{3})(\d{3})/, '$1 $2');
   $('#pinSmall').textContent = pin;
   $('#qr').innerHTML = '';
+  joinHref = url.href;
   if (window.QRCode) new QRCode($('#qr'), { text: url.href, width: 168, height: 168, colorDark: '#2B2350', colorLight: '#ffffff' });
+  opts.mode = 'classic'; renderModes();
   $('#crowd').innerHTML = '';
   show('lobby');
   music('lobby'); $('#musicBtn').classList.add('on');
@@ -229,12 +232,72 @@ async function hostGame(q) {
 }
 
 const active = () => Object.entries(players).filter(([, p]) => p && p.name);
+const isAlive = (p) => opts.mode !== 'survival' || (p.hearts ?? opts.hearts) > 0;
+
+/* ───── QR ขยาย ───── */
+$('#qr').onclick = () => {
+  $('#qrBigImg').innerHTML = '';
+  const size = Math.floor(Math.min(innerWidth * 0.55, innerHeight * 0.78));
+  if (window.QRCode) new QRCode($('#qrBigImg'), { text: joinHref, width: size, height: size, colorDark: '#2B2350', colorLight: '#ffffff' });
+  $('#qrBigUrl').textContent = $('#joinUrl').textContent;
+  $('#qrBigPin').textContent = $('#pinBig').textContent;
+  $('#qrBig').hidden = false; sfx.whoosh();
+};
+const closeQr = () => ($('#qrBig').hidden = true);
+$('#qrClose').onclick = closeQr;
+$('#qrBig').onclick = (e) => e.target === $('#qrBig') && closeQr();
+addEventListener('keydown', (e) => e.key === 'Escape' && closeQr());
+
+/* ───── โหมดเกม ───── */
+function renderModes() {
+  $('#modes').innerHTML = Object.entries(MODES).map(([k, m]) => `<button class="mode ${opts.mode === k ? 'on' : ''}" data-m="${k}"><span class="mi">${m.icon}</span><b>${m.name}</b><small>${m.desc}</small></button>`).join('');
+  $('#modeOpt').innerHTML = opts.mode === 'team'
+    ? `<span>จำนวนทีม</span>${[2, 3, 4].map((n) => `<button class="chip ${opts.teams === n ? 'on' : ''}" data-t="${n}">${n} ทีม</button>`).join('')}<button class="chip" data-shuffle="1">🔀 สุ่มทีมใหม่</button>`
+    : opts.mode === 'survival'
+      ? `<span>หัวใจเริ่มต้น</span>${[1, 2, 3, 5].map((n) => `<button class="chip ${opts.hearts === n ? 'on' : ''}" data-h="${n}">${n} ❤️</button>`).join('')}`
+      : '';
+  renderTeamSum();
+}
+$('#modes').onclick = (e) => {
+  const b = e.target.closest('[data-m]'); if (!b || opts.mode === b.dataset.m) return;
+  opts.mode = b.dataset.m; sfx.tap(); renderModes(); pushMode(true);
+};
+$('#modeOpt').onclick = (e) => {
+  const t = e.target.closest('[data-t]'), h = e.target.closest('[data-h]'), sh = e.target.closest('[data-shuffle]');
+  if (t) { opts.teams = +t.dataset.t; renderModes(); pushMode(true); }
+  if (h) { opts.hearts = +h.dataset.h; renderModes(); pushMode(false); }
+  if (sh) { sfx.whoosh(); pushMode(true); }
+};
+async function pushMode(reshuffle) {
+  await DB.update(R, { 'meta/mode': opts.mode, 'meta/teams': opts.teams, 'meta/hearts': opts.hearts });
+  if (opts.mode === 'team') assignTeams(reshuffle);
+  renderCrowd(active());
+}
+function assignTeams(reshuffle = false) {
+  if (opts.mode !== 'team') return;
+  const list = active();
+  const counts = Array(opts.teams).fill(0);
+  if (!reshuffle) list.forEach(([, p]) => p.team != null && p.team < opts.teams && counts[p.team]++);
+  let todo = reshuffle ? list : list.filter(([, p]) => p.team == null || p.team >= opts.teams);
+  if (reshuffle) todo = [...todo].sort(() => Math.random() - 0.5);
+  const upd = {};
+  todo.forEach(([u]) => { const t = counts.indexOf(Math.min(...counts)); counts[t]++; upd[`players/${u}/team`] = t; });
+  if (Object.keys(upd).length) DB.update(R, upd);
+}
+function renderTeamSum() {
+  const el = $('#teamSum'); if (!el) return;
+  if (opts.mode !== 'team') { el.innerHTML = ''; return; }
+  const c = Array(opts.teams).fill(0);
+  active().forEach(([, p]) => p.team != null && p.team < opts.teams && c[p.team]++);
+  el.innerHTML = c.map((n, k) => `<span style="--tc:${TEAMS[k].c}">${TEAMS[k].e} ${n}</span>`).join('');
+}
 function onPlayers() {
   const list = active();
   $('#pCount').textContent = list.length;
   $('#startBtn').disabled = !list.length;
   $('#hallEmpty').hidden = list.length > 0;
-  if (phase === 'lobby') renderCrowd(list);
+  if (opts.mode === 'team' && phase) assignTeams(false);
+  if (phase === 'lobby') { renderCrowd(list); renderTeamSum(); }
   if (phase === 'question') updateAnswerCount();
 }
 function renderCrowd(list) {
@@ -253,7 +316,11 @@ function renderCrowd(list) {
       sfx.pop();
     }
     if (n.dataset.av !== avs) { n.dataset.av = avs; n.querySelector('.avatar-box').innerHTML = renderAvatar(p.avatar, { bg: false }); n.classList.remove('wiggle'); void n.offsetWidth; n.classList.add('wiggle'); }
-    n.querySelector('.tag').textContent = p.name;
+    const tag = n.querySelector('.tag');
+    tag.textContent = p.name;
+    const tm = opts.mode === 'team' && p.team != null ? TEAMS[p.team] : null;
+    tag.style.background = tm ? tm.c : ''; tag.style.color = tm ? '#fff' : '';
+    n.style.order = tm ? p.team : 0;
     n.classList.toggle('off', p.online === false);
   }
   $$('.buddy', crowd).forEach((n) => !seen.has(n.dataset.uid) && n.remove());
@@ -274,10 +341,14 @@ function leave() {
 }
 
 $('#startBtn').onclick = async () => {
-  opts = { showQ: $('#optShowQ').checked, streak: $('#optStreak').checked, shuffle: $('#optShuffle').checked };
+  opts = { ...opts, showQ: $('#optShowQ').checked, streak: $('#optStreak').checked, shuffle: $('#optShuffle').checked };
   order = quiz.questions.map((_, i) => i);
   if (opts.shuffle) order.sort(() => Math.random() - 0.5);
-  await DB.update(R, { 'meta/showQ': opts.showQ, 'meta/streak': opts.streak });
+  const up = { 'meta/showQ': opts.showQ, 'meta/streak': opts.streak, 'meta/mode': opts.mode, 'meta/teams': opts.teams, 'meta/hearts': opts.hearts };
+  if (opts.mode === 'survival') active().forEach(([u]) => { up[`players/${u}/hearts`] = opts.hearts; up[`players/${u}/outAt`] = null; });
+  await DB.update(R, up);
+  if (opts.mode === 'team') assignTeams(false);
+  closeQr();
   music(null);
   show('game');
   goQuestion(0);
@@ -349,8 +420,8 @@ async function beginAnswering() {
 
 function updateAnswerCount() {
   if (phase !== 'question') return;
-  const n = Object.keys(liveAnswers).length;
-  const total = active().filter(([, p]) => p.online !== false).length;
+  const n = Object.keys(liveAnswers).filter((u) => players[u] && isAlive(players[u])).length;
+  const total = active().filter(([, p]) => p.online !== false && isAlive(p)).length;
   const a = $('#aNum'); if (a) a.textContent = n;
   const o = $('#aOf'); if (o) o.textContent = `จาก ${total} คน`;
   if (total > 0 && n >= total) endQuestion();
@@ -366,35 +437,65 @@ async function endQuestion() {
   await wait(500); // รอคำตอบที่กำลังส่งมา
   const answers = (await DB.get(`${R}/answers/${qi}`)) || {};
   const T = q.time * 1000;
-  const before = rankScores(players);
+  const before = sortPlayers(rankScores(players), opts.mode);
   before.forEach((p, i) => (prevRanks[p.uid] = i + 1));
 
   const res = {};
+  const surv = opts.mode === 'survival';
   for (const [uid, p] of active()) {
-    const a = answers[uid];
+    const alive = isAlive(p);
+    const a = alive ? answers[uid] : null;
     const answered = !!a && a.at - qStart <= T + 1500;
     const correct = answered && a.choice === q.correct;
     const ms = answered ? Math.min(T, Math.max(0, a.at - qStart)) : null;
     const gained = correct ? Math.round(q.points * (1 - ms / T / 2)) : 0;
-    const streak = correct ? (p.streak || 0) + 1 : 0;
+    const streak = correct ? (p.streak || 0) + 1 : alive ? 0 : (p.streak || 0);
     const bonus = correct && opts.streak && q.points > 0 && streak >= 2 ? Math.min((streak - 1) * 100, 500) : 0;
-    res[uid] = { answered, correct, choice: answered ? a.choice : null, ms, gained, bonus, streak, score: (p.score || 0) + gained + bonus, correctCount: (p.correct || 0) + (correct ? 1 : 0) };
+    res[uid] = { answered, correct, choice: answered ? a.choice : null, ms, gained, bonus, streak, alive,
+      score: (p.score || 0) + gained + bonus, correctCount: (p.correct || 0) + (correct ? 1 : 0) };
+    if (surv) res[uid].hearts = p.hearts ?? opts.hearts;
+    if (p.team != null) res[uid].team = p.team;
   }
-  const ranked = Object.entries(res).sort((a, b) => b[1].score - a[1].score);
+  let mercy = false;
+  if (surv) {
+    const live = Object.values(res).filter((r) => r.alive);
+    mercy = live.length > 0 && live.every((r) => !r.correct);
+    if (!mercy) for (const r of live) if (!r.correct) { r.hearts = Math.max(0, r.hearts - 1); r.lost = true; if (!r.hearts) r.outNow = true; }
+  }
+  const entries = Object.entries(res).map(([uid, r]) => ({ uid, name: players[uid].name, score: r.score, hearts: r.hearts, outAt: r.outNow ? qi : players[uid].outAt }));
+  sortPlayers(entries, opts.mode);
   const upd = { 'meta/state': 'reveal', 'current/correct': q.correct };
-  ranked.forEach(([uid, r], i) => {
-    r.rank = i + 1; r.of = ranked.length;
-    r.ahead = i > 0 ? { name: players[ranked[i - 1][0]].name, gap: ranked[i - 1][1].score - r.score } : null;
-    upd[`players/${uid}/score`] = r.score;
-    upd[`players/${uid}/streak`] = r.streak;
-    upd[`players/${uid}/correct`] = r.correctCount;
-    upd[`players/${uid}/lastGain`] = r.gained + r.bonus;
-    upd[`results/${qi}/${uid}`] = r;
+  entries.forEach((e, i) => {
+    const r = res[e.uid];
+    r.rank = i + 1; r.of = entries.length; r.mercy = mercy;
+    const gap = i > 0 ? entries[i - 1].score - r.score : 0;
+    r.ahead = gap > 0 ? { name: entries[i - 1].name, gap } : null;
+    upd[`players/${e.uid}/score`] = r.score;
+    upd[`players/${e.uid}/streak`] = r.streak;
+    upd[`players/${e.uid}/correct`] = r.correctCount;
+    upd[`players/${e.uid}/lastGain`] = r.gained + r.bonus;
+    if (surv) { upd[`players/${e.uid}/hearts`] = r.hearts; if (r.outNow) upd[`players/${e.uid}/outAt`] = qi; }
   });
+  let teams = null;
+  if (opts.mode === 'team') {
+    teams = teamTable(Object.values(res), (r) => r.score, (r) => r.gained + r.bonus);
+    for (const r of Object.values(res)) { const t = teams[r.team]; if (t) { r.teamRank = t.rank; r.teamScore = t.score; r.teamsOf = teams.length; } }
+  }
+  Object.entries(res).forEach(([uid, r]) => (upd[`results/${qi}/${uid}`] = r));
   await DB.update(R, upd);
-  lastReveal = { res, answers };
+  lastReveal = { res, answers, mercy, teams };
   phase = 'reveal';
   renderReveal();
+}
+
+function teamTable(members, scoreOf, gainOf = () => 0) {
+  const t = TEAMS.slice(0, opts.teams).map((T, k) => {
+    const m = members.filter((r) => r.team === k);
+    const avg = (f) => (m.length ? Math.round(m.reduce((s, r) => s + f(r), 0) / m.length) : 0);
+    return { k, n: m.length, score: avg(scoreOf), gained: avg(gainOf) };
+  });
+  [...t].sort((a, b) => b.score - a.score).forEach((x, i) => (x.rank = i + 1));
+  return t;
 }
 
 function renderReveal() {
@@ -420,6 +521,7 @@ function renderReveal() {
       <div class="ans-grid n${n} rev">${q.choices.slice(0, n).map((c, k) => `<div class="ans a${k} ${k === q.correct ? 'right' : 'dim'}"><span class="shape">${SHAPES[k]}</span><span>${esc(c)}</span>${k === q.correct ? '<span class="tick">✓</span>' : ''}</div>`).join('')}</div>
       <div class="rev-foot">
         <span class="pill">ตอบถูก <b>${nCorrect}/${totalP}</b> คน</span>
+        ${opts.mode === 'survival' ? (lastReveal.mercy ? '<span class="pill">😅 ผิดหมดทุกคน — ข้อนี้ไม่เสียหัวใจ</span>' : `<span class="pill">💔 ตกรอบ <b>${Object.values(res).filter((r) => r.outNow).length}</b> · ยังรอด <b>${Object.values(res).filter((r) => r.hearts > 0).length}</b> คน</span>`) : ''}
         ${fastest ? `<span class="pill">⚡ เร็วที่สุด: <b>${esc(players[fastest[0]]?.name)}</b> ${(fastest[1].ms / 1000).toFixed(1)} วิ</span>` : ''}
         <span class="sp"></span>
         <button class="btn gold big" id="toBoard">ดูอันดับ ›</button>
@@ -436,11 +538,24 @@ async function showBoard() {
   await DB.update(R, { 'meta/state': 'board', 'meta/rankShown': -1 });
   const { res } = lastReveal;
   const top = Object.entries(res).sort((a, b) => a[1].rank - b[1].rank).slice(0, 5);
-  const last = qi >= order.length - 1;
+  const aliveN = Object.values(res).filter((r) => r.hearts > 0).length;
+  const last = qi >= order.length - 1 || (opts.mode === 'survival' && aliveN <= 1);
+  const outNow = Object.entries(res).filter(([, r]) => r.outNow).map(([u]) => esc(players[u]?.name));
+  const teamHtml = () => {
+    const ts = [...lastReveal.teams].sort((a, b) => a.rank - b.rank);
+    const max = Math.max(1, ...ts.map((t) => t.score));
+    const mvp = Object.entries(res).filter(([, r]) => r.gained + r.bonus > 0).sort((a, b) => (b[1].gained + b[1].bonus) - (a[1].gained + a[1].bonus))[0];
+    return `<ol class="rank-list">${ts.map((t) => { const T = TEAMS[t.k]; return `<li class="rk tb" style="--tc:${T.c}">
+        <span class="rk-n">${t.rank}</span><span class="tb-e">${T.e}</span>
+        <span class="tb-main"><span class="tb-name">${T.name} <small>${t.n} คน</small></span><span class="tb-track"><i style="--w:${Math.max(3, (t.score / max) * 100)}%"></i></span></span>
+        ${t.gained > 0 ? `<span class="gain">+${t.gained.toLocaleString('th-TH')}</span>` : ''}
+        <b class="rk-s" data-from="${t.score - t.gained}" data-to="${t.score}">${(t.score - t.gained).toLocaleString('th-TH')}</b></li>`; }).join('')}</ol>
+      ${mvp ? `<div class="mvp"><span class="pill">⭐ MVP ข้อนี้: <b>${esc(players[mvp[0]]?.name)}</b> +${(mvp[1].gained + mvp[1].bonus).toLocaleString('th-TH')}</span></div>` : ''}`;
+  };
   stage().innerHTML = `
     <div class="board">
-      <h1 class="board-h">🏆 อันดับคะแนน</h1>
-      <ol class="rank-list">${top.map(([uid, r]) => {
+      <h1 class="board-h">${opts.mode === 'team' ? '👥 คะแนนทีม' : opts.mode === 'survival' ? `❤️ ผู้รอดชีวิต ${aliveN} คน` : '🏆 อันดับคะแนน'}</h1>
+      ${opts.mode === 'team' ? teamHtml() : `<ol class="rank-list">${top.map(([uid, r]) => {
         const p = players[uid] || {};
         const mv = (prevRanks[uid] || r.rank) - r.rank;
         const g = r.gained + r.bonus;
@@ -448,11 +563,13 @@ async function showBoard() {
           <span class="rk-n">${r.rank}</span>
           <span class="rk-av">${renderAvatar(p.avatar)}</span>
           <span class="rk-name">${esc(p.name)} ${r.streak >= 2 ? `<span class="fire">🔥${r.streak}</span>` : ''}</span>
+          ${opts.mode === 'survival' ? `<span class="hp">${r.hearts > 0 ? hearts(r.hearts, opts.hearts) : '👻'}</span>` : ''}
           ${mv > 0 && qi > 0 ? `<span class="mv up">▲${mv}</span>` : ''}
           ${g > 0 ? `<span class="gain">+${g.toLocaleString('th-TH')}</span>` : ''}
           <b class="rk-s" data-from="${r.score - g}" data-to="${r.score}">${(r.score - g).toLocaleString('th-TH')}</b>
         </li>`;
       }).join('')}</ol>
+      ${outNow.length ? `<div class="out-line">👻 ตกรอบข้อนี้: ${outNow.join(', ')}</div>` : ''}`}
       <div class="rev-foot"><span class="pill" id="boardNote">🥁 กำลังประกาศอันดับ…</span><span class="sp"></span>
         <button class="btn gold big" id="nextBtn" disabled>${last ? '🎉 ประกาศผล' : 'ข้อต่อไป ›'}</button></div>
     </div>`;
@@ -480,31 +597,40 @@ async function finish() {
   phase = 'end'; clearInterval(tickH); music(null);
   const total = Math.max(1, qi + 1); // นับเฉพาะข้อที่เล่นจริง (กรณีจบเกมก่อน)
   await DB.update(R, { 'meta/state': 'end', 'meta/podiumDone': false, 'meta/played': total });
-  const list = rankScores(players);
-  const podium = [list[1], list[0], list[2]];
+  const list = sortPlayers(rankScores(players), opts.mode);
+  const teams = opts.mode === 'team' ? teamTable(list, (p) => p.score).sort((a, b) => a.rank - b.rank) : null;
+  if (teams) await DB.update(R, { 'meta/finalTeams': teams });
+  const ent = teams
+    ? teams.map((t) => ({ name: TEAMS[t.k].name, score: t.score, icon: `<div class="team-icon" style="--tc:${TEAMS[t.k].c}">${TEAMS[t.k].e}</div>` }))
+    : list.map((p) => ({ name: p.name, score: p.score, icon: renderAvatar(p.avatar, { bg: false }) }));
+  const podium = [ent[1], ent[0], ent[2]];
   const T3 = 0.4, T2 = 2.0, T1 = 5.0; // วินาทีที่แต่ละอันดับขึ้น
   stage().innerHTML = `
     <div class="end">
-      <h1 class="board-h">🎉 ${esc(quiz.title)}</h1>
+      <h1 class="board-h">🎉 ${esc(quiz.title)} <small class="mode-tag">${MODES[opts.mode].icon} ${MODES[opts.mode].name}</small></h1>
       <div class="podium">${podium.map((p, k) => {
         const place = [2, 1, 3][k];
         return p ? `<div class="pod p${place}" style="--delay:${[T2, T1, T3][k]}s">
-          <div class="pod-av">${place === 1 ? '<span class="crown">👑</span>' : ''}${renderAvatar(p.avatar, { bg: false })}</div>
+          <div class="pod-av">${place === 1 ? '<span class="crown">👑</span>' : ''}${p.icon}</div>
           <div class="pod-name">${esc(p.name)}</div>
           <div class="pod-col"><span>${place}</span><small>${p.score.toLocaleString('th-TH')}</small></div>
         </div>` : '<div class="pod empty-pod"></div>';
       }).join('')}</div>
       <details class="all-rank card"><summary>ดูคะแนนทุกคน (${list.length} คน)</summary>
-        <table><thead><tr><th>อันดับ</th><th>เลขประจำตัว</th><th>ชื่อ</th><th>ตอบถูก</th><th>คะแนน</th></tr></thead><tbody>
-        ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.sid || '-')}</td><td>${esc(p.name)}</td><td>${p.correct || 0}/${total}</td><td>${p.score.toLocaleString('th-TH')}</td></tr>`).join('')}
+        <table><thead><tr><th>อันดับ</th><th>เลขประจำตัว</th><th>ชื่อ</th>${opts.mode !== 'classic' ? '<th>หมายเหตุ</th>' : ''}<th>ตอบถูก</th><th>คะแนน</th></tr></thead><tbody>
+        ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.sid || '-')}</td><td>${esc(p.name)}</td>${opts.mode !== 'classic' ? `<td>${note(p)}</td>` : ''}<td>${p.correct || 0}/${total}</td><td>${p.score.toLocaleString('th-TH')}</td></tr>`).join('')}
         </tbody></table></details>
       <div class="rev-foot">
         <label class="pill conv">แปลงเป็นคะแนนเก็บ เต็ม <input type="number" id="fullPts" value="10" min="1" max="100"> คะแนน</label>
         <button class="btn light" id="csvBtn">⤓ ดาวน์โหลดคะแนน (CSV)</button><span class="sp"></span><button class="btn gold" id="homeBtn">กลับหน้าหลัก</button></div>
     </div>`;
+  function note(p) {
+    if (opts.mode === 'team') return p.team != null ? TEAMS[p.team].e + ' ' + TEAMS[p.team].name : '-';
+    return (p.hearts ?? 1) > 0 ? 'รอด ' + hearts(p.hearts ?? opts.hearts, opts.hearts) : `ตกรอบข้อ ${(p.outAt ?? 0) + 1}`;
+  }
   const at = (s, fn) => setTimeout(() => phase === 'end' && fn(), s * 1000);
-  if (list[2]) at(T3, () => sfx.rankStep(0));
-  if (list[1]) at(T2, () => sfx.rankStep(2));
+  if (ent[2]) at(T3, () => sfx.rankStep(0));
+  if (ent[1]) at(T2, () => sfx.rankStep(2));
   at(T1 - 2.2, () => sfx.drumroll(2.2));
   at(T1, () => { sfx.fanfare(); confetti(220, 6000); });
   at(T1 + 1.2, () => DB.update(R, { 'meta/podiumDone': true }));
@@ -513,8 +639,9 @@ async function finish() {
     const full = Math.max(1, +$('#fullPts').value || 10);
     const bySid = list.map((p, i) => ({ ...p, rank: i + 1 }))
       .sort((a, b) => String(a.sid || '').localeCompare(String(b.sid || ''), 'th', { numeric: true }));
-    const rows = [['เลขประจำตัว', 'ชื่อ', 'อันดับ', 'ตอบถูก', 'จำนวนข้อ', 'คะแนนเกม', `คะแนนเก็บ (เต็ม ${full})`],
-      ...bySid.map((p) => [p.sid || '', p.name, p.rank, p.correct || 0, total, p.score, Math.round(((p.correct || 0) / total) * full * 100) / 100])];
+    const extra = opts.mode !== 'classic';
+    const rows = [['เลขประจำตัว', 'ชื่อ', 'อันดับ', ...(extra ? ['หมายเหตุ'] : []), 'ตอบถูก', 'จำนวนข้อ', 'คะแนนเกม', `คะแนนเก็บ (เต็ม ${full})`],
+      ...bySid.map((p) => [p.sid || '', p.name, p.rank, ...(extra ? [note(p).replace(/[❤️🤍]/gu, '').trim()] : []), p.correct || 0, total, p.score, Math.round(((p.correct || 0) / total) * full * 100) / 100])];
     const csv = '﻿' + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
