@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz Live — จอครู</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/host.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="sky">
+
+<!-- ═══ หน้าหลัก: ชุดคำถาม ═══ -->
+<section class="screen on" id="scr-home">
+  <header class="topbar">
+    <div class="logo"><span class="mark"></span>Quiz<b>Live</b></div>
+    <span class="sp"></span>
+    <span class="pill" id="modeBadge">กำลังเชื่อมต่อ…</span>
+  </header>
+  <main class="home-wrap">
+    <div class="home-head">
+      <div>
+        <h1>ชุดคำถามของฉัน</h1>
+        <p class="muted">สร้างคำถาม กำหนดเวลาและคะแนนแต่ละข้อ แล้วกด <b>เปิดห้อง</b> ให้นักเรียนสแกนเข้ามา</p>
+      </div>
+      <div class="row">
+        <label class="btn ghost">นำเข้าไฟล์ (.json)<input type="file" id="importFile" accept=".json,application/json" hidden></label>
+        <button class="btn gold" id="newQuiz">＋ สร้างชุดใหม่</button>
+      </div>
+    </div>
+    <div class="quiz-grid" id="quizGrid"></div>
+  </main>
+</section>
+
+<!-- ═══ ตัวแก้ไขคำถาม ═══ -->
+<section class="screen" id="scr-editor">
+  <header class="topbar ed-top">
+    <button class="icon-btn" id="edBack" aria-label="กลับ">←</button>
+    <input class="ed-title" id="edTitle" placeholder="ชื่อชุดคำถาม" maxlength="80">
+    <span class="sp"></span>
+    <span class="saved" id="savedMark">บันทึกอัตโนมัติ ✓</span>
+    <button class="btn ghost sm" id="bulkBtn">วางข้อความหลายข้อ</button>
+    <button class="btn green" id="edPlay">▶ เปิดห้อง</button>
+  </header>
+  <div class="ed-body">
+    <aside class="ed-side">
+      <div class="q-list" id="qList"></div>
+      <button class="btn light sm add-q" id="addQ">＋ เพิ่มคำถาม</button>
+    </aside>
+    <main class="ed-main card" id="qForm"></main>
+  </div>
+</section>
+
+<!-- ═══ ห้องล็อกเกอร์ (รอผู้เล่น) ═══ -->
+<section class="screen" id="scr-lobby">
+  <div class="lobby-top">
+    <div class="join-card card">
+      <div class="join-info">
+        <div class="muted">เข้าร่วมที่</div>
+        <div class="join-url" id="joinUrl"></div>
+        <div class="muted" style="margin-top:6px">รหัสห้อง (PIN)</div>
+        <div class="pin" id="pinBig">------</div>
+      </div>
+      <div class="qr" id="qr"></div>
+    </div>
+  </div>
+  <div class="hall">
+    <div class="lockers"></div>
+    <div class="floor"></div>
+    <div class="hall-empty" id="hallEmpty">
+      <div class="spinner"></div>
+      รอนักเรียนเข้าห้องล็อกเกอร์…
+    </div>
+    <div class="crowd" id="crowd"></div>
+  </div>
+  <footer class="lobby-bar">
+    <div class="count"><b id="pCount">0</b> คน</div>
+    <label class="tog"><input type="checkbox" id="optShowQ" checked><span></span>แสดงคำถามบนมือถือ</label>
+    <label class="tog"><input type="checkbox" id="optStreak" checked><span></span>โบนัสตอบถูกติดกัน</label>
+    <label class="tog"><input type="checkbox" id="optShuffle"><span></span>สลับลำดับข้อ</label>
+    <span class="sp"></span>
+    <button class="icon-btn" id="musicBtn" title="เพลง">🎵</button>
+    <button class="btn ghost" id="lobbyCancel">ยกเลิก</button>
+    <button class="btn gold big" id="startBtn" disabled>เริ่มเกม ▶</button>
+  </footer>
+</section>
+
+<!-- ═══ ในเกม ═══ -->
+<section class="screen" id="scr-game">
+  <header class="topbar">
+    <span class="pill">PIN <b id="pinSmall"></b></span>
+    <span class="pill" id="qCounter"></span>
+    <span class="sp"></span>
+    <button class="icon-btn" id="muteBtn" title="เปิด/ปิดเสียง">🔊</button>
+    <button class="btn ghost sm" id="endGameBtn">จบเกม</button>
+  </header>
+  <div class="stage" id="stage"></div>
+</section>
+
+<!-- ═══ หน้าต่างวางข้อความ ═══ -->
+<dialog id="bulkDlg" class="dlg card">
+  <h3>วางคำถามหลายข้อพร้อมกัน</h3>
+  <p class="muted">บรรทัดแรก = คำถาม, บรรทัดต่อไป = ตัวเลือก (ใส่ <b>*</b> หน้าข้อที่ถูก), เว้น 1 บรรทัดระหว่างข้อ</p>
+  <textarea class="input" id="bulkText" rows="12" placeholder="ข้อใดคือเมืองหลวงของไทย
+เชียงใหม่
+*กรุงเทพฯ
+ขอนแก่น
+ภูเก็ต
+
+ดวงอาทิตย์ขึ้นทางทิศตะวันออก
+*ถูก
+ผิด"></textarea>
+  <div class="row end">
+    <button class="btn light" value="cancel" formmethod="dialog" id="bulkCancel">ยกเลิก</button>
+    <button class="btn green" id="bulkOk">เพิ่มคำถาม</button>
+  </div>
+</dialog>
+
+<script type="module" src="js/host.js"></script>
+</body>
+</html>

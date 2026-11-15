@@ -1,0 +1,24 @@
+{
+  "rules": {
+    "quiz": {
+      "rooms": {
+        "$pin": {
+          ".read": "auth != null",
+          ".write": "auth != null && (!data.exists() || data.child('meta/hostUid').val() === auth.uid)",
+          "players": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid"
+            }
+          },
+          "answers": {
+            "$q": {
+              "$uid": {
+                ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('quiz/rooms/' + $pin + '/meta/state').val() === 'question'"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

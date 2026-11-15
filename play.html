@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#241A63">
+<title>Quiz Live — เข้าร่วม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/play.css">
+</head>
+<body class="sky">
+
+<!-- ขั้นที่ 1: ใส่ PIN -->
+<section class="screen on" id="scr-pin">
+  <div class="center-box">
+    <div class="logo big"><span class="mark"></span>Quiz<b>Live</b></div>
+    <form class="join-form card" id="pinForm">
+      <input class="input huge" id="pinIn" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" placeholder="รหัสห้อง (PIN)" autocomplete="off" aria-label="รหัสห้อง">
+      <button class="btn big" type="submit">ถัดไป ›</button>
+    </form>
+    <p class="hint" id="modeHint"></p>
+  </div>
+</section>
+
+<!-- ขั้นที่ 2: ตั้งชื่อ -->
+<section class="screen" id="scr-name">
+  <div class="center-box">
+    <div class="name-av avatar-box" id="nameAv"></div>
+    <form class="join-form card" id="nameForm">
+      <div class="room-title" id="roomTitle"></div>
+      <input class="input huge" id="nameIn" maxlength="16" placeholder="ชื่อเล่น / ชื่อที่จะแสดง" autocomplete="off" aria-label="ชื่อ">
+      <button class="btn big green" type="submit">เข้าห้องล็อกเกอร์ 🚪</button>
+    </form>
+  </div>
+</section>
+
+<!-- ขั้นที่ 3: ห้องล็อกเกอร์ แต่งตัวรอ -->
+<section class="screen" id="scr-locker">
+  <header class="topbar">
+    <span class="pill">PIN <b id="lkPin"></b></span>
+    <span class="sp"></span>
+    <span class="pill">👥 <b id="lkCount">0</b> คน</span>
+  </header>
+  <div class="locker-scene">
+    <div class="lockers"></div>
+    <div class="my-locker">
+      <div class="locker-door"><span class="vent"></span><span class="vent"></span><span class="vent"></span><span class="handle"></span></div>
+      <div class="locker-inside">
+        <div class="avatar-box me-av" id="lkAv"></div>
+      </div>
+      <div class="name-plate" id="lkName"></div>
+    </div>
+    <div class="wait-msg"><span class="dots"><i></i><i></i><i></i></span> รอครูเริ่มเกม — แต่งตัวไปก่อนได้เลย!</div>
+  </div>
+  <div class="closet card">
+    <div class="tabs" id="tabs"></div>
+    <div class="opt-grid" id="optGrid"></div>
+    <div class="closet-foot">
+      <button class="btn light sm" id="randBtn">🎲 สุ่มชุด</button>
+      <span class="sp"></span>
+      <button class="btn ghost sm leave" id="leaveBtn">ออกจากห้อง</button>
+    </div>
+  </div>
+</section>
+
+<!-- ระหว่างเกม -->
+<section class="screen" id="scr-play">
+  <header class="topbar play-top">
+    <span class="me-chip"><span class="mini-av" id="pAv"></span><span id="pName"></span></span>
+    <span class="sp"></span>
+    <span class="pill" id="pQ"></span>
+    <span class="pill score">⭐ <b id="pScore">0</b></span>
+  </header>
+  <div class="pstage" id="pstage"></div>
+</section>
+
+<script type="module" src="js/play.js"></script>
+</body>
+</html>
