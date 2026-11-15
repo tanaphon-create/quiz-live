@@ -192,13 +192,17 @@ $('#bulkBtn').onclick = () => { $('#bulkText').value = ''; $('#bulkDlg').showMod
 $('#bulkCancel').onclick = () => $('#bulkDlg').close();
 $('#bulkOk').onclick = () => {
   const blocks = $('#bulkText').value.split(/\n\s*\n/).map((b) => b.split('\n').map((l) => l.trim()).filter(Boolean)).filter((b) => b.length >= 3);
-  const out = blocks.map(([text, ...opts]) => {
+  const out = blocks.map(([head, ...opts]) => {
+    // ท้ายบรรทัดคำถามใส่ [คะแนน] หรือ [คะแนน/วินาที] ได้ เช่น [2000] หรือ [1500/30]
+    let text = head, points = 1000, time = 20;
+    const tag = head.match(/\s*\[\s*(\d+)\s*(?:คะแนน)?\s*(?:\/\s*(\d+)\s*(?:วิ(?:นาที)?|s)?)?\s*\]\s*$/);
+    if (tag) { text = head.slice(0, tag.index).trim(); points = Math.min(100000, +tag[1]); if (tag[2]) time = TIMES.reduce((a, t) => (Math.abs(t - tag[2]) < Math.abs(a - tag[2]) ? t : a), 20); }
     let correct = Math.max(0, opts.findIndex((o) => o.startsWith('*')));
-    const choices = opts.slice(0, 4).map((o) => o.replace(/^\*\s*/, ''));
+    const choices = opts.slice(0, 4).map((o) => o.replace(/^\*+\s*/, ''));
     if (correct > 3) correct = 0;
     const tf = choices.length === 2 && /^(ถูก|จริง|true)$/i.test(choices[0]) && /^(ผิด|เท็จ|false)$/i.test(choices[1]);
     while (choices.length < 4) choices.push('');
-    return { ...blankQ(), type: tf ? 'tf' : 'mc', text, choices, correct };
+    return { ...blankQ(), type: tf ? 'tf' : 'mc', text, choices, correct, points, time };
   });
   if (!out.length) return toast('ไม่พบคำถาม — ตรวจรูปแบบอีกครั้ง');
   if (ed.questions.length === 1 && !ed.questions[0].text.trim()) ed.questions = [];
