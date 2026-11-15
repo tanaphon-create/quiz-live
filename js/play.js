@@ -18,15 +18,59 @@ $('#nameIn').value = saved.name || '';
 $('#sidIn').value = sid;
 const goSid = (title) => { $('#roomTitle').textContent = title; $('#roomTitle2').textContent = title; show('sid'); $('#sidIn').focus(); };
 
-// INTRO: แสดงก่อนเข้าหน้ากรอกข้อมูลทุกครั้ง
+// INTRO: แสดงก่อนเข้าหน้ากรอกข้อมูลทุกครั้ง — ฟ้ายามเช้าพาสเทล เล่นกับตัวละครได้
 const introDone = new Promise((res) => {
+  const intro = $('#intro');
   const segs = 'Segmenter' in Intl ? [...new Intl.Segmenter('th', { granularity: 'grapheme' }).segment('ฟลุ๊กถูก')].map((x) => x.segment) : ['ฟ', 'ลุ๊', 'ก', 'ถู', 'ก'];
-  $('#introTitle').innerHTML = segs.map((c, i) => `<span class="${i >= 3 ? 'gold' : ''}" style="--i:${i}">${c}</span>`).join('');
-  $('#introCrowd').innerHTML = Array.from({ length: 5 }, (_, i) => `<div class="ic" style="--i:${i}">${renderAvatar(randomAvatar(), { bg: false })}</div>`).join('');
-  $('#introGo').onclick = () => {
+  $('#introTitle').innerHTML = segs.map((c, i) => `<span style="--i:${i}">${c}</span>`).join('');
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  $('#bubbles').innerHTML = Array.from({ length: 16 }, () => `<i style="left:${rnd(0, 100)}%;--s:${rnd(10, 34)}px;--t:${rnd(9, 18)}s;--dl:${rnd(-18, 0)}s"></i>`).join('');
+  $('#sparkles').innerHTML = Array.from({ length: 14 }, () => `<i style="left:${rnd(4, 96)}%;top:${rnd(4, 70)}%;--dl:${rnd(0, 4)}s;--s:${rnd(8, 16)}px"></i>`).join('');
+  $('#introCrowd').innerHTML = Array.from({ length: 5 }, (_, i) => `<button class="ic" style="--i:${i}" aria-label="ตัวละคร ${i + 1}">${renderAvatar(randomAvatar(), { bg: false })}</button>`).join('');
+
+  // แตะตัวละคร → กระโดด + หัวใจลอย + บางครั้งเปลี่ยนชุด
+  $('#introCrowd').onclick = (e) => {
+    const b = e.target.closest('.ic'); if (!b) return;
+    unlock(); sfx.pop();
+    b.classList.remove('boing'); void b.offsetWidth; b.classList.add('boing');
+    if (Math.random() < 0.5) setTimeout(() => { b.innerHTML = renderAvatar(randomAvatar(), { bg: false }); }, 180);
+    const r = b.getBoundingClientRect(), ir = intro.getBoundingClientRect();
+    const cols = ['#FF6F91', '#FF9F43', '#A78BFA', '#3DD6A8', '#4FB3FF'];
+    for (let k = 0; k < 5; k++) {
+      const h = document.createElement('i');
+      h.className = 'heart-pop';
+      h.textContent = ['♥', '★', '♥', '✦', '♥'][k];
+      h.style.cssText = `left:${r.left - ir.left + r.width / 2}px;top:${r.top - ir.top + 10}px;--x:${rnd(-60, 60)}px;--r:${rnd(-40, 40)}deg;color:${cols[k]}`;
+      intro.append(h);
+      h.addEventListener('animationend', () => h.parentNode && h.parentNode.removeChild(h));
+    }
+  };
+
+  // ประโยคในลูกโป่งคำพูด
+  const lines = ['พร้อมยัง?', 'ตอบไวได้คะแนนเยอะ!', 'ฟลุ๊กก็ถูกได้นะ', 'ชวนเพื่อนมาแข่งกัน!', 'สู้ ๆ นะทุกคน'];
+  let li = 0;
+  const sayH = setInterval(() => {
+    const s = $('#introSay'); s.classList.remove('pop'); void s.offsetWidth;
+    li = (li + 1) % lines.length; s.textContent = lines[li]; s.classList.add('pop');
+  }, 2600);
+
+  // พารัลแลกซ์: ขยับตามเมาส์/การเอียงมือถือ
+  const layers = $$('.layer', intro);
+  const tilt = (x, y) => layers.forEach((l) => { const d = +l.dataset.d; l.style.transform = `translate(${x * d}px, ${y * d}px)`; });
+  const onMove = (e) => tilt(e.clientX / innerWidth - 0.5, e.clientY / innerHeight - 0.5);
+  const onTilt = (e) => { if (e.gamma != null) tilt(Math.max(-1, Math.min(1, e.gamma / 30)) / 2, Math.max(-1, Math.min(1, (e.beta - 40) / 30)) / 2); };
+  addEventListener('pointermove', onMove);
+  addEventListener('deviceorientation', onTilt);
+
+  $('#introGo').onclick = (e) => {
     unlock(); sfx.intro();
-    $('#intro').classList.add('leave');
-    setTimeout(res, 650);
+    clearInterval(sayH);
+    removeEventListener('pointermove', onMove); removeEventListener('deviceorientation', onTilt);
+    const r = e.currentTarget.getBoundingClientRect();
+    intro.style.setProperty('--wx', `${r.left + r.width / 2}px`);
+    intro.style.setProperty('--wy', `${r.top + r.height / 2}px`);
+    intro.classList.add('leave');
+    setTimeout(res, 750);
   };
 });
 

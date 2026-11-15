@@ -289,3 +289,24 @@
 .pill.who { font-size: .85rem; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pill.who:empty { display: none; }
 @media (max-width: 700px) { .pill.who { display: none; } }
+
+/* ─── Candy Aurora: ส่วนจอครู ─── */
+.lockers {
+  background:
+    linear-gradient(180deg, rgba(18,14,51,0) 68%, rgba(18,14,51,.92)),
+    repeating-linear-gradient(90deg,
+      #E8677F 0 94px, rgba(0,0,0,.35) 94px 98px,
+      #F2A64B 98px 192px, rgba(0,0,0,.35) 192px 196px,
+      #36B98F 196px 290px, rgba(0,0,0,.35) 290px 294px,
+      #4A9BE8 294px 388px, rgba(0,0,0,.35) 388px 392px,
+      #9B7BEA 392px 486px, rgba(0,0,0,.35) 486px 490px);
+}
+.lockers::before { opacity: .55; }
+.floor { background: linear-gradient(180deg, #2A1F6B, #17123F); }
+.qcard::before { height: 8px; background: linear-gradient(90deg, var(--coral), var(--orange), var(--butter), var(--mint), var(--sky), var(--lilac)); }
+.home-head h1 { font-size: 2.4rem; }
+.join-card .pin { background: linear-gradient(90deg, #E8467A, #8C5BF5); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.mode.on { border-color: var(--coral); background: #FFF0F4; box-shadow: 0 4px 0 var(--coral); }
+.chip.on, .tabs button.on { background: var(--coral); }
+.ready-num { background: linear-gradient(90deg, var(--coral), var(--orange)); }
+.rk:first-child { background: linear-gradient(90deg, #FFF3C4, #fff 60%); }

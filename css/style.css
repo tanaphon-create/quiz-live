@@ -138,3 +138,69 @@ img { max-width: 100%; }
 .av .eyes { transform-box: fill-box; transform-origin: center; animation: blink 4.2s infinite; }
 @keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.12); } }
 [hidden] { display: none !important; }
+
+/* ═════════ ธีม "Candy Aurora" — คำถามฟลุ๊กถูก ═════════ */
+:root {
+  --bg0: #120E33; --bg1: #1C1650;
+  --coral: #FF6F91; --orange: #FF9F43; --mint: #3DD6A8; --sky: #4FB3FF; --lilac: #A78BFA; --butter: #FFD45E;
+  --gold: #FFD45E;
+  --font-ui: 'Prompt', 'Noto Sans Thai', system-ui, sans-serif;
+  --font-display: 'Mitr', 'Prompt', system-ui, sans-serif;
+}
+body {
+  font-family: var(--font-ui);
+  line-height: 1.6;
+  background: radial-gradient(1400px 900px at 50% 120%, #2A1C6E 0%, transparent 60%), linear-gradient(180deg, var(--bg1), var(--bg0));
+  background-attachment: fixed;
+}
+h1, h2, h3, .logo, .pin, .big-num, .rank-big b, .final-score, .timer span, .bar-n, .rk-s, .pod-col span, .count b, .ans-count b, .q-title, .ready-q, .board-h, .plus {
+  font-family: var(--font-display);
+  line-height: 1.35;
+}
+/* แสงออโรร่าหลากสีลอยช้า ๆ */
+.sky::before {
+  background-image:
+    radial-gradient(38vmax 30vmax at 12% 18%, rgba(255,111,145,.42), transparent 70%),
+    radial-gradient(34vmax 28vmax at 88% 12%, rgba(79,179,255,.38), transparent 70%),
+    radial-gradient(36vmax 30vmax at 80% 88%, rgba(61,214,168,.32), transparent 70%),
+    radial-gradient(30vmax 26vmax at 18% 92%, rgba(255,159,67,.34), transparent 70%),
+    radial-gradient(26vmax 22vmax at 50% 50%, rgba(167,139,250,.22), transparent 70%);
+  background-size: auto; opacity: 1; filter: blur(30px);
+  inset: -10%;
+  animation: aurora 26s ease-in-out infinite alternate;
+}
+@keyframes aurora {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  50% { transform: translate(3%, -2%) rotate(6deg) scale(1.06); }
+  100% { transform: translate(-3%, 2%) rotate(-5deg) scale(1.02); }
+}
+.sky::after { background-image: radial-gradient(#fff 1.3px, transparent 1.6px); background-size: 90px 90px; opacity: .14; }
+
+/* โลโก้: "คำถาม" ป้ายเล็ก + "ฟลุ๊กถูก" ตัวใหญ่ */
+.logo { gap: 12px; letter-spacing: 0; }
+.brand { display: grid; line-height: 1.05; }
+.brand small { font-family: var(--font-ui); font-size: .42em; font-weight: 600; color: var(--mint); letter-spacing: 1px; margin-bottom: 2px; }
+.brand > span { color: #fff; }
+.brand b { color: var(--butter); }
+.logo .mark { border-radius: 30% 30% 30% 8px; background: conic-gradient(from 200deg, var(--coral), var(--orange), var(--butter), var(--mint), var(--sky), var(--lilac), var(--coral)); box-shadow: 0 4px 0 rgba(0,0,0,.25), 0 0 24px rgba(255,111,145,.35); }
+
+/* ปุ่มและป้ายแบบกระจกฝ้า */
+.btn { --b: var(--coral); --bd: #D94A72; }
+.btn.ghost, .pill, .icon-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.btn.ghost:hover, .icon-btn:hover { background: rgba(255,255,255,.18); }
+.pill b { color: var(--butter); }
+.card { box-shadow: 0 18px 40px rgba(8, 4, 30, .35); }
+.input:focus { border-color: var(--coral); box-shadow: 0 0 0 4px rgba(255,111,145,.2); }
+.brand small { font-size: .52em; }
+.topbar .logo { font-size: 1.7rem; }
+.lockers {
+  background:
+    linear-gradient(180deg, rgba(18,14,51,0) 68%, rgba(18,14,51,.92)),
+    repeating-linear-gradient(90deg,
+      #E8677F 0 94px, rgba(0,0,0,.35) 94px 98px,
+      #F2A64B 98px 192px, rgba(0,0,0,.35) 192px 196px,
+      #36B98F 196px 290px, rgba(0,0,0,.35) 290px 294px,
+      #4A9BE8 294px 388px, rgba(0,0,0,.35) 388px 392px,
+      #9B7BEA 392px 486px, rgba(0,0,0,.35) 486px 490px);
+}
+.lockers::before { opacity: .55; }
