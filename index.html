@@ -2,29 +2,110 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>คำถามฟลุ๊กถูก</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F7FC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ฟลุ๊กถูก">
+<meta name="description" content="ศูนย์รวมเครื่องมือห้องเรียน: สมุดคะแนน เกมคำถาม โหมดห้องเรียน และหน้าสำหรับนักเรียน">
+<title>คำถามฟลุ๊กถูก — เมนูรวม</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/bright.css">
 <style>
-  .wrap { min-height: 100dvh; display: grid; place-content: center; gap: 28px; padding: 24px 16px; text-align: center; }
-  .logo { justify-content: center; font-size: 2.8rem; } .logo .mark { width: 60px; height: 60px; }
-  .tag { margin: -12px 0 0; opacity: .8; font-size: 1.1rem; }
-  .pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; width: min(640px, calc(100vw - 32px)); }
-  .pick a { text-decoration: none; padding: 26px 20px; display: grid; gap: 8px; justify-items: center; transition: transform .15s; }
-  .pick a:hover { transform: translateY(-4px); }
-  .pick .ico { font-size: 3rem; } .pick h2 { margin: 0; } .pick p { margin: 0; color: var(--ink2); font-size: .95rem; }
+  .hub { width: min(1080px, 100% - 32px); margin: 0 auto; padding: max(24px, env(safe-area-inset-top)) 0 calc(40px + env(safe-area-inset-bottom)); display: grid; gap: 28px; }
+  .hub-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .hub-head .logo { font-size: 2rem; }
+  .hub-head .logo .mark { width: 52px; height: 52px; }
+  .acct { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .acct .pill { font-size: .9rem; }
+  .hero { position: relative; overflow: hidden; border-radius: 28px; padding: 28px 30px; color: #fff;
+    background: linear-gradient(120deg, #6C4DFF 0%, #B04DFF 45%, #FF5C8A 100%); box-shadow: 0 18px 40px rgba(108,77,255,.28); }
+  .hero::after { content: ''; position: absolute; right: -60px; top: -60px; width: 260px; height: 260px; border-radius: 50%; background: rgba(255,255,255,.14); }
+  .hero::before { content: ''; position: absolute; right: 120px; bottom: -90px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,.10); }
+  .hero h1 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.3; position: relative; z-index: 1; }
+  .hero p { margin: 6px 0 0; font-size: 1.05rem; opacity: .95; position: relative; z-index: 1; max-width: 640px; line-height: 1.6; }
+  .sec h2 { margin: 0 0 12px; font-size: 1.25rem; display: flex; align-items: center; gap: 10px; }
+  .sec h2 small { font-family: var(--font-ui); font-weight: 400; font-size: .9rem; color: var(--ink2); }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .tile { --tc: #6C4DFF; position: relative; display: grid; grid-template-columns: 56px 1fr; grid-template-rows: auto auto; gap: 2px 14px; align-items: center;
+    padding: 18px; border-radius: 22px; background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow-sm); text-decoration: none; color: var(--ink);
+    transition: transform .18s cubic-bezier(.3,1.4,.5,1), box-shadow .18s; overflow: hidden; }
+  .tile::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--tc); }
+  .tile:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+  .tile:active { transform: scale(.98); }
+  .tile .ic { grid-row: span 2; width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center; font-size: 1.8rem;
+    background: color-mix(in srgb, var(--tc) 14%, #fff); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tc) 22%, transparent); }
+  .tile b { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; line-height: 1.3; }
+  .tile span { font-size: .9rem; color: var(--ink2); line-height: 1.45; }
+  .tile.big { grid-column: span 2; padding: 22px; }
+  .tile.big .ic { width: 64px; height: 64px; font-size: 2.1rem; }
+  .tile.big b { font-size: 1.35rem; }
+  .tile .go { position: absolute; right: 16px; top: 16px; color: var(--tc); font-weight: 700; opacity: .7; }
+  .foot { text-align: center; color: var(--ink2); font-size: .85rem; }
+  @media (max-width: 640px) {
+    .hub { width: calc(100% - 24px); gap: 22px; }
+    .hub-head .logo { font-size: 1.6rem; }
+    .acct { margin-left: 0; width: 100%; }
+    .hero { padding: 22px 20px; border-radius: 22px; }
+    .tiles { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .tile { grid-template-columns: 1fr; grid-template-rows: auto; padding: 14px; gap: 8px; border-radius: 18px; }
+    .tile .ic { grid-row: auto; width: 48px; height: 48px; font-size: 1.5rem; border-radius: 15px; }
+    .tile span { font-size: .8rem; }
+    .tile.big { grid-column: 1 / -1; grid-template-columns: 56px 1fr; }
+    .tile.big .ic { grid-row: span 2; }
+    .tile .go { display: none; }
+  }
 </style>
 </head>
 <body class="sky">
-  <div class="wrap">
+<main class="hub">
+  <header class="hub-head">
     <div class="logo"><span class="mark"></span><span class="brand"><small>คำถาม</small><span>ฟลุ๊ก<b>ถูก</b></span></span></div>
-    <p class="tag">ตอบคำถามแข่งกันแบบเรียลไทม์ในห้องเรียน</p>
-    <div class="pick">
-      <a class="card" href="host.html"><span class="ico">🧑‍🏫</span><h2>ครู</h2><p>สร้างคำถาม เปิดห้อง ฉายขึ้นจอ</p></a>
-      <a class="card" href="play.html"><span class="ico">🎒</span><h2>นักเรียน</h2><p>ใส่ PIN แต่งตัว แล้วรอในห้องล็อกเกอร์</p></a>
+    <div class="acct" id="acct"><span class="pill" id="acctTxt">กำลังตรวจสอบการเข้าสู่ระบบ…</span></div>
+  </header>
+
+  <section class="hero">
+    <h1 id="hello">ศูนย์รวมเครื่องมือห้องเรียน</h1>
+    <p>สมุดคะแนน เกมคำถาม และโหมดห้องเรียนในที่เดียว — ล็อกอินครั้งเดียวใช้ได้ทุกระบบ</p>
+  </section>
+
+  <section class="sec">
+    <h2>🧑‍🏫 สำหรับครู <small>ต้องเข้าสู่ระบบด้วยอีเมลครู</small></h2>
+    <div class="tiles">
+      <a class="tile big" style="--tc:#6C4DFF" href="../score-book/"><span class="ic">📒</span><b>สมุดคะแนน</b><span>กรอกคะแนน เช็คชื่อ คะแนนเสริม จัดกลุ่ม สุ่มชื่อ — ซิงก์กับ Google Sheet</span><span class="go">›</span></a>
+      <a class="tile" style="--tc:#FF5C8A" href="host.html"><span class="ic">🎮</span><b>เกมคำถาม</b><span>สร้างชุดคำถาม เปิดห้องแข่งตอบแบบเรียลไทม์</span><span class="go">›</span></a>
+      <a class="tile" style="--tc:#1FBF8F" href="live.html"><span class="ic">🖥</span><b>โหมดห้องเรียน</b><span>คะแนนกลุ่ม กดแข่งความไว สุ่มตอบ ความคิดเห็นท้ายคาบ</span><span class="go">›</span></a>
     </div>
-  </div>
+  </section>
+
+  <section class="sec">
+    <h2>🎒 สำหรับนักเรียน <small>ไม่ต้องล็อกอิน</small></h2>
+    <div class="tiles">
+      <a class="tile" style="--tc:#FF9640" href="play.html"><span class="ic">🎯</span><b>เข้าร่วมเกม</b><span>ใส่ PIN จากจอครู แล้วแต่งตัวรอในล็อกเกอร์</span><span class="go">›</span></a>
+      <a class="tile" style="--tc:#3B9BFF" href="buzz.html"><span class="ic">🔔</span><b>ห้องเรียนสด</b><span>เข้ากลุ่ม กดปุ่มแข่ง ส่งความคิดเห็น</span><span class="go">›</span></a>
+      <a class="tile" style="--tc:#8B6CFF" href="../score-book/student.html"><span class="ic">🔎</span><b>ดูคะแนนของฉัน</b><span>พิมพ์เลขประจำตัว (เมื่อครูเปิดให้ดู)</span><span class="go">›</span></a>
+    </div>
+  </section>
+
+  <p class="foot">คำถามฟลุ๊กถูก · ใช้งานฟรี · รองรับ MacBook, iPhone, iPad และจอโปรเจกเตอร์</p>
+</main>
+<script type="module">
+  // แสดงสถานะล็อกอิน (ใช้ร่วมกับทุกระบบ) — ไม่บังคับล็อกอินที่หน้านี้
+  import { connect, isTeacher } from './js/db.js';
+  const txt = document.getElementById('acctTxt'), acct = document.getElementById('acct');
+  connect({ host: true }).then((DB) => DB.onUser((u) => {
+    if (isTeacher(u)) {
+      txt.innerHTML = `✅ ${u.email}`;
+      document.getElementById('hello').textContent = 'สวัสดีครับคุณครู 👋';
+      if (!document.getElementById('outBtn')) { const b = document.createElement('button'); b.id = 'outBtn'; b.className = 'btn ghost sm'; b.textContent = 'ออกจากระบบ'; b.onclick = () => DB.signOut(); acct.append(b); }
+    } else {
+      txt.textContent = 'ยังไม่ได้เข้าสู่ระบบ (ครู)';
+      document.getElementById('outBtn')?.remove();
+      if (!document.getElementById('inBtn')) { const b = document.createElement('button'); b.id = 'inBtn'; b.className = 'btn sm'; b.textContent = 'เข้าสู่ระบบครู'; b.onclick = () => DB.signIn().catch(() => {}); acct.append(b); }
+    }
+    if (isTeacher(u)) document.getElementById('inBtn')?.remove();
+  })).catch(() => { txt.textContent = 'ออฟไลน์'; });
+</script>
 </body>
 </html>

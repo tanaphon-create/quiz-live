@@ -1,0 +1,186 @@
+/* ═════════ ธีมสว่าง "Bright Classroom" — สีสันสดใส สบายตา อ่านง่าย (โหลดเป็นไฟล์สุดท้าย) ═════════ */
+:root {
+  --bg: #F6F7FC;
+  --ink: #1F1A3D;
+  --ink2: #5E5880;
+  --line: #E7E4F3;
+  --soft: #F1EEFC;
+  --coral: #FF5C8A; --orange: #FF9640; --mint: #1FBF8F; --sky: #3B9BFF; --lilac: #8B6CFF; --butter: #FFC23D;
+  --accent: #6C4DFF;
+  --hi: #E8467A;              /* ตัวเลข/คำเน้นบนพื้นสว่าง (แทนสีทอง) */
+  --glass: rgba(255,255,255,.78);
+  --shadow: 0 12px 32px rgba(60,48,130,.10), 0 2px 6px rgba(60,48,130,.06);
+  --shadow-sm: 0 4px 14px rgba(60,48,130,.08);
+  color-scheme: light;
+}
+html { -webkit-text-size-adjust: 100%; }
+body {
+  color: var(--ink);
+  background: var(--bg);
+  padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right);
+}
+/* พื้นหลังแสงพาสเทลนุ่ม ๆ */
+.sky::before {
+  inset: -10%;
+  background-image:
+    radial-gradient(34vmax 26vmax at 8% 6%, rgba(255,92,138,.16), transparent 70%),
+    radial-gradient(32vmax 26vmax at 96% 4%, rgba(59,155,255,.16), transparent 70%),
+    radial-gradient(34vmax 28vmax at 92% 96%, rgba(31,191,143,.14), transparent 70%),
+    radial-gradient(30vmax 24vmax at 6% 94%, rgba(255,150,64,.14), transparent 70%),
+    radial-gradient(28vmax 22vmax at 50% 50%, rgba(139,108,255,.10), transparent 70%);
+  filter: blur(20px); opacity: 1;
+}
+.sky::after { background-image: radial-gradient(rgba(108,77,255,.18) 1.2px, transparent 1.4px); background-size: 28px 28px; opacity: .35; animation: none; }
+
+/* ตัวหนังสือและส่วนประกอบพื้นฐาน */
+.muted, .hint { color: var(--ink2); }
+.logo .brand > span, .brand > span { color: var(--ink); }
+.brand b { color: var(--coral); }
+.brand small { color: var(--accent); }
+.pill, .icon-btn, .btn.ghost { background: var(--glass); border: 1px solid var(--line); color: var(--ink); box-shadow: var(--shadow-sm); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.btn.ghost { --b: #fff; --bd: #DDD8F0; }
+.icon-btn:hover, .btn.ghost:hover { background: #fff; }
+.pill b { color: var(--hi); }
+.card, .qcard, .login-card, .setup-card { box-shadow: var(--shadow); border: 1px solid var(--line); }
+.btn { --b: var(--accent); --bd: #4F33D6; }
+.btn.gold { --b: #FFC23D; --bd: #E09A00; color: #2A2140; }
+.btn.light { --b: #fff; --bd: #DDD8F0; }
+.input { border-color: var(--line); }
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(108,77,255,.16); }
+.small-link:hover { color: var(--accent); }
+.spinner { border-color: rgba(108,77,255,.18); border-top-color: var(--accent); }
+.tog span { background: #D9D4EE; }
+.dots i { background: var(--accent); }
+:focus-visible { outline: 3px solid rgba(108,77,255,.5); outline-offset: 2px; }
+
+/* แถบบน: ติดด้านบน + เบลอ (สบายตาบน iPhone/Mac) */
+.topbar { position: sticky; top: 0; z-index: 20; background: rgba(246,247,252,.82); backdrop-filter: saturate(1.4) blur(14px); -webkit-backdrop-filter: saturate(1.4) blur(14px); border-bottom: 1px solid rgba(231,228,243,.8); padding-top: max(12px, env(safe-area-inset-top)); }
+.home-link { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: #fff; border: 1px solid var(--line); text-decoration: none; font-size: 1.15rem; box-shadow: var(--shadow-sm); }
+
+/* ── จอครู: หน้าหลัก / ตัวแก้ไข ── */
+.home-head h1, .ed-title { color: var(--ink); }
+.ed-top { background: rgba(255,255,255,.85); }
+.ed-title { border-bottom-color: #D4CEEA; }
+.saved { color: var(--ink2); opacity: 1; }
+.qthumb { background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+.qthumb:hover { background: #FBFAFF; }
+.qthumb.on { border: 2px solid var(--accent); }
+.qthumb .n { background: var(--soft); color: var(--accent); }
+.qc-band span { color: var(--accent); }
+.chip.on, .tabs button.on { background: var(--accent); color: #fff; }
+
+/* ── ห้องล็อกเกอร์ ── */
+.lockers { background:
+    linear-gradient(180deg, rgba(246,247,252,0) 62%, var(--bg)),
+    repeating-linear-gradient(90deg,
+      #FF8FA8 0 94px, rgba(255,255,255,.75) 94px 98px,
+      #FFC27A 98px 192px, rgba(255,255,255,.75) 192px 196px,
+      #6FDAB3 196px 290px, rgba(255,255,255,.75) 290px 294px,
+      #7CBBFF 294px 388px, rgba(255,255,255,.75) 388px 392px,
+      #B49BFF 392px 486px, rgba(255,255,255,.75) 486px 490px); }
+.lockers::before { opacity: .7; }
+.floor { background: linear-gradient(180deg, #EEEAFE, var(--bg)); }
+.floor::before { background: repeating-linear-gradient(90deg, rgba(108,77,255,.05) 0 80px, transparent 80px 160px); }
+.hall-empty { color: var(--ink2); }
+.buddy .avatar-box { filter: drop-shadow(0 8px 6px rgba(60,48,130,.22)); }
+.buddy .tag { box-shadow: 0 2px 6px rgba(60,48,130,.18); border: 1px solid var(--line); }
+.lobby-bar { background: rgba(255,255,255,.9); border-top: 1px solid var(--line); color: var(--ink); padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+.count b { color: var(--hi); }
+.join-card .pin { background: linear-gradient(90deg, #E8467A, #6C4DFF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+#musicBtn.on { background: #FFE7A3; }
+
+/* ── ระหว่างเกม ── */
+.ready-num { background: linear-gradient(90deg, var(--coral), var(--orange)); color: #fff; }
+.ready-q, .board-h { color: var(--ink); }
+.ready-bar, .tbar { background: #E6E1F7; }
+.ready-bar i, .tbar i { background: linear-gradient(90deg, var(--coral), var(--orange)); }
+.muted-badge { background: var(--soft); color: var(--ink2); }
+.q-title { border: 1px solid var(--line); box-shadow: var(--shadow); }
+.timer .trk { stroke: #E6E1F7; fill: #fff; }
+.timer .arc { stroke: var(--accent); }
+.timer span { color: var(--ink); }
+.timer.hurry .arc { stroke: var(--coral); }
+.timer.hurry span { color: var(--coral); }
+.ans-count { background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow-sm); color: var(--ink); }
+.ans-count small { color: var(--ink2); opacity: 1; }
+.q-ph { filter: drop-shadow(0 6px 10px rgba(60,48,130,.15)); }
+.bar-n { color: var(--ink); }
+.bar.dim { opacity: .35; }
+.ans-grid .ans.dim { opacity: .4; filter: grayscale(.4); }
+.ans-grid .ans.right { outline-color: var(--ink); }
+.reveal.suspense .ans.right { outline: none; }
+.rk { border: 1px solid var(--line); }
+.rk:first-child { background: linear-gradient(90deg, #FFF1C6, #fff 60%); outline-color: var(--butter); }
+.out-line, .mode-tag { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+.pod-name { border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+.podium .pod-av svg { filter: drop-shadow(0 8px 6px rgba(60,48,130,.25)); }
+
+/* ── มือถือนักเรียน ── */
+.center-box { color: var(--ink); }
+.locker-scene .lockers { height: 100%; }
+.wait-msg { color: var(--ink); }
+.mode-badge { background: rgba(31,26,61,.82); color: #fff; }
+.me-chip { color: var(--ink); }
+.msg { color: var(--ink); }
+.msg .soft, .soft { color: var(--ink2); opacity: 1; }
+.big-num { border: 1px solid var(--line); }
+.q-mini-card { border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+.rank-big b, .plus { color: var(--hi); text-shadow: none; }
+.rank-chip { background: #fff; border: 1px solid var(--line); }
+.rank-chip b { color: var(--hi); }
+.picked-shape { box-shadow: 0 8px 0 var(--d), var(--shadow); }
+body.flash-ok, body.flash-bad { color: #fff; }
+body.flash-ok .msg, body.flash-bad .msg, body.flash-ok .soft, body.flash-bad .soft, body.flash-ok .me-chip, body.flash-bad .me-chip { color: #fff; }
+body.flash-ok .plus, body.flash-bad .plus { color: #FFE27A; text-shadow: 0 3px 0 rgba(0,0,0,.18); }
+.result .res-ico { box-shadow: var(--shadow); }
+.streak { box-shadow: var(--shadow-sm); }
+.closet { box-shadow: 0 -8px 30px rgba(60,48,130,.10); border: 1px solid var(--line); }
+.sid-chip { background: var(--soft); }
+
+/* ── โหมดห้องเรียน ── */
+.live-top { background: rgba(246,247,252,.85); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; padding-top: max(12px, env(safe-area-inset-top)); }
+.live-title b { color: var(--ink); }
+.live-title small { color: var(--ink2); opacity: 1; }
+.pin-pill { border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+.live-tabs button { background: #fff; border: 1px solid var(--line); color: var(--ink); box-shadow: var(--shadow-sm); }
+.live-tabs button.on { color: #fff; border-color: transparent; }
+.gcard { border: 1px solid var(--line); border-top: 10px solid var(--gc); }
+.bz-stage { background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow); color: var(--ink); }
+.bz-armed .bz-big { color: var(--coral); }
+.bz-first, .bz-win { color: #fff; }
+.bz-side { border: 1px solid var(--line); box-shadow: var(--shadow); }
+.rd-box { background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow); color: var(--ink); }
+.rd-box.win { color: #fff; border-color: transparent; }
+.mchip2 { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+.rf-hint, .rf-empty { color: var(--ink2); }
+.note { border: 1px solid var(--line); border-top: 6px solid var(--gc); box-shadow: var(--shadow-sm); }
+.bz-hint { color: var(--ink); }
+.bz-btn { background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.4), transparent 45%), #A9A3C6; }
+.bz-msg { color: var(--ink); }
+
+/* ── จอแคบ (iPhone) ── */
+@media (max-width: 640px) {
+  .topbar { gap: 8px; padding-left: 12px; padding-right: 12px; flex-wrap: wrap; }
+  .topbar .logo { font-size: 1.35rem; }
+  .home-head h1 { font-size: 1.7rem; }
+  .home-wrap { width: calc(100% - 24px); }
+  .quiz-grid { grid-template-columns: 1fr; }
+  .ed-top .ed-title { min-width: 0; flex: 1 1 100%; order: 5; }
+  .live-top { gap: 8px; padding: 10px 12px; }
+  .live-title b { max-width: 60vw; font-size: 1.1rem; }
+  .live-tabs { margin-left: 0; width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+  .live-tabs button { flex: none; }
+  .score-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .gcard { padding: 12px; border-radius: 18px; }
+  .gscore { font-size: 2.8rem; }
+  .gbtns button { min-width: 0; flex: 1; padding: 6px 4px; }
+}
+
+/* ตัวเลขใหญ่ใช้ Prompt (ฟอนต์หัวเรื่อง Mitr วาดเลข 0 ตัวหนาเป็นวงทึบ) */
+.ans-count b, .bar-n, .rk-s, .timer span, .count b, .big-num, .rank-big b, .final-score, .plus, .gscore, .pod-col span, .pod-col small,
+.bz-no, .gno, .bz-gno, .ready-num, .pin, .qc-band span, .rk-n, .o-no, .bz-gscore b, .pin-pill b, .rd-name, .bz-btn span {
+  font-family: var(--font-ui); font-weight: 700;
+}
+.timer span { position: relative; z-index: 1; }
+body.flash-ok .topbar, body.flash-bad .topbar { background: transparent; border-bottom-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.picked-overlay, .picked-overlay h2, .picked-overlay p { color: #fff; }
