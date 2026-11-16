@@ -204,3 +204,4 @@ h1, h2, h3, .logo, .pin, .big-num, .rank-big b, .final-score, .timer span, .bar-
       #9B7BEA 392px 486px, rgba(0,0,0,.35) 486px 490px);
 }
 .lockers::before { opacity: .55; }
+a.btn { text-decoration: none; }
