@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1C1650">
+<title>ห้องเรียนสด — คำถามฟลุ๊กถูก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/play.css">
+<link rel="stylesheet" href="css/live.css">
+</head>
+<body class="sky">
+
+<!-- เข้าห้อง -->
+<section class="screen on" id="scr-join">
+  <div class="center-box">
+    <div class="logo big"><span class="mark"></span><span class="brand"><small>ห้องเรียนสด</small><span>ฟลุ๊ก<b>ถูก</b></span></span></div>
+    <form class="join-form card" id="joinForm">
+      <div class="room-title" id="bzRoom">กำลังโหลดห้อง…</div>
+      <input class="input huge" id="pinIn" inputmode="numeric" maxlength="7" placeholder="รหัสห้อง (PIN)" autocomplete="off" aria-label="รหัสห้อง">
+      <label class="sid-label" for="codeIn" id="codeLab">เลขประจำตัวนักเรียน</label>
+      <input class="input huge" id="codeIn" inputmode="numeric" maxlength="10" placeholder="เช่น 12345" autocomplete="off">
+      <input class="input huge" id="nameIn" maxlength="20" placeholder="ชื่อเล่น" autocomplete="off" hidden aria-label="ชื่อเล่น">
+      <button class="btn big" type="submit">เข้าห้อง ›</button>
+    </form>
+  </div>
+</section>
+
+<!-- เลือกกลุ่ม (กรณีครูให้เลือกเอง หรือไม่พบเลขประจำตัว) -->
+<section class="screen" id="scr-group">
+  <div class="center-box">
+    <div class="join-form card">
+      <div class="room-title" id="grpTitle">เลือกกลุ่มของคุณ</div>
+      <div class="team-grid" id="grpGrid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- หน้าหลัก: ปุ่มกด / ความคิดเห็น -->
+<section class="screen" id="scr-main">
+  <header class="bz-head" id="bzHead">
+    <span class="bz-gno" id="bzGno"></span>
+    <div class="bz-ginfo"><b id="bzGname"></b><small id="bzMe"></small></div>
+    <span class="bz-gscore">⭐ <b id="bzScore">0</b></span>
+  </header>
+  <div class="bz-body" id="bzBody"></div>
+  <div class="picked-overlay" id="pickedOv" hidden><div><div class="po-ico">🎯</div><h2 id="pickedTxt"></h2><p>เตรียมตอบได้เลย!</p></div></div>
+</section>
+
+<script type="module" src="js/buzz.js"></script>
+</body>
+</html>

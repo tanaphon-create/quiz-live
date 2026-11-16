@@ -24,6 +24,30 @@
             }
           }
         }
+      },
+      "live": {
+        "$pin": {
+          ".read": "auth != null",
+          ".write": "auth != null && ((!data.exists() && auth.token.email === 'tanaphon@wangchan.ac.th' && auth.token.email_verified === true) || (data.exists() && data.child('meta/hostUid').val() === auth.uid))",
+          "players": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid"
+            }
+          },
+          "presses": {
+            "$r": {
+              "$uid": {
+                ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('quiz/live/' + $pin + '/buzz/armed').val() === true && root.child('quiz/live/' + $pin + '/buzz/rkey').val() === $r"
+              }
+            }
+          },
+          "notes": {
+            "$nid": {
+              ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid && root.child('quiz/live/' + $pin + '/meta/state').val() === 'reflect'",
+              ".validate": "newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 300"
+            }
+          }
+        }
       }
     }
   }
