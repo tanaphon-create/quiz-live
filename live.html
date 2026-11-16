@@ -10,9 +10,11 @@
 <link rel="stylesheet" href="css/host.css">
 <link rel="stylesheet" href="css/live.css">
 <link rel="stylesheet" href="css/bright.css">
+<link rel="stylesheet" href="css/cute.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
-<body class="sky">
+<body class="sky live-body">
+<div class="deco" aria-hidden="true"><i>☁️</i><i>⭐</i><i>💖</i><i>☁️</i><i>✨</i><i>🎈</i><i>⭐</i><i>💜</i></div>
 
 <!-- ล็อกอินครู -->
 <section class="screen on" id="scr-login">
@@ -74,7 +76,8 @@
       <button data-tab="random">🎲 สุ่มตอบ</button>
       <button data-tab="reflect">💬 ความคิดเห็น</button>
     </nav>
-    <button class="icon-btn" id="lvMute" title="เปิด/ปิดเสียง">🔊</button>
+    <button class="icon-btn music-btn" id="lvMusic" title="เปิด/ปิดเพลงประกอบ" aria-label="เพลงประกอบ">🎵</button>
+    <button class="icon-btn" id="lvMute" title="เปิด/ปิดเสียงทั้งหมด">🔊</button>
     <button class="btn ghost sm" id="lvEnd">จบคาบ</button>
   </header>
   <main class="live-main" id="liveMain"></main>

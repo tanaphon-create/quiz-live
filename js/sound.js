@@ -75,6 +75,31 @@ const SONGS = {
       if (s % 2 === 0) note(NOTE(ch[mel[s / 2]] + 12), 0.14, { t, type: 'square', vol: 0.03, filter: 3000 });
     },
   },
+  // โหมดห้องเรียน: สดใส น่ารัก เบา ๆ (มาริมบา + กลองเบา)
+  classroom: {
+    bpm: 104, prog: ['F', 'C', 'Dm', 'Bb'],
+    step(i, t, ch) {
+      const s = i % 16;
+      if (s === 0 || s === 10) kick(t, 0.28);
+      if (s === 4 || s === 12) hiss(0.08, { t, vol: 0.06, freq: 2500 });
+      if (s % 2 === 0) hat(t, 0.022);
+      if ([0, 6, 8, 14].includes(s)) note(NOTE(ch[0] - 24), 0.28, { t, type: 'triangle', vol: 0.12 });
+      const mel = [0, 2, 1, 2, 0, 1, 2, 1];
+      if (s % 2 === 0) note(NOTE(ch[mel[s / 2]] + 12), 0.18, { t, type: 'triangle', vol: 0.045, attack: 0.003 });
+      if (s === 3 || s === 11) note(NOTE(ch[2] + 24), 0.35, { t, type: 'sine', vol: 0.025 });   // กระดิ่งเล็ก ๆ
+    },
+  },
+  // ความคิดเห็นท้ายคาบ: นุ่ม สงบ ไม่มีกลอง
+  think: {
+    bpm: 72, prog: ['C', 'Am', 'F', 'G'],
+    step(i, t, ch) {
+      const s = i % 16;
+      if (s === 0) ch.forEach((n) => note(NOTE(n), 2.6, { t, type: 'sine', vol: 0.03, attack: 0.6 }));
+      if (s === 0 || s === 8) note(NOTE(ch[0] - 12), 1.4, { t, type: 'sine', vol: 0.05, attack: 0.05 });
+      const arp = [0, 1, 2, 1, 2, 1, 0, 2];
+      if (s % 2 === 0) note(NOTE(ch[arp[s / 2]] + 12), 0.5, { t, type: 'sine', vol: 0.028, attack: 0.02 });
+    },
+  },
   // ระหว่างตอบ: ตื่นเต้น กดดัน
   question: {
     bpm: 138, prog: ['Am', 'F', 'Dm', 'E'],
@@ -109,6 +134,7 @@ export function music(name) {
   }, 40);
 }
 export const musicOn = () => !!loopH;
+export const currentSong = () => (loopH ? Object.keys(SONGS).find((k) => SONGS[k] === song) : null);
 export const hurry = (on) => { tempoMul = on ? 1.3 : 1; };
 
 /* ───── เสียงเอฟเฟกต์ ───── */

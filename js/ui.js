@@ -111,3 +111,20 @@ export function teamDecision(votes) {
   const c = +tied[0];
   return { choice: c, count: max, at: reach[c][max - 1], counts: cnt, tie: tied.length > 1 };
 }
+
+// มาสคอตประจำกลุ่ม (โหมดห้องเรียน) — กลุ่มเดียวกันได้ตัวเดิมเสมอ
+export const MASCOTS = [
+  { shape: 'bear', body: '#FFB4C2', eyes: 'sparkle', mouth: 'cat', hat: 'bow', acc: 'none' },
+  { shape: 'bunny', body: '#A8E1FF', eyes: 'happy', mouth: 'smile', hat: 'none', acc: 'scarf' },
+  { shape: 'cat', body: '#FFE38A', eyes: 'sparkle', mouth: 'open', hat: 'crown', acc: 'none' },
+  { shape: 'chick', body: '#FFC89B', eyes: 'dot', mouth: 'o', hat: 'sprout', acc: 'none' },
+  { shape: 'dino', body: '#B8F0C8', eyes: 'wink', mouth: 'grin', hat: 'cap', acc: 'none' },
+  { shape: 'round', body: '#B9B8FF', eyes: 'star', mouth: 'smile', hat: 'wizard', acc: 'none' },
+  { shape: 'bean', body: '#FFC89B', eyes: 'heart', mouth: 'kiss', hat: 'flower', acc: 'none' },
+  { shape: 'ghost', body: '#FFFFFF', eyes: 'sparkle', mouth: 'cat', hat: 'halo', acc: 'none' },
+  { shape: 'bear', body: '#D9C3A5', eyes: 'happy', mouth: 'tongue', hat: 'party', acc: 'none' },
+  { shape: 'bunny', body: '#FFB4C2', eyes: 'sparkle', mouth: 'o', hat: 'flower', acc: 'none' },
+  { shape: 'cat', body: '#E0B8FF', eyes: 'dot', mouth: 'cat', hat: 'beanie', acc: 'none' },
+  { shape: 'dino', body: '#9EE6DF', eyes: 'sparkle', mouth: 'smile', hat: 'frog', acc: 'none' },
+];
+export const mascotOf = (g) => g?.avatar || MASCOTS[((g?.no || 1) - 1) % MASCOTS.length];

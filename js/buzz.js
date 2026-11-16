@@ -1,7 +1,8 @@
 // โหมดห้องเรียน (มือถือนักเรียน): เข้ากลุ่ม · ปุ่มกดแข่ง · ถูกสุ่ม · พิมพ์ความคิดเห็น
 import { connect, TS } from './db.js';
 import { sfx, unlock } from './sound.js';
-import { $, $$, esc, show, toast, confetti } from './ui.js';
+import { $, $$, esc, show, toast, confetti, mascotOf } from './ui.js';
+import { renderAvatar } from './avatar.js';
 
 const qs = new URLSearchParams(location.search);
 const ME = 'quizlive:buzzme';
@@ -95,7 +96,7 @@ function enter() {
 function head() {
   const g = groups[me?.gid]; if (!g) return;
   document.documentElement.style.setProperty('--gc', g.color);
-  $('#bzGno').textContent = g.no; $('#bzGname').textContent = g.name; $('#bzMe').textContent = me.name; $('#bzScore').textContent = g.score || 0;
+  $('#bzGno').innerHTML = renderAvatar(mascotOf(g), { bg: false }); $('#bzGname').textContent = `${g.name}`; $('#bzMe').textContent = me.name; $('#bzScore').textContent = g.score || 0;
 }
 
 function order() {
@@ -127,12 +128,14 @@ function render() {
     label = cur?.gid === me.gid ? 'ได้ตอบ!' : wrong.has(me.gid) ? 'ตอบผิด' : `อันดับ ${myRank + 1}`;
     sub = cur?.gid === me.gid ? 'กลุ่มคุณได้สิทธิ์ตอบ' : mateFirst ? 'เพื่อนในกลุ่มกดให้แล้ว' : 'กดแล้ว รอผล';
   } else { state = 'idle'; label = 'รอครู'; sub = 'ปุ่มจะกดได้เมื่อครูสั่ง'; }
-  body.innerHTML = `<div class="bz-btn-wrap"><button class="bz-btn ${state}" id="bzBtn" ${state === 'armed' ? '' : 'disabled'}><span>${label}</span></button><p class="bz-hint">${sub}</p></div>`;
+  body.innerHTML = `<div class="bz-btn-wrap"><button class="bz-btn ${state}" id="bzBtn" ${state === 'armed' ? '' : 'disabled'}><i class="face" aria-hidden="true"><i class="eye"></i><i class="eye"></i><i class="mouth"></i></i><span>${label}</span></button><p class="bz-hint">${sub}</p></div>`;
   $('#bzBtn').onclick = press;
 }
 async function press() {
   if (!buzz.armed || presses[DB.uid]) return;
   $('#bzBtn').disabled = true; $('#bzBtn').classList.add('pressed');
+  const wrap = document.querySelector('.bz-btn-wrap');
+  for (let k = 0; k < 10; k++) { const s = document.createElement('i'); s.className = 'burst'; s.textContent = ['♥', '★', '✦', '●'][k % 4]; const a = (k / 10) * Math.PI * 2; s.style.cssText = `--x:${Math.round(Math.cos(a) * 170)}px;--y:${Math.round(Math.sin(a) * 170)}px`; wrap.append(s); s.addEventListener('animationend', () => s.parentNode && s.parentNode.removeChild(s)); }
   if (navigator.vibrate) navigator.vibrate(40);
   sfx.tap();
   try { await DB.set(`${R}/presses/${buzz.rkey}/${DB.uid}`, { gid: me.gid, name: me.name, at: TS }); }
