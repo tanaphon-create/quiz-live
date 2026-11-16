@@ -20,3 +20,6 @@ export const FIREBASE = {
 
 // อีเมลครูที่เข้าหน้าจอครูได้ (คนอื่นเข้าไม่ได้ — ตรวจทั้งในหน้าเว็บและในกฎฐานข้อมูล)
 export const TEACHER_EMAILS = ['tanaphon@wangchan.ac.th'];
+
+// สมุดคะแนน (Apps Script) — ใช้บันทึกคะแนนพิเศษอันดับ 1–3 หลังจบเกม (ใช้การล็อกอินครูชุดเดียวกัน)
+export const SCOREBOOK_API = 'https://script.google.com/macros/s/AKfycbwJsr4hqB6Xq5RRTQFFeWZ3KxaTmpXQcNg52Vn5kjouwKiX9LO9OI3TxuRU-c18e8PDuA/exec';

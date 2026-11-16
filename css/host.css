@@ -310,3 +310,23 @@
 .chip.on, .tabs button.on { background: var(--coral); }
 .ready-num { background: linear-gradient(90deg, var(--coral), var(--orange)); }
 .rk:first-child { background: linear-gradient(90deg, #FFF3C4, #fff 60%); }
+
+/* ─── บันทึกคะแนนพิเศษ ─── */
+.bonus-dlg { width: min(760px, calc(100% - 32px)); display: grid; gap: 10px; }
+.bonus-dlg[open] { display: grid; }
+#bonusBody { display: grid; gap: 12px; }
+.bn-tbl { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.bn-tbl th, .bn-tbl td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+.bn-tbl th { font-size: .82rem; color: var(--ink2); font-weight: 500; }
+.bn-tbl tr.miss td { opacity: .65; }
+.bn-tbl small { color: var(--ink2); }
+.bn-tbl input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--coral); }
+.input.bn-pts { width: 76px; padding: .35em .5em; }
+.bn-note { margin: 0; font-size: .85rem; }
+.bn-done { display: grid; gap: 8px; justify-items: center; text-align: center; }
+.bn-done .big { font-size: 3rem; }
+.bn-done h3 { margin: 0; }
+.bn-done ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
+.bn-done .row { justify-self: stretch; }
+@media (max-width: 640px) { .bn-tbl th:nth-child(5), .bn-tbl td:nth-child(5) { display: none; } }
+.bn-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap; }

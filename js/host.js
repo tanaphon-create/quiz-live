@@ -3,6 +3,7 @@ import { renderAvatar } from './avatar.js';
 import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock } from './sound.js';
 import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js';
 import { SAMPLE } from './sample.js';
+import { SCOREBOOK_API } from './config.js';
 
 /* ───────────── ชุดคำถาม (เก็บใน Firebase เฉพาะบัญชีครู) ───────────── */
 const LS = 'quizlive:quizzes'; // ที่เก็บเดิมในเครื่อง — ย้ายขึ้นคลาวด์ครั้งแรกแล้วลบทิ้ง
@@ -257,7 +258,7 @@ $('#logoutBtn').onclick = async () => { if (confirm('ออกจากระบ
 /* ───────────── โฮสต์เกม ───────────── */
 let R = '', pin = '', quiz = null, order = [], qi = -1, phase = '', players = {};
 let opts = { showQ: true, streak: true, shuffle: false, mode: 'classic', teams: 2, hearts: 3, vteams: 4 };
-let vstate = [], played = 0;
+let vstate = [], played = 0, gameStartAt = 0;
 let joinHref = '';
 let unsubs = [], tickH = null, qStart = 0, liveAnswers = {}, lastReveal = null, prevRanks = {};
 
@@ -419,7 +420,7 @@ $('#startBtn').onclick = async () => {
   }
   closeQr();
   music(null);
-  played = 0;
+  played = 0; gameStartAt = Date.now();
   show('game');
   goQuestion(0);
 };
@@ -728,7 +729,7 @@ async function finish() {
         </tbody></table></details>
       <div class="rev-foot">
         <label class="pill conv">แปลงเป็นคะแนนเก็บ เต็ม <input type="number" id="fullPts" value="10" min="1" max="100"> คะแนน</label>
-        <button class="btn light" id="csvBtn">⤓ ดาวน์โหลดคะแนน (CSV)</button><span class="sp"></span><button class="btn gold" id="homeBtn">กลับหน้าหลัก</button></div>
+        <button class="btn green" id="bonusBtn">🏅 บันทึกคะแนนพิเศษ (อันดับ 1–3)</button><button class="btn light" id="csvBtn">⤓ ดาวน์โหลดคะแนน (CSV)</button><span class="sp"></span><button class="btn gold" id="homeBtn">กลับหน้าหลัก</button></div>
     </div>`;
   function note(p) {
     if (opts.mode === 'team') return p.team != null ? TEAMS[p.team].e + ' ' + TEAMS[p.team].name : '-';
@@ -742,6 +743,8 @@ async function finish() {
   at(T1, () => { sfx.fanfare(); confetti(220, 6000); });
   at(T1 + 1.2, () => DB.update(R, { 'meta/podiumDone': true }));
   $('#homeBtn').onclick = leave;
+  const recips = bonusRecipients(list, teams);
+  $('#bonusBtn').onclick = () => openBonus(recips);
   $('#csvBtn').onclick = () => {
     const full = Math.max(1, +$('#fullPts').value || 10);
     const bySid = list.map((p, i) => ({ ...p, rank: i + 1 }))
@@ -756,3 +759,83 @@ async function finish() {
   };
 }
 
+/* ───────────── บันทึกคะแนนพิเศษลงสมุดคะแนน (อันดับ 1 = 3, 2 = 2, 3 = 1) ───────────── */
+const BONUS_PTS = [3, 2, 1];
+const MEDAL = ['🥇', '🥈', '🥉'];
+async function bookApi(body) {
+  const tok = DB.mode === 'firebase' ? await DB.user().getIdToken() : 'local-test';
+  const r = await fetch(SCOREBOOK_API, { method: 'POST', body: JSON.stringify({ ...body, idToken: tok }) });
+  let j; try { j = await r.json(); } catch { throw { error: 'bad_response' }; }
+  if (!j.ok) throw j;
+  return j;
+}
+function bonusRecipients(list, teams) {
+  if (teams) {
+    return teams.slice(0, 3).flatMap((t, i) => list
+      .filter((p) => (opts.mode === 'vote' ? p.vteam : p.team) === t.k)
+      .map((p) => ({ sid: String(p.sid || '').trim(), name: p.name, pts: BONUS_PTS[i], place: i + 1, team: teamInfo(opts.mode, t.k).name })));
+  }
+  return list.slice(0, 3).map((p, i) => ({ sid: String(p.sid || '').trim(), name: p.name, pts: BONUS_PTS[i], place: i + 1 }));
+}
+async function openBonus(recips) {
+  const dlg = $('#bonusDlg'), body = $('#bonusBody');
+  dlg.showModal();
+  if (!recips.length) { body.innerHTML = '<p class="muted">ยังไม่มีผู้ได้อันดับ</p><div class="row end"><button class="btn light" data-x>ปิด</button></div>'; body.querySelector('[data-x]').onclick = () => dlg.close(); return; }
+  body.innerHTML = '<p class="muted">กำลังโหลดรายชื่อห้องจากสมุดคะแนน…</p>';
+  let classes;
+  try { classes = (await bookApi({ action: 'classes' })).classes || []; }
+  catch (e) {
+    body.innerHTML = `<p class="warn-line">โหลดสมุดคะแนนไม่ได้ ${e?.error === 'auth' ? '— ต้องล็อกอินด้วยอีเมลครู' : '— ตรวจอินเทอร์เน็ตแล้วลองใหม่'}</p><div class="row end"><button class="btn light" data-x>ปิด</button></div>`;
+    body.querySelector('[data-x]').onclick = () => dlg.close();
+    return;
+  }
+  const hits = (c) => { const set = new Set(c.students.map((s) => s.code)); return recips.filter((r) => set.has(r.sid)).length; };
+  const opts2 = classes.map((c) => ({ c, n: hits(c) })).sort((a, b) => b.n - a.n);
+  let cls = opts2[0]?.c;
+  const draw = () => {
+    const byCode = new Map((cls?.students || []).map((s) => [s.code, s.name]));
+    body.innerHTML = `
+      <label class="field"><span>บันทึกลงห้อง (จับคู่ด้วยเลขประจำตัว)</span>
+        <select class="input" id="bnCls">${opts2.map(({ c, n }) => `<option value="${esc(c.id)}" ${c === cls ? 'selected' : ''}>${esc(c.name)}${c.subject ? ' · ' + esc(c.subject) : ''} — ตรง ${n}/${recips.length} คน</option>`).join('')}</select></label>
+      <label class="field"><span>เหตุผล (แสดงในช่องคะแนนเสริม)</span>
+        <input class="input" id="bnWhy" maxlength="100" value="${esc('ตอบคำถาม: ' + (quiz?.title || ''))}"></label>
+      <table class="bn-tbl"><thead><tr><th></th><th>อันดับ</th><th>ชื่อในเกม</th><th>เลขประจำตัว</th><th>ในสมุดคะแนน</th><th>คะแนน</th></tr></thead><tbody>
+      ${recips.map((r, i) => { const nm = byCode.get(r.sid); return `<tr class="${nm ? '' : 'miss'}">
+        <td><input type="checkbox" data-i="${i}" ${nm ? 'checked' : 'disabled'} aria-label="บันทึก ${esc(r.name)}"></td>
+        <td>${MEDAL[r.place - 1]} ${r.team ? `<small>${esc(r.team)}</small>` : ''}</td>
+        <td>${esc(r.name)}</td><td>${esc(r.sid || '-')}</td>
+        <td>${nm ? esc(nm) : '<span class="warn-line">ไม่พบเลขนี้ในห้อง</span>'}</td>
+        <td><input class="input bn-pts" type="number" min="-100" max="100" step="0.5" data-p="${i}" value="${r.pts}" aria-label="คะแนน ${esc(r.name)}"></td></tr>`; }).join('')}
+      </tbody></table>
+      <p class="muted bn-note">ครูเลือกได้ว่าจะบันทึกใครบ้าง กดซ้ำเกมเดิมระบบจะไม่บวกซ้ำ</p>
+      <div class="bn-actions"><button class="btn light" data-x>ไม่บันทึก</button><button class="btn green" id="bnSave">💾 บันทึกคะแนนพิเศษ</button></div>`;
+    body.querySelector('[data-x]').onclick = () => dlg.close();
+    $('#bnCls').onchange = (e) => { cls = classes.find((c) => c.id === e.target.value); draw(); };
+    $('#bnSave').onclick = save;
+  };
+  const save = async () => {
+    const why = $('#bnWhy').value.trim() || 'ตอบคำถาม';
+    const entries = $$('#bonusBody input[type=checkbox]:checked').map((cb) => {
+      const r = recips[+cb.dataset.i];
+      return { code: r.sid, pts: +$(`#bonusBody [data-p="${cb.dataset.i}"]`).value || 0, reason: why };
+    }).filter((e) => e.pts);
+    if (!entries.length) return toast('ยังไม่ได้เลือกนักเรียน');
+    const b = $('#bnSave'); b.disabled = true; b.textContent = 'กำลังบันทึก…';
+    try {
+      const j = await bookApi({ action: 'addbonus', classId: cls.id, gameKey: `${pin}-${gameStartAt}`, reason: why, entries });
+      body.innerHTML = `<div class="bn-done"><div class="big">✅</div><h3>บันทึกลง “${esc(j.cls)}” แล้ว</h3>
+        <ul>${j.added.map((a) => `<li>${esc(a.name)} <b>+${a.pts}</b></li>`).join('')}</ul>
+        ${j.dup.length ? `<p class="muted">ข้ามรายการที่เคยบันทึกจากเกมนี้แล้ว ${j.dup.length} คน</p>` : ''}
+        ${j.missing.length ? `<p class="warn-line">ไม่พบเลข: ${j.missing.map(esc).join(', ')}</p>` : ''}
+        <p class="muted">เปิดสมุดคะแนน → แท็บ “คะแนนเสริม” เพื่อดูรายการ</p>
+        <div class="row end"><button class="btn gold" data-x>ปิด</button></div></div>`;
+      body.querySelector('[data-x]').onclick = () => dlg.close();
+      sfx.correct();
+      const ob = $('#bonusBtn'); if (ob) { ob.textContent = '✅ บันทึกคะแนนพิเศษแล้ว'; }
+    } catch (e) {
+      b.disabled = false; b.textContent = '💾 บันทึกคะแนนพิเศษ';
+      toast(e?.error === 'auth' ? 'ต้องล็อกอินด้วยอีเมลครูก่อน' : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง');
+    }
+  };
+  draw();
+}
