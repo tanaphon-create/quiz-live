@@ -46,7 +46,7 @@ svg.ghost .gh-fx { animation: gh-twinkle 1.8s ease-in-out infinite; transform-or
 .mini-ghosts i { position: absolute; bottom: -90px; width: 64px; height: 64px; opacity: 0; transform: scale(var(--s)); animation: rise 7s linear infinite; animation-delay: var(--d); }
 @keyframes rise { 0% { transform: translateY(0) scale(var(--s)) rotate(-6deg); opacity: 0 } 12% { opacity: .55 } 50% { transform: translate(18px, -55vh) scale(var(--s)) rotate(6deg) } 85% { opacity: .45 } 100% { transform: translateY(-112vh) scale(var(--s)) rotate(-6deg); opacity: 0 } }
 
-.in-stage { position: relative; width: min(56vw, 250px); aspect-ratio: 1; }
+.in-stage { position: relative; width: min(56vw, 250px, 34vh); aspect-ratio: 1; margin-top: 4vh; }
 .in-ghost { width: 100%; height: 100%; opacity: 0; transform: translateY(40px) scale(.2); }
 .gc-intro.play .in-ghost { animation: g-pop .9s cubic-bezier(.34, 1.7, .5, 1) .35s forwards; }
 @keyframes g-pop { 0% { opacity: 0; transform: translateY(40px) scale(.2) rotate(-18deg) } 60% { opacity: 1; transform: translateY(-14px) scale(1.08) rotate(6deg) } 100% { opacity: 1; transform: none } }
@@ -63,7 +63,7 @@ svg.ghost .gh-fx { animation: gh-twinkle 1.8s ease-in-out infinite; transform-or
 .in-bubble.pop { animation: bub .4s cubic-bezier(.34, 1.7, .5, 1) forwards !important; }
 @keyframes bub { from { opacity: 0; transform: scale(0) } to { opacity: 1; transform: scale(1) } }
 
-.in-title { margin: 8px 0 0; font: 700 clamp(46px, 12vw, 92px)/1 var(--gc-font); letter-spacing: .5px; }
+.in-title { margin: 8px 0 0; font: 700 min(clamp(46px, 12vw, 92px), 11vh)/1 var(--gc-font); white-space: nowrap; letter-spacing: .5px; }
 .in-title span { display: inline-block; opacity: 0; transform: translateY(40px) scale(.4); color: var(--gc-pur);
   text-shadow: 0 4px 0 #fff, 0 7px 0 #D9CCFF; }
 .in-title span:nth-child(n+7) { color: #FF5C8A; }
