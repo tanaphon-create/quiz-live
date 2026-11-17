@@ -71,7 +71,7 @@ function enter() {
   DB.onDisconnect(`${R}/players/${DB.uid}/online`, false);
   DB.connected((c) => c && joined && DB.update(`${R}/players/${DB.uid}`, { online: true }));
   DB.on(`${R}/players/${DB.uid}`, (p) => { if (!p && joined) { joined = false; $('#bzBody').innerHTML = '<div class="bz-msg"><h2>ออกจากห้องแล้ว</h2><a class="btn" href="buzz.html">เข้าใหม่</a></div>'; } else if (p) me = p; });
-  DB.on(`${R}/meta`, (m) => { meta = m || {}; render(); });
+  DB.on(`${R}/meta`, (m) => { const was = meta?.state; meta = m || {}; if (meta.state !== was && meta.state === 'reflect') hidePicked(); render(); });
   DB.on(`${R}/groups`, (g) => { groups = g || {}; head(); });
   DB.on(`${R}/buzz`, (b) => {
     const prev = buzz.rkey; buzz = b || {};
@@ -88,11 +88,13 @@ function enter() {
     if (!mine) return;
     $('#pickedTxt').textContent = p.kind === 'group' ? `กลุ่มของคุณถูกสุ่ม!` : `คุณถูกสุ่ม!`;
     $('#pickedOv').hidden = false; sfx.fanfare(); if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
-    setTimeout(() => ($('#pickedOv').hidden = true), 6000);
+    clearTimeout(pickH); pickH = setTimeout(hidePicked, 5000);
   });
-  $('#pickedOv').onclick = () => ($('#pickedOv').hidden = true);
+  $('#pickedOv').onclick = hidePicked;
   head();
 }
+let pickH = null;
+function hidePicked() { clearTimeout(pickH); $('#pickedOv').hidden = true; }
 function head() {
   const g = groups[me?.gid]; if (!g) return;
   document.documentElement.style.setProperty('--gc', g.color);

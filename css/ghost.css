@@ -165,6 +165,18 @@ svg.ghost .gh-fx { animation: gh-twinkle 1.8s ease-in-out infinite; transform-or
   .acct .pill { flex: 1; max-width: none; }
 }
 
+/* ── ความเสถียรบนมือถือ ── */
+.po-tap { display: block; margin-top: 14px; opacity: .85; font-size: .95rem; }
+.picked-overlay { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+/* ห้องรอของครูบนจอเล็ก: เลื่อนดูโหมด/ปุ่มเริ่มได้ */
+@media (max-width: 760px), (max-height: 640px) {
+  #scr-lobby { height: auto; min-height: 100dvh; overflow: visible; }
+  #scr-lobby .hall { min-height: 220px; }
+  #scr-lobby .lobby-bar { position: relative; }
+}
+button, a, [role=button], label { touch-action: manipulation; }
+dialog:not([open]) { display: none !important; }
+
 @media (prefers-reduced-motion: reduce) {
   svg.ghost *, .gc-logo img, .mini-ghosts i, .fog { animation: none !important; }
   .gc-body.hub-in .gc-hub > * { animation: none; }
