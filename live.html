@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>โหมดห้องเรียน — คำถามฟลุ๊กถูก</title>
+<title>โหมดห้องเรียน · Ghost Class</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -12,6 +13,7 @@
 <link rel="stylesheet" href="css/bright.css">
 <link rel="stylesheet" href="css/cute.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="stylesheet" href="css/ghost.css">
 </head>
 <body class="sky live-body">
 <div class="deco" aria-hidden="true"><i>☁️</i><i>⭐</i><i>💖</i><i>☁️</i><i>✨</i><i>🎈</i><i>⭐</i><i>💜</i></div>
@@ -19,7 +21,7 @@
 <!-- ล็อกอินครู -->
 <section class="screen on" id="scr-login">
   <div class="login-wrap">
-    <div class="logo big"><span class="mark"></span><span class="brand"><small>โหมดห้องเรียน</small><span>ฟลุ๊ก<b>ถูก</b></span></span></div>
+    <div class="logo big"><span class="mark gmark" aria-hidden="true"></span><span class="brand"><small>โหมดห้องเรียน</small><span>Ghost <b>Class</b></span></span></div>
     <div class="login-card card">
       <h2>เข้าสู่ระบบสำหรับครู</h2>
       <p class="muted">ล็อกอินที่สมุดคะแนนแล้ว ระบบจะเข้าให้อัตโนมัติ</p>
@@ -34,9 +36,9 @@
 <!-- ตั้งค่าก่อนเปิดห้อง -->
 <section class="screen" id="scr-setup">
   <header class="topbar">
-    <div class="logo"><span class="mark"></span><span class="brand"><small>โหมดห้องเรียน</small><span>ฟลุ๊ก<b>ถูก</b></span></span></div>
+    <div class="logo"><span class="mark gmark" aria-hidden="true"></span><span class="brand"><small>โหมดห้องเรียน</small><span>Ghost <b>Class</b></span></span></div>
     <span class="sp"></span>
-    <a class="home-link" href="./" title="เมนูรวม" aria-label="เมนูรวม">🏠</a>
+    <a class="home-link" href="./" title="เมนูรวม Ghost Class" aria-label="เมนูรวม"><img src="img/ghost.svg" alt=""></a>
     <a class="btn ghost sm" href="../score-book/">← สมุดคะแนน</a>
     <a class="btn ghost sm" href="host.html">🎮 เกมคำถาม</a>
   </header>
@@ -66,7 +68,7 @@
 <!-- จอแสดงผล -->
 <section class="screen" id="scr-live">
   <header class="live-top">
-    <a class="home-link" href="./" title="เมนูรวม" aria-label="เมนูรวม">🏠</a>
+    <a class="home-link" href="./" title="เมนูรวม Ghost Class" aria-label="เมนูรวม"><img src="img/ghost.svg" alt=""></a>
     <div class="live-title"><b id="lvTitle"></b><small id="lvSub"></small></div>
     <button class="pin-pill" id="pinPill" title="แสดง QR ให้นักเรียนสแกน">📱 PIN <b id="lvPin"></b></button>
     <span class="pill">👥 <b id="lvJoined">0</b> คน</span>
