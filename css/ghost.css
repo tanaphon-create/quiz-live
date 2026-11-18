@@ -138,6 +138,12 @@ svg.ghost .gh-fx { animation: gh-twinkle 1.8s ease-in-out infinite; transform-or
 
 .gc-foot { margin-top: 32px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; text-align: center; font-size: 13px; color: #8A7DB0; }
 .foot-ghost { width: 40px; height: 40px; }
+.fest-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.fest-opt { display: grid; gap: 2px; text-align: left; padding: 12px 14px; border-radius: 18px; border: 2px solid #ECE6FF; background: #fff; color: var(--gc-ink); cursor: pointer; font: inherit; box-shadow: 0 6px 16px #7C5CFF14; min-height: 64px; }
+.fest-opt b { font-weight: 700; font-size: 16px; } .fest-opt span { font-size: 13px; color: #6D5F96; }
+.fest-opt[aria-checked='true'] { border-color: #F27B2E; background: #FFF6EC; box-shadow: 0 0 0 3px #F27B2E33; }
+.fest-msg { margin: 8px 2px 0; font-size: 14px; color: #6D5F96; min-height: 1.2em; }
+@media (max-width: 600px) { .fest-row { grid-template-columns: 1fr; } .fest-opt { min-height: 56px; } }
 .link-btn { border: 0; background: none; cursor: pointer; color: var(--gc-pur); font: 500 13px var(--font-read); text-decoration: underline; text-underline-offset: 3px; }
 
 /* โน้ตบุ๊กเล็ก / แท็บเล็ต */

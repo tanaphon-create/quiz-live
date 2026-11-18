@@ -48,6 +48,13 @@
             }
           }
         }
+      },
+      "site": {
+        "festival": {
+          ".read": true,
+          ".write": "auth != null && auth.token.email === 'tanaphon@wangchan.ac.th' && auth.token.email_verified === true",
+          ".validate": "newData.hasChildren(['mode']) && newData.child('mode').isString() && newData.child('mode').val().length <= 30"
+        }
       }
     }
   }

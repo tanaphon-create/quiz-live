@@ -58,6 +58,16 @@
     </div>
   </section>
 
+  <section class="sec fest-sec" id="festSec" hidden>
+    <h3><span class="dot" style="--tc:#F27B2E"></span>🎉 ของตกแต่งตามเทศกาล <small>ทุกหน้าและมือถือนักเรียนเห็นเหมือนกัน</small></h3>
+    <div class="fest-row" role="radiogroup" aria-label="ของตกแต่งตามเทศกาล">
+      <button type="button" class="fest-opt" data-fest="auto" role="radio"><b>📅 อัตโนมัติ</b><span>แสดงเองเมื่อถึงช่วงเทศกาล</span></button>
+      <button type="button" class="fest-opt" data-fest="loykrathong" role="radio"><b>🪷 ลอยกระทง</b><span>เปิดตอนนี้เลย</span></button>
+      <button type="button" class="fest-opt" data-fest="off" role="radio"><b>🚫 ปิด</b><span>ไม่แสดงของตกแต่ง</span></button>
+    </div>
+    <p class="fest-msg" id="festMsg" aria-live="polite"></p>
+  </section>
+
   <section class="sec">
     <h3><span class="dot" style="--tc:#FF9640"></span>สำหรับนักเรียน <small>ไม่ต้องล็อกอิน</small></h3>
     <div class="tiles">
@@ -113,6 +123,20 @@ let seen = false; try { seen = sessionStorage.getItem('gc_intro') === '1'; } cat
 if ((seen || reduce) && !new URLSearchParams(location.search).has('intro')) { intro.hidden = true; document.body.classList.add('hub-in'); clearInterval(sayH); }
 else openIntro();
 
+// ── ของตกแต่งตามเทศกาล (เฉพาะครู) ──
+function setupFest(DB) {
+  const sec = $('#festSec'), msg = $('#festMsg'); sec.hidden = false;
+  const mark = () => { const m = window.GCFest?.get().mode || 'auto'; sec.querySelectorAll('[data-fest]').forEach((b) => b.setAttribute('aria-checked', b.dataset.fest === m)); };
+  mark(); addEventListener('gc-fest', mark);
+  sec.onclick = async (e) => {
+    const b = e.target.closest('[data-fest]'); if (!b || !window.GCFest) return;
+    msg.textContent = 'กำลังบันทึก…';
+    const tok = await DB.user()?.getIdToken().catch(() => null);
+    const r = await GCFest.set(b.dataset.fest, tok); mark();
+    msg.textContent = r.ok ? '✅ บันทึกแล้ว — ทุกหน้าและมือถือนักเรียนจะเห็นตามนี้' : '⚠ บันทึกได้เฉพาะเครื่องนี้ (ยังไม่ได้เปิดสิทธิ์ในฐานข้อมูล)';
+  };
+}
+
 // ── สถานะล็อกอิน (ใช้ร่วมทุกระบบ) ──
 const txt = $('#acctTxt'), acct = $('#acct');
 connect({ host: true }).then((DB) => DB.onUser((u) => {
@@ -120,12 +144,15 @@ connect({ host: true }).then((DB) => DB.onUser((u) => {
   if (isTeacher(u)) {
     txt.textContent = '✅ ' + u.email;
     $('#hello').textContent = 'สวัสดีครับคุณครู วันนี้สอนอะไรดี?';
+    setupFest(DB);
     const b = document.createElement('button'); b.id = 'outBtn'; b.className = 'btn ghost sm'; b.textContent = 'ออกจากระบบ'; b.onclick = () => DB.signOut(); acct.append(b);
   } else {
+    $('#festSec').hidden = true;
     txt.textContent = 'ยังไม่ได้เข้าสู่ระบบ (ครู)';
     const b = document.createElement('button'); b.id = 'inBtn'; b.className = 'btn sm'; b.textContent = 'เข้าสู่ระบบครู'; b.onclick = () => DB.signIn().catch(() => {}); acct.append(b);
   }
 })).catch(() => { txt.textContent = 'ออฟไลน์'; });
 </script>
+<script src="js/festival.js" defer></script>
 </body>
 </html>
