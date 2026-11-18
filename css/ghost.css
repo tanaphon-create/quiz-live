@@ -143,7 +143,8 @@ svg.ghost .gh-fx { animation: gh-twinkle 1.8s ease-in-out infinite; transform-or
 .fest-opt b { font-weight: 700; font-size: 16px; } .fest-opt span { font-size: 13px; color: #6D5F96; }
 .fest-opt[aria-checked='true'] { border-color: #F27B2E; background: #FFF6EC; box-shadow: 0 0 0 3px #F27B2E33; }
 .fest-msg { margin: 8px 2px 0; font-size: 14px; color: #6D5F96; min-height: 1.2em; }
-@media (max-width: 600px) { .fest-row { grid-template-columns: 1fr; } .fest-opt { min-height: 56px; } }
+@media (max-width: 900px) { .fest-row { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .fest-opt { min-height: 64px; padding: 10px 12px; } .fest-opt b { font-size: 15px; } }
 .link-btn { border: 0; background: none; cursor: pointer; color: var(--gc-pur); font: 500 13px var(--font-read); text-decoration: underline; text-underline-offset: 3px; }
 
 /* โน้ตบุ๊กเล็ก / แท็บเล็ต */
