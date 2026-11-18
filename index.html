@@ -97,7 +97,8 @@ const letters = 'Ghost Class'.split('');
 $('#inTitle').innerHTML = letters.map((c, i) => c === ' ' ? '<span class="sp"> </span>' : `<span style="--i:${i}">${c}</span>`).join('');
 $('#inGhost').innerHTML = ghost('wave');
 $('#miniGhosts').innerHTML = Array.from({ length: 7 }, (_, i) => `<i style="left:${8 + i * 13}%;--d:${(i * 0.9).toFixed(1)}s;--s:${(0.5 + (i % 3) * 0.2).toFixed(1)}">${ghost(['peek', 'love', 'sleepy', 'hello'][i % 4])}</i>`).join('');
-const lines = ['บู๋! สวัสดี~', 'พร้อมเรียนหรือยัง?', 'ไม่ต้องกลัวนะ ผีใจดี 💜'];
+let lines = ['บู๋! สวัสดี~', 'พร้อมเรียนหรือยัง?', 'ไม่ต้องกลัวนะ ผีใจดี 💜'];
+addEventListener('gc-fest-intro', (e) => { lines = e.detail.lines; li = 0; $('#inBubble').textContent = lines[0]; });
 let li = 0, sayH = setInterval(() => { li = (li + 1) % lines.length; const b = $('#inBubble'); b.classList.remove('pop'); void b.offsetWidth; b.textContent = lines[li]; b.classList.add('pop'); }, 1500);
 let exitH = null;
 function closeIntro() {
@@ -118,7 +119,7 @@ function openIntro() {
 }
 $('#inGo').onclick = closeIntro; $('#inSkip').onclick = closeIntro;
 intro.addEventListener('keydown', (e) => (e.key === 'Escape' || e.key === 'Enter') && closeIntro());
-$('#replay').onclick = () => { sayH = setInterval(() => { li = (li + 1) % lines.length; $('#inBubble').textContent = lines[li]; }, 1500); openIntro(); window.scrollTo(0, 0); };
+$('#replay').onclick = () => { window.GCFest?.decorateIntro(); sayH = setInterval(() => { li = (li + 1) % lines.length; $('#inBubble').textContent = lines[li]; }, 1500); openIntro(); window.scrollTo(0, 0); };
 let seen = false; try { seen = sessionStorage.getItem('gc_intro') === '1'; } catch {}
 if ((seen || reduce) && !new URLSearchParams(location.search).has('intro')) { intro.hidden = true; document.body.classList.add('hub-in'); clearInterval(sayH); }
 else openIntro();

@@ -49,8 +49,9 @@ const introDone = new Promise((res) => {
   };
 
   // ประโยคในลูกโป่งคำพูด
-  const lines = ['พร้อมยัง?', 'ตอบไวได้คะแนนเยอะ!', 'ฟลุ๊กก็ถูกได้นะ', 'ชวนเพื่อนมาแข่งกัน!', 'สู้ ๆ นะทุกคน'];
+  let lines = ['พร้อมยัง?', 'ตอบไวได้คะแนนเยอะ!', 'ฟลุ๊กก็ถูกได้นะ', 'ชวนเพื่อนมาแข่งกัน!', 'สู้ ๆ นะทุกคน'];
   let li = 0;
+  addEventListener('gc-fest-intro', (e) => { lines = e.detail.lines; li = 0; $('#introSay').textContent = lines[0]; });
   const sayH = setInterval(() => {
     const s = $('#introSay'); s.classList.remove('pop'); void s.offsetWidth;
     li = (li + 1) % lines.length; s.textContent = lines[li]; s.classList.add('pop');
