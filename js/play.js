@@ -1,6 +1,8 @@
 import { connect, TS } from './db.js';
 import { renderAvatar, randomAvatar, OPTS } from './avatar.js';
 import { sfx, unlock } from './sound.js';
+import { applyTheme, savedTheme } from './themes.js';
+applyTheme(savedTheme());
 import { $, $$, esc, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js';
 
 const ME_KEY = 'quizlive:me';
@@ -146,7 +148,7 @@ function enterRoom() {
   });
   DB.on(`${R}/players`, (v) => { allPlayers = v || {}; $('#lkCount').textContent = Object.keys(allPlayers).length; renderTally(); });
   DB.on(`${R}/current`, (c) => { cur = c; route(); });
-  DB.on(`${R}/meta`, (m) => { meta = m; badges(); route(); });
+  DB.on(`${R}/meta`, (m) => { meta = m; if (m?.theme && document.documentElement.dataset.theme !== m.theme) applyTheme(m.theme); badges(); route(); });
 }
 
 function kicked() {

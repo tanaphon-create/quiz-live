@@ -4,6 +4,8 @@ import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock } from './sound.j
 import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js';
 import { SAMPLE } from './sample.js';
 import { SCOREBOOK_API } from './config.js';
+import { applyTheme, savedTheme, openThemePicker } from './themes.js';
+applyTheme(savedTheme());
 
 /* ───────────── ชุดคำถาม (เก็บใน Firebase เฉพาะบัญชีครู) ───────────── */
 const LS = 'quizlive:quizzes'; // ที่เก็บเดิมในเครื่อง — ย้ายขึ้นคลาวด์ครั้งแรกแล้วลบทิ้ง
@@ -270,7 +272,7 @@ async function hostGame(q) {
   quiz = structuredClone(q);
   do { pin = String(100000 + Math.floor(Math.random() * 900000)); } while (await DB.get(`quiz/rooms/${pin}/meta`));
   R = `quiz/rooms/${pin}`;
-  await DB.set(R, { meta: { hostUid: DB.uid, state: 'lobby', title: quiz.title, total: quiz.questions.length, qIndex: -1, createdAt: TS, showQ: true } });
+  await DB.set(R, { meta: { hostUid: DB.uid, state: 'lobby', title: quiz.title, total: quiz.questions.length, qIndex: -1, createdAt: TS, showQ: true, theme: savedTheme() } });
   qi = -1; phase = 'lobby'; players = {}; prevRanks = {};
   const url = new URL('play.html', location.href);
   url.searchParams.set('pin', pin);
@@ -395,6 +397,8 @@ $('#crowd').onclick = (e) => {
   const p = players[b.dataset.uid];
   if (p && confirm(`นำ “${p.name}” ออกจากห้อง?`)) DB.remove(`${R}/players/${b.dataset.uid}`);
 };
+const pickTheme = () => openThemePicker((id) => { if (R && phase !== '') DB.update(R, { 'meta/theme': id }).catch(() => {}); });
+$('#themeBtn').onclick = pickTheme; $('#themeBtnHome').onclick = () => openThemePicker(null, { note: 'ใช้กับเกมถัดไป นักเรียนจะเห็นธีมเดียวกันบนมือถือ' });
 $('#musicBtn').onclick = () => { const on = !musicOn(); music(on ? 'lobby' : null); $('#musicBtn').classList.toggle('on', on); };
 $('#lobbyCancel').onclick = async () => { if (confirm('ยกเลิกห้องนี้?')) { await DB.update(R, { 'meta/state': 'end', 'meta/cancelled': true }); leave(); } };
 $('#muteBtn').onclick = () => { setMuted(!isMuted()); $('#muteBtn').textContent = isMuted() ? '🔇' : '🔊'; };

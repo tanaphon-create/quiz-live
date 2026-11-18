@@ -6,14 +6,16 @@
 <title>เกมคำถาม (จอครู) · Ghost Class</title>
 <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600;700&family=Mitr:wght@400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/host.css">
 <link rel="stylesheet" href="css/bright.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="stylesheet" href="css/ghost.css">
+<link rel="stylesheet" href="css/themes.css">
 </head>
-<body class="sky">
+<body class="sky qz">
+<script>try{var t=localStorage.getItem("gc_theme");document.documentElement.dataset.theme=t||"ghost"}catch(e){document.documentElement.dataset.theme="ghost"}</script>
 
 <!-- ═══ ล็อกอินครู ═══ -->
 <section class="screen on" id="scr-login">
@@ -38,6 +40,7 @@
     <div class="logo"><span class="mark gmark" aria-hidden="true"></span><span class="brand"><small>เกมคำถามฟลุ๊กถูก</small><span>Ghost <b>Class</b></span></span></div>
     <span class="sp"></span>
     <span class="pill" id="modeBadge">กำลังเชื่อมต่อ…</span>
+    <button class="btn ghost sm" id="themeBtnHome" title="เลือกธีมพื้นหลังเกม">🎨 ธีม</button>
     <a class="btn ghost sm" href="../score-book/" title="กลับไปสมุดคะแนน">← สมุดคะแนน</a>
     <a class="btn ghost sm" href="live.html" title="จอคะแนนกลุ่ม ปุ่มกดแข่ง สุ่มตอบ ความคิดเห็น">🖥 โหมดห้องเรียน</a>
     <span class="pill who" id="who"></span>
@@ -111,6 +114,7 @@
     <label class="tog"><input type="checkbox" id="optStreak" checked><span></span>โบนัสตอบถูกติดกัน</label>
     <label class="tog"><input type="checkbox" id="optShuffle"><span></span>สลับลำดับข้อ</label>
     <span class="sp"></span>
+    <button class="btn ghost" id="themeBtn" title="เลือกธีมพื้นหลัง">🎨 ธีม</button>
     <button class="icon-btn" id="musicBtn" title="เพลง">🎵</button>
     <button class="btn ghost" id="lobbyCancel">ยกเลิก</button>
     <button class="btn gold big" id="startBtn" disabled>เริ่มเกม ▶</button>
