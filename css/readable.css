@@ -1,0 +1,15 @@
+/* ═════════ ตัวอักษรอ่านง่ายทั้งเว็บ (โหลดเป็นไฟล์สุดท้าย) ═════════
+   ภาษาไทย = IBM Plex Sans Thai Looped (แบบมีหัว อ่านง่ายสำหรับนักเรียน)
+   ตัวเลข/อังกฤษในหัวข้อใหญ่ = Fredoka (กลม ชัด น่ารัก) */
+:root {
+  --font-read: 'IBM Plex Sans Thai Looped', 'Noto Sans Thai Looped', 'Noto Sans Thai', system-ui, sans-serif;
+  --font-ui: var(--font-read);
+  --font-display: 'Fredoka', var(--font-read);
+  --gc-font: 'Fredoka', var(--font-read);
+}
+body, .gc-body { font-family: var(--font-read); line-height: 1.6; letter-spacing: .005em; -webkit-font-smoothing: antialiased; }
+input, button, select, textarea { font-family: inherit; }
+h1, h2, h3, .q-title, .ready-q, .board-h { font-weight: 700; line-height: 1.4; }
+.muted, .hint, small { font-weight: 500; }
+/* ชื่อคน/ชื่อกลุ่ม/คำตอบ ให้ไทยไม่อัดแน่น */
+.gname, .rd-name, .bz-big, .bz-ginfo b, .live-title b, .picked-overlay h2, .gt-txt b, .sec h3, .gc-hero h2 { line-height: 1.4; }
