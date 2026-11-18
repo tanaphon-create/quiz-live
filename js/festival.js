@@ -39,7 +39,7 @@
     else { delete document.documentElement.dataset.fest; undoIntro(); }
     window.dispatchEvent(new CustomEvent('gc-fest', { detail: { fest: f, mode: cfg.mode || 'auto' } }));
   }
-  function clear() { document.getElementById('gcFest')?.remove(); document.getElementById('gcFestHi')?.remove(); }
+  function clear() { ['gcFest', 'gcFestHi', 'gcFestFront'].forEach((id) => document.getElementById(id)?.remove()); document.querySelectorAll('.lk-hero,.lk-tag').forEach((e) => e.remove()); }
 
   /* ── ลอยกระทง ── */
   const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -68,10 +68,17 @@
         box-shadow:0 0 30px 10px rgba(255,226,140,.45),0 0 90px 40px rgba(255,214,120,.22);opacity:.95}
       #gcFest .gf-moon::before,#gcFest .gf-moon::after{content:"";position:absolute;border-radius:50%;background:rgba(232,200,120,.35)}
       #gcFest .gf-moon::before{width:18%;height:18%;left:30%;top:52%}#gcFest .gf-moon::after{width:11%;height:11%;left:60%;top:30%}
-      #gcFest .gf-lan{position:absolute;bottom:-70px;width:clamp(22px,3vw,34px);filter:drop-shadow(0 0 10px rgba(255,180,70,.75));animation:gf-rise var(--d) linear var(--w) infinite}
-      #gcFest .gf-lan svg{width:100%;display:block;animation:gf-sway 3.6s ease-in-out infinite alternate}
+      #gcFest .gf-lan,#gcFestFront .gf-lan{position:absolute;bottom:-70px;width:clamp(22px,3vw,34px);filter:drop-shadow(0 0 10px rgba(255,180,70,.75));animation:gf-rise var(--d) linear var(--w) infinite}
+      #gcFest .gf-lan svg,#gcFestFront .gf-lan svg{width:100%;display:block;animation:gf-sway 3.6s ease-in-out infinite alternate}
       @keyframes gf-rise{0%{transform:translateY(0);opacity:0}8%{opacity:.95}80%{opacity:.85}100%{transform:translateY(calc(-100vh - 140px)) translateX(var(--x));opacity:0}}
       @keyframes gf-sway{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+      #gcFest .gf-dusk{position:absolute;inset:0;background:linear-gradient(180deg,rgba(124,92,255,.16) 0%,rgba(255,170,120,.12) 45%,rgba(255,214,150,.10) 70%,rgba(80,130,230,.18) 100%)}
+      #gcFestFront{position:fixed;inset:0;z-index:40;pointer-events:none;overflow:hidden}
+      #gcFestFront .gf-lan{opacity:.9;width:clamp(18px,2.4vw,28px)}
+      @media (prefers-reduced-motion:reduce){#gcFestFront{display:none}}
+      .lk-hero{position:absolute;left:-12%;width:124%;bottom:-16%;pointer-events:none;animation:gf-bob 2.8s ease-in-out infinite alternate}
+      .lk-hero svg{display:block;width:100%}
+      .lk-tag{display:inline-flex;align-items:center;gap:6px;margin-left:6px;padding:4px 12px;border-radius:999px;background:linear-gradient(90deg,#FFB347,#FF6FA0);color:#fff;font-weight:700;font-size:.85em;box-shadow:0 4px 12px rgba(255,140,80,.35)}
       #gcFest .gf-water{position:absolute;left:0;right:0;bottom:0;height:clamp(54px,9vh,92px);
         background:linear-gradient(180deg,rgba(120,190,255,.0),rgba(98,170,245,.45) 30%,rgba(70,140,230,.62));}
       #gcFest .gf-wave{position:absolute;left:-50%;width:200%;height:14px;top:22%;opacity:.55;
@@ -102,8 +109,18 @@
     const ls = [...Array(nL)].map((_, i) => `<div class="gf-lan" style="left:${(4 + i * (92 / nL) + (i % 2) * 3).toFixed(0)}vw;--d:${22 + (i % 4) * 5}s;--w:${-(i * 3.1).toFixed(1)}s;--x:${(i % 2 ? 1 : -1) * (20 + i * 3)}px;--top:${(18 + (i * 37) % 55)}vh">${lantern}</div>`).join('');
     const sp = [...Array(phone ? 6 : 12)].map((_, i) => `<i class="gf-spark" style="left:${(7 + i * 83) % 96}vw;top:${(6 + i * 29) % 60}vh;--w:${-(i * .7).toFixed(1)}s"></i>`).join('');
     const el = document.createElement('div'); el.id = 'gcFest'; el.setAttribute('aria-hidden', 'true');
-    el.innerHTML = `<style>${css}</style><div class="gf-moon"></div>${sp}${ls}<div class="gf-water"><i class="gf-wave"></i><i class="gf-wave w2"></i></div>${ks}`;
+    el.innerHTML = `<style>${css}</style><div class="gf-dusk"></div><div class="gf-moon"></div>${sp}${ls}<div class="gf-water"><i class="gf-wave"></i><i class="gf-wave w2"></i></div>${ks}`;
     document.body.prepend(el);
+    // โคมลอยเล็ก ๆ ลอยผ่าน "ด้านหน้า" เนื้อหา (แตะทะลุได้ ไม่บังการกด) → เห็นบรรยากาศเทศกาลชัดทุกหน้า
+    const nF = phone ? 4 : 7;
+    const fr = document.createElement('div'); fr.id = 'gcFestFront'; fr.setAttribute('aria-hidden', 'true');
+    fr.innerHTML = [...Array(nF)].map((_, i) => `<div class="gf-lan" style="left:${(8 + i * (84 / nF) + (i % 2) * 5).toFixed(0)}vw;--d:${18 + (i % 3) * 6}s;--w:${-(i * 4.3 + 2).toFixed(1)}s;--x:${(i % 2 ? 1 : -1) * (24 + i * 4)}px">${lantern}</div>`).join('');
+    document.body.append(fr);
+    // หน้าเมนูรวม: ผีน้อยในแบนเนอร์นั่งกระทง + ป้ายเทศกาล
+    const hg = document.getElementById('heroGhost');
+    if (hg && !hg.querySelector('.lk-hero')) { hg.style.position = 'relative'; hg.insertAdjacentHTML('beforeend', `<div class="lk-hero">${krathong('#FFB4C8', false)}</div>`); }
+    const ht = document.querySelector('.hero-tag');
+    if (ht && !document.querySelector('.lk-tag')) ht.insertAdjacentHTML('afterend', '<span class="lk-tag">🪷 เทศกาลลอยกระทง</span>');
     if (rm) return;
     // หน้าที่มี INTRO อยู่ (เมนูรวม/เข้าเกม) ทักทายใน INTRO แล้ว — ไม่แสดงป้ายซ้ำ เพื่อไม่บังปุ่มเริ่ม
     const it = document.getElementById('intro'); if (it && !it.hidden) return;
@@ -121,7 +138,15 @@
   /* ── INTRO แบบลอยกระทง (หน้าเมนูรวม .gc-intro และหน้าเข้าเกม .intro) ── */
   function introLoyKrathong() {
     const intro = document.getElementById('intro');
-    if (!intro || intro.hidden || intro.classList.contains('lk')) return;
+    if (!intro || intro.classList.contains('lk')) return;
+    if (intro.hidden) {
+      // หน้าเมนูรวม: ถ้า INTRO ปกติเคยเล่นไปแล้ว ให้เล่น INTRO ลอยกระทงอีก 1 ครั้งต่อเครื่อง
+      let seen = true; try { seen = localStorage.getItem('gc_lk_intro_2569') === '1'; } catch (e) {}
+      if (seen || !window.gcOpenIntro || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      try { localStorage.setItem('gc_lk_intro_2569', '1'); } catch (e) {}
+      window.gcOpenIntro();
+    }
+    try { localStorage.setItem('gc_lk_intro_2569', '1'); } catch (e) {}
     const hub = intro.classList.contains('gc-intro');
     if (!document.getElementById('gcLkCss')) {
       const st = document.createElement('style'); st.id = 'gcLkCss';

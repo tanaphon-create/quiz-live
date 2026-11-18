@@ -119,6 +119,7 @@ function openIntro() {
 }
 $('#inGo').onclick = closeIntro; $('#inSkip').onclick = closeIntro;
 intro.addEventListener('keydown', (e) => (e.key === 'Escape' || e.key === 'Enter') && closeIntro());
+window.gcOpenIntro = () => { clearInterval(sayH); sayH = setInterval(() => { li = (li + 1) % lines.length; $('#inBubble').textContent = lines[li]; }, 1500); openIntro(); window.scrollTo(0, 0); };
 $('#replay').onclick = () => { window.GCFest?.decorateIntro(); sayH = setInterval(() => { li = (li + 1) % lines.length; $('#inBubble').textContent = lines[li]; }, 1500); openIntro(); window.scrollTo(0, 0); };
 let seen = false; try { seen = sessionStorage.getItem('gc_intro') === '1'; } catch {}
 if ((seen || reduce) && !new URLSearchParams(location.search).has('intro')) { intro.hidden = true; document.body.classList.add('hub-in'); clearInterval(sayH); }
