@@ -1,13 +1,13 @@
 /* ═════════ ธีมทั้งเว็บ: เทศกาล + ฤดูกาล — ใช้ได้ทุกหน้า (เกมคำถาม · โหมดห้องเรียน · สมุดคะแนน · หน้านักเรียน) ═════════
    โหลดแบบ <script src=".../festival.js?v=..." defer> (ไม่ต้องเป็น module)
-   เฉพาะครูเปลี่ยนได้: อัตโนมัติตามวันที่ / ลอยกระทง / ฤดูร้อน / กลางคืน / ฝน / ปิด — เก็บที่ Firebase quiz/site/festival
+   เฉพาะครูเปลี่ยนได้: อัตโนมัติตามวันที่ / ลอยกระทง / ฤดูร้อน / กลางคืน / ฝน / สงคราม / ปิด — เก็บที่ Firebase quiz/site/festival
    ฉากหลังอยู่ "ด้านหลัง" เนื้อหา (z-index:-1) ส่วนเอฟเฟกต์ด้านหน้า (โคมลอย ฝน หิ่งห้อย) แตะทะลุได้ ไม่บังการกด */
 (function () {
   'use strict';
   const DB_URL = 'https://quizlive-wcw-default-rtdb.asia-southeast1.firebasedatabase.app';
   const PATH = '/quiz/site/festival.json';
   const KEY = 'gc_fest';
-  const VER = '20261118d';
+  const VER = '20261119b';
   const SRC = document.currentScript && document.currentScript.src;
   const ART = import(new URL('ghost.js?v=' + VER, SRC || location.href).href).catch(() => null);
 
@@ -30,6 +30,10 @@
       hub: ['ฝนตกแล้ว กางร่มก่อน ☔', 'ฟังเสียงฝนแล้วตั้งใจเรียน 🌧️', 'อย่าลืมพกร่มนะ!', 'หลังฝนมีรุ้งเสมอ 🌈'],
       play: ['ฝนตก ใจไม่ตก! ☔', 'ตอบถูก รุ้งจะมา 🌈', 'พร้อมยัง?'],
       hello: '☔ หน้าฝนแสนชุ่มฉ่ำ หลังฝนมีรุ้ง 🌈', playHello: '☔ ฝนตก ใจไม่ตก ตอบถูก! 🌈' },
+    war: { name: 'สงคราม', emoji: '⚔️', greet: '⚔️ เรียนรู้สงคราม เพื่อรักษาสันติภาพ 🕊️', tag: '⚔️ ธีมสงคราม', pose: 'soldier', windows: [],
+      hub: ['ทหารผีน้อยพร้อมแล้ว! 🪖', 'เรียนประวัติศาสตร์ เพื่อสันติภาพ 🕊️', 'จัดแถว! ตรงไปข้างหน้า~', 'ภารกิจวันนี้: ตั้งใจเรียน ⭐'],
+      play: ['ทหารกล้า ตอบให้ถูก! 🪖', 'บุกไปข้างหน้า! ⚔️', 'ชัยชนะอยู่ไม่ไกล ⭐', 'พร้อมรบยัง?'],
+      hello: '⚔️ เรียนรู้สงคราม เพื่อรักษาสันติภาพ 🕊️', playHello: '🪖 ทหารกล้า ตอบไว ตอบถูก! ⭐' },
   };
 
   /* ── อ่าน/เขียนการตั้งค่า ── */
@@ -72,6 +76,20 @@
     <path d="M86 220 C84 160 78 110 90 64" stroke="#D9A46E" stroke-width="4" fill="none" stroke-dasharray="6 10"/>
     ${[[-150, '#3FAE5C'], [-110, '#56C26F'], [-60, '#3FAE5C'], [-20, '#56C26F'], [20, '#3FAE5C']].map(([r, c]) => `<path transform="translate(90 64) rotate(${r})" d="M0 0 C20 -10 46 -10 70 8 C48 2 26 6 0 0 Z" fill="${c}"/>`).join('')}
     <circle cx="84" cy="70" r="7" fill="#8A5A2B"/><circle cx="96" cy="72" r="7" fill="#A06A35"/></svg>`;
+  const plane = `<svg viewBox="0 0 80 40" aria-hidden="true"><path d="M8 22 Q6 14 14 14 L58 16 Q66 17 66 22 Q66 27 58 28 L14 30 Q6 30 8 22 Z" fill="#7A8B4A" stroke="#3E4A22" stroke-width="2"/>
+    <rect x="26" y="5" width="12" height="30" rx="4" fill="#9AAB66" stroke="#3E4A22" stroke-width="2"/><path d="M8 22 L2 12 L12 16 Z" fill="#5E6E36" stroke="#3E4A22" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="48" cy="22" r="5" fill="#F6F1DE" stroke="#3E4A22" stroke-width="1.5"/><circle cx="48" cy="22" r="2.4" fill="#C2410C"/><path d="M60 19 Q64 18 64 22" fill="#BFE3FF" stroke="#3E4A22" stroke-width="1.2"/>
+    <rect class="gf-prop" x="66" y="10" width="4" height="24" rx="2" fill="#5E4A2A"/></svg>`;
+  const tank = `<svg viewBox="0 0 120 70" aria-hidden="true"><rect x="10" y="44" width="100" height="22" rx="11" fill="#4A5728" stroke="#2F3818" stroke-width="2.5"/>
+    ${[24, 44, 64, 84, 98].map((x) => `<circle cx="${x}" cy="55" r="7" fill="#8C9A5E" stroke="#2F3818" stroke-width="2"/>`).join('')}
+    <rect x="16" y="30" width="88" height="18" rx="7" fill="#7A8B4A" stroke="#2F3818" stroke-width="2.5"/><rect x="38" y="14" width="40" height="20" rx="9" fill="#8C9A5E" stroke="#2F3818" stroke-width="2.5"/>
+    <rect x="74" y="20" width="42" height="6" rx="3" fill="#5E6E36" stroke="#2F3818" stroke-width="2"/><circle cx="58" cy="24" r="5" fill="#F6F1DE"/><circle cx="58" cy="24" r="2.3" fill="#C2410C"/>
+    <path d="M52 14 L52 2" stroke="#5E4A2A" stroke-width="2"/><path d="M52 2 L66 6 L52 10 Z" fill="#C2410C"/></svg>`;
+  const hills = `<svg viewBox="0 0 1200 140" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70 Q150 20 320 60 T640 50 T960 64 T1200 44 L1200 140 L0 140 Z" fill="#8C9A5E" opacity=".55"/>
+    <path d="M0 100 Q200 70 420 96 T820 88 T1200 92 L1200 140 L0 140 Z" fill="#6B7F3A" opacity=".75"/>
+    ${[...Array(16)].map((_, i) => `<ellipse cx="${30 + i * 76}" cy="124" rx="34" ry="13" fill="#C8B88A" stroke="#8C6B3E" stroke-width="2"/>`).join('')}
+    ${[...Array(15)].map((_, i) => `<ellipse cx="${68 + i * 76}" cy="108" rx="32" ry="12" fill="#D6C79A" stroke="#8C6B3E" stroke-width="2"/>`).join('')}</svg>`;
+  const flag = (c) => `<svg viewBox="0 0 40 60" aria-hidden="true"><rect x="3" y="2" width="3" height="58" rx="1.5" fill="#7A6440"/><path class="gf-wave-flag" d="M6 4 Q16 0 24 5 Q31 9 38 5 L38 24 Q31 28 24 24 Q16 19 6 23 Z" fill="${c}"/></svg>`;
   const gull = `<svg viewBox="0 0 40 16" aria-hidden="true"><path d="M2 12 Q11 2 20 10 Q29 2 38 12" stroke="#4B4F7A" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`;
 
   /* ═════════ ฉากหลังทุกหน้า ═════════ */
@@ -124,7 +142,17 @@
   .gf-rip{position:absolute;bottom:var(--b);width:44px;height:12px;border-radius:50%;border:2px solid rgba(120,160,220,.55);opacity:0;animation:gf-rp 2.6s ease-out var(--w) infinite}
   @keyframes gf-rp{0%{transform:scale(.2);opacity:.9}100%{transform:scale(1.8);opacity:0}}
   .gf-puddle{position:absolute;left:0;right:0;bottom:0;height:clamp(40px,7vh,70px);background:linear-gradient(180deg,rgba(150,180,220,0),rgba(120,150,200,.35))}
-  @media (prefers-reduced-motion:reduce){#gcFest *,#gcFest *::before{animation:none!important}#gcFestFront{display:none}.gf-lan{bottom:auto;top:var(--top)}.gf-k{left:var(--l)}.gf-cl{left:var(--l)}}
+  .gf-beam{position:absolute;bottom:0;width:22vw;height:115vh;background:linear-gradient(0deg,rgba(255,248,200,.42),rgba(255,248,200,0) 85%);clip-path:polygon(46% 100%,54% 100%,100% 0,0 0);transform-origin:50% 100%;transform:rotate(-24deg);animation:gf-sweep 11s ease-in-out var(--w) infinite alternate}
+  @keyframes gf-sweep{to{transform:rotate(24deg)}}
+  .gf-hills{position:absolute;left:0;right:0;bottom:0;height:clamp(60px,11vh,110px)}.gf-hills svg{width:100%;height:100%;display:block}
+  .gf-flag{position:absolute;bottom:clamp(44px,8vh,84px);width:clamp(30px,3.6vw,46px)}.gf-flag svg{display:block;width:100%}
+  .gf-wave-flag{transform-box:fill-box;transform-origin:0 50%;animation:gf-flagw 1.4s ease-in-out infinite alternate}
+  @keyframes gf-flagw{to{transform:skewY(-6deg) scaleX(.9)}}
+  .gf-tank{position:absolute;bottom:clamp(8px,2vh,20px);width:clamp(80px,9vw,130px);left:-140px;animation:gf-drift var(--d) linear var(--w) infinite}.gf-tank svg{display:block;width:100%;animation:gf-bob .5s ease-in-out infinite alternate}
+  .gf-plane{position:absolute;width:clamp(60px,6vw,90px);left:-100px;animation:gf-fly var(--d) linear var(--w) infinite}.gf-plane svg{display:block;width:100%}
+  .gf-prop{transform-box:fill-box;transform-origin:50% 50%;animation:gf-propsp .12s linear infinite alternate}
+  @keyframes gf-propsp{to{transform:scaleY(.15)}}
+  @media (prefers-reduced-motion:reduce){#gcFest *,#gcFest *::before{animation:none!important}#gcFestFront{display:none}.gf-lan{bottom:auto;top:var(--top)}.gf-k{left:var(--l)}.gf-cl{left:var(--l)}.gf-tank{left:var(--l)}}
   @media print{#gcFest,#gcFestFront,#gcFestHi{display:none!important}}
   #gcFestHi{position:fixed;left:50%;bottom:calc(clamp(54px,9vh,92px) + 14px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:60;
     display:flex;align-items:center;gap:10px;padding:10px 12px 10px 16px;border-radius:999px;background:rgba(255,255,255,.95);color:#3A2E5C;
@@ -162,6 +190,14 @@
       const rips = [...Array(N(phone, 4, 8))].map((_, i) => `<i class="gf-rip" style="left:${(6 + i * 29) % 92}%;--b:${8 + (i % 3) * 10}px;--w:${-(i * .7).toFixed(1)}s"></i>`).join('');
       return { back: `<div class="gf-tint" style="background:linear-gradient(180deg,rgba(110,130,170,.30),rgba(150,170,205,.16) 50%,rgba(140,170,215,.2))"></div>${clouds(N(phone, 3, 6), '#E9EEF7', .95)}<div class="gf-puddle"></div>${rips}`,
         front: drops, ft: ['#4FB3FF', '#6C7CFF'] };
+    },
+    war(phone) {
+      const planes = [...Array(N(phone, 1, 2))].map((_, i) => `<div class="gf-plane" style="top:${12 + i * 14}%;--d:${26 + i * 9}s;--w:${-(i * 11)}s">${plane}</div>`).join('');
+      return { back: `<div class="gf-tint" style="background:linear-gradient(180deg,rgba(150,140,90,.22),rgba(200,185,130,.14) 50%,rgba(120,130,80,.18))"></div>
+        <i class="gf-beam" style="left:12%;--w:-2s"></i><i class="gf-beam" style="left:72%;--w:-6s;animation-direction:alternate-reverse"></i>${clouds(N(phone, 2, 3), '#EFEADB', .85)}
+        <div class="gf-hills">${hills}</div><div class="gf-flag" style="left:6%">${flag('#C2410C')}</div>${phone ? '' : `<div class="gf-flag" style="right:7%">${flag('#6B7F3A')}</div>`}
+        <div class="gf-tank" style="--d:70s;--w:-20s;--l:30vw">${tank}</div>${planes}`,
+        front: '', ft: ['#6B7F3A', '#B45309'] };
     },
   };
 
@@ -232,6 +268,15 @@
   #intro.fx-rain :is(.in-go,.intro-go){background:linear-gradient(135deg,#4FB3FF,#6C7CFF);box-shadow:0 8px 0 #2C4FB0,0 14px 34px rgba(80,140,255,.45)}
   #intro.fx-rain .in-skip{background:rgba(255,255,255,.5);color:#1F3358}
   #intro.fx-rain .gf-drop{background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.8))}
+  /* สงคราม: ฟ้ายามเย็นสีกากี ไฟฉายส่อง เครื่องบิน รถถัง */
+  #intro.fx-war{background:linear-gradient(180deg,#56653A 0%,#83915A 38%,#C4BC88 72%,#E6DCB4 100%)!important}
+  #intro.fx-war .in-title span{color:#FFF4D6;text-shadow:0 4px 0 #3E4A22,0 8px 22px rgba(40,50,20,.45)}#intro.fx-war .in-title span:nth-child(n+7){color:#FFC56B}
+  #intro.fx-war :is(.in-sub,.intro-tag,.intro-hint){color:#2F3818}#intro.fx-war .fx-hello{color:#7C2D12}
+  #intro.fx-war .intro-title span{text-shadow:0 5px 0 #3E4A22}
+  #intro.fx-war :is(.in-go,.intro-go){background:linear-gradient(135deg,#6B7F3A,#B45309);box-shadow:0 8px 0 #3E4A22,0 14px 34px rgba(80,90,40,.45)}
+  #intro.fx-war .in-skip{background:rgba(255,255,255,.5);color:#2F3818}
+  #intro.fx-war .hill{background:radial-gradient(ellipse at 50% 30%,rgba(255,240,190,.5),rgba(255,240,190,.1) 60%,transparent 72%)}
+  #intro.fx .gf-hills{height:20vh}#intro.fx .gf-tank{bottom:3vh;width:clamp(100px,16vmin,160px)}#intro.fx .gf-flag{bottom:14vh}
   @media (prefers-reduced-motion:reduce){#intro.fx *{animation-duration:.01s!important;animation-iteration-count:1!important}#intro.fx .gf-lan{bottom:auto;top:var(--top)}#intro.fx .gf-k{left:var(--l)}}
   @media (max-height:640px){.gc-intro.fx .in-stage{margin-top:min(12vh,90px)}}`;
 
@@ -244,6 +289,7 @@
     if (f === 'summer') return `<div class="gf-sun"><b></b><i></i></div>${clouds(N(phone, 3, 5), '#fff', .95)}<div class="gf-sea"><i class="gf-wave" style="top:14%"></i><i class="gf-wave w2" style="top:34%"></i></div><div class="gf-palm" style="left:-14px;width:clamp(120px,22vmin,220px)">${palm}</div><div class="gf-palm" style="right:-18px;transform:scaleX(-1);width:clamp(120px,22vmin,220px)">${palm}</div>${[...Array(3)].map((_, i) => `<div class="gf-gull" style="top:${12 + i * 8}%;--d:${16 + i * 5}s;--w:${-(i * 5)}s">${gull}</div>`).join('')}`;
     if (f === 'night') return `${stars(N(phone, 40, 80), 'gf-star', 75)}<div class="gf-cres"></div><i class="gf-shoot" style="--w:-1s"></i><i class="gf-shoot" style="--w:-4s;top:20%;left:35%"></i>${[...Array(N(phone, 8, 14))].map((_, i) => `<i class="gf-fly" style="left:${(9 + i * 37) % 92}%;top:${(40 + i * 23) % 50 + 40}%;--d:${4 + (i % 4)}s;--w:${-(i * .9).toFixed(1)}s;--x:${(i % 2 ? 1 : -1) * (30 + i * 6)}px;--y:${(i % 3 ? -1 : 1) * (24 + i * 4)}px"></i>`).join('')}`;
     if (f === 'rain') return `${clouds(N(phone, 4, 7), '#EEF2F9', .95)}${[...Array(N(phone, 40, 80))].map((_, i) => `<i class="gf-drop" style="left:${((i * 41) % 104)}%;--d:${(.7 + (i % 5) * .12).toFixed(2)}s;--w:${-(i * .19).toFixed(2)}s"></i>`).join('')}<div class="gf-puddle"></div>${[...Array(N(phone, 5, 9))].map((_, i) => `<i class="gf-rip" style="left:${(6 + i * 29) % 92}%;--b:${8 + (i % 3) * 14}px;--w:${-(i * .6).toFixed(1)}s"></i>`).join('')}`;
+    if (f === 'war') return `<i class="gf-beam" style="left:8%;--w:-1s"></i><i class="gf-beam" style="left:70%;--w:-5s;animation-direction:alternate-reverse"></i>${clouds(N(phone, 2, 4), '#EFEADB', .9)}${[...Array(N(phone, 2, 3))].map((_, i) => `<div class="gf-plane" style="top:${10 + i * 12}%;--d:${14 + i * 5}s;--w:${-(i * 4)}s">${plane}</div>`).join('')}<div class="gf-hills">${hills}</div><div class="gf-flag" style="left:5%">${flag('#C2410C')}</div><div class="gf-flag" style="right:6%">${flag('#6B7F3A')}</div><div class="gf-tank" style="--d:30s;--w:-8s;--l:20vw">${tank}</div>`;
     return '';
   }
 

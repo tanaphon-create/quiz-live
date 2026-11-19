@@ -1,11 +1,17 @@
 import { connect, TS, isTeacher } from './db.js';
 import { renderAvatar } from './avatar.js';
-import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock } from './sound.js';
+import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock, setMusicTheme } from './sound.js';
 import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js';
 import { SAMPLE } from './sample.js';
 import { SCOREBOOK_API } from './config.js';
 import { applyTheme, savedTheme, openThemePicker } from './themes.js';
 applyTheme(savedTheme());
+// เพลงตามธีม: ใช้ธีมเกมที่ครูเลือก · ถ้ายังเป็นค่าเริ่มต้น 👻 ใช้ธีมทั้งเว็บ (ลอยกระทง ฤดูร้อน กลางคืน ฝน สงคราม) แทน
+const syncMusic = () => {
+  const g = document.documentElement.dataset.theme || savedTheme();
+  setMusicTheme(g !== 'ghost' ? g : (window.GCFest?.get().active || 'ghost'));
+};
+syncMusic(); addEventListener('gc-fest', syncMusic);
 
 /* ───────────── ชุดคำถาม (เก็บใน Firebase เฉพาะบัญชีครู) ───────────── */
 const LS = 'quizlive:quizzes'; // ที่เก็บเดิมในเครื่อง — ย้ายขึ้นคลาวด์ครั้งแรกแล้วลบทิ้ง
@@ -397,8 +403,8 @@ $('#crowd').onclick = (e) => {
   const p = players[b.dataset.uid];
   if (p && confirm(`นำ “${p.name}” ออกจากห้อง?`)) DB.remove(`${R}/players/${b.dataset.uid}`);
 };
-const pickTheme = () => openThemePicker((id) => { if (R && phase !== '') DB.update(R, { 'meta/theme': id }).catch(() => {}); });
-$('#themeBtn').onclick = pickTheme; $('#themeBtnHome').onclick = () => openThemePicker(null, { note: 'ใช้กับเกมถัดไป นักเรียนจะเห็นธีมเดียวกันบนมือถือ' });
+const pickTheme = () => openThemePicker((id) => { syncMusic(); if (R && phase !== '') DB.update(R, { 'meta/theme': id }).catch(() => {}); });
+$('#themeBtn').onclick = pickTheme; $('#themeBtnHome').onclick = () => openThemePicker(() => syncMusic(), { note: 'ใช้กับเกมถัดไป นักเรียนจะเห็นธีมเดียวกันบนมือถือ · 🎵 เพลงในเกมเปลี่ยนตามธีม' });
 $('#musicBtn').onclick = () => { const on = !musicOn(); music(on ? 'lobby' : null); $('#musicBtn').classList.toggle('on', on); };
 $('#lobbyCancel').onclick = async () => { if (confirm('ยกเลิกห้องนี้?')) { await DB.update(R, { 'meta/state': 'end', 'meta/cancelled': true }); leave(); } };
 $('#muteBtn').onclick = () => { setMuted(!isMuted()); $('#muteBtn').textContent = isMuted() ? '🔇' : '🔊'; };

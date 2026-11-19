@@ -32,6 +32,19 @@ def squiggle(x,y,c,o=1): return f"<path d='M{x} {y} q5 -6 10 0 t10 0 t10 0' fill
 def pumpkin(x,y,s,o=1): return f"<g transform='translate({x} {y}) scale({s})' opacity='{o}'><ellipse cx='-5' cy='0' rx='7' ry='8' fill='#FFA24C'/><ellipse cx='5' cy='0' rx='7' ry='8' fill='#FFA24C'/><ellipse cx='0' cy='0' rx='6' ry='8.5' fill='#FFB86B'/><rect x='-1.2' y='-12' width='2.4' height='5' rx='1' fill='#4CC38A'/></g>"
 def moon(x,y,s,c,o=1): return f"<path transform='translate({x} {y}) scale({s})' d='M4 -10 A11 11 0 1 0 10 6 A8 8 0 1 1 4 -10 Z' fill='{c}' opacity='{o}'/>"
 
+# ── ทหาร/สงคราม ──
+def helmet(x,y,s,c='#7A8B4A',o=1): return (f"<g transform='translate({x} {y}) scale({s})' opacity='{o}'><path d='M-15 4 C-15 -11 -7 -17 0 -17 C7 -17 15 -11 15 4 Z' fill='{c}'/>"
+    f"<rect x='-19' y='2' width='38' height='6' rx='3' fill='#5E6E36'/><path d='M-9 -9 L9 -9 M-11 -3 L11 -3 M-4 -15 L-4 2 M4 -15 L4 2' stroke='#5E6E36' stroke-width='1.3' opacity='.55'/></g>")
+def roundel(x,y,r,o=1): return f"<g opacity='{o}'><circle cx='{x}' cy='{y}' r='{r}' fill='#6B7F3A'/>{star(x,y,r*.68,'#F6F1DE')}</g>"
+def biplane(x,y,s,c='#8C6B3E',o=1): return (f"<g transform='translate({x} {y}) scale({s})' opacity='{o}'><rect x='-6' y='-14' width='12' height='28' rx='2' fill='{c}' transform='rotate(90)'/>"
+    f"<rect x='-4' y='-20' width='8' height='40' rx='3' fill='#A4844E'/><rect x='-14' y='-6' width='6' height='12' rx='2' fill='#A4844E' transform='translate(28 0)'/>"
+    f"<path d='M16 -7 L18 0 L16 7' stroke='#5E4A2A' stroke-width='2' fill='none'/><circle cx='-6' cy='0' r='2' fill='#F6F1DE'/></g>")
+def flagpole(x,y,s,c='#C2410C',o=1): return f"<g transform='translate({x} {y}) scale({s})' opacity='{o}'><rect x='-1' y='-22' width='2' height='34' fill='#7A6440'/><path d='M1 -22 Q8 -25 16 -21 Q22 -18 26 -20 L26 -8 Q20 -6 15 -9 Q8 -12 1 -10 Z' fill='{c}'/><circle cx='0' cy='-23' r='2' fill='#D9B44A'/></g>"
+def tank(x,y,s,o=1): return (f"<g transform='translate({x} {y}) scale({s})' opacity='{o}'><rect x='-18' y='0' width='36' height='10' rx='5' fill='#5E6E36'/>"
+    f"<circle cx='-11' cy='5' r='3' fill='#8C9A5E'/><circle cx='0' cy='5' r='3' fill='#8C9A5E'/><circle cx='11' cy='5' r='3' fill='#8C9A5E'/>"
+    f"<rect x='-15' y='-7' width='30' height='8' rx='3' fill='#7A8B4A'/><rect x='-7' y='-13' width='14' height='7' rx='3' fill='#7A8B4A'/><rect x='6' y='-11' width='16' height='3' rx='1.5' fill='#5E6E36'/></g>")
+def mapline(x,y,o=1): return f"<g opacity='{o}'><path d='M{x} {y} q14 -16 30 -4 t30 -6' fill='none' stroke='#A4844E' stroke-width='2' stroke-dasharray='4 5' stroke-linecap='round'/><path d='M{x+56} {y-16} l8 8 M{x+64} {y-16} l-8 8' stroke='#C2410C' stroke-width='2.6' stroke-linecap='round'/></g>"
+
 T = {}
 # id: name, emoji, bg (base gradient), blobs(before), tile(after), accent, hi, swatch
 T['ghost'] = dict(name='ผีน้อยพาสเทล', emoji='👻', accent='#6C4DFF', hi='#E8467A',
@@ -75,7 +88,12 @@ T['spooky'] = dict(name='ฮาโลวีนน่ารัก', emoji='🎃',
   blobs='radial-gradient(32vmax 26vmax at 90% 10%,rgba(255,169,77,.24),transparent 70%),radial-gradient(32vmax 26vmax at 8% 88%,rgba(139,108,255,.22),transparent 70%)',
   tile=tile(230,230, pumpkin(46,50,1.3,.85)+ghost(170,70,.95,'#fff',.95)+pumpkin(160,180,1,.8)+ghost(60,170,.8,'#fff',.9)+moon(110,110,.9,'#FFD45E',.6)+star(210,20,5,'#B9A6FF',.7)+dot(20,110,2.5,'#8B6CFF',.5)), size=230)
 
-ORDER = ['ghost','candy','ocean','garden','sky','space','fruit','notebook','spooky']
+T['war'] = dict(name='สมรภูมิสงคราม', emoji='⚔️', accent='#4D6B1F', hi='#B45309',
+  bg='linear-gradient(165deg,#F3EEDC 0%,#E8EBD3 55%,#F1E5CF 100%)',
+  blobs='radial-gradient(22vmax 14vmax at 10% 14%,rgba(107,127,58,.20),transparent 70%),radial-gradient(18vmax 12vmax at 30% 70%,rgba(140,107,62,.16),transparent 70%),radial-gradient(24vmax 15vmax at 88% 20%,rgba(94,110,54,.18),transparent 70%),radial-gradient(20vmax 13vmax at 72% 88%,rgba(107,127,58,.18),transparent 70%),radial-gradient(16vmax 10vmax at 55% 40%,rgba(164,132,78,.12),transparent 70%)',
+  tile=tile(260,260, helmet(48,54,1.1,o=.8)+ghost(196,170,.9,'#fff',.95)+helmet(196,154,.62,o=.95)+biplane(180,50,1,o=.6)+tank(70,200,1.05,.65)+roundel(120,120,9,.55)+flagpole(240,240,.8,o=.6)+mapline(20,120,.6)+star(30,240,5,'#B45309',.45)+star(240,100,4,'#6B7F3A',.5)), size=260)
+
+ORDER = ['ghost','candy','ocean','garden','sky','space','fruit','notebook','spooky','war']
 css = ["/* ═════════ ธีมเกมคำถาม: พื้นหลังน่ารักหลายแบบ + ตัวอักษรอ่านง่าย (สร้างจาก gen/themes.py — โหลดเป็นไฟล์สุดท้าย) ═════════ */",
 """
 /* ── ตัวอักษร: แบบมีหัว (Looped) อ่านง่ายสำหรับนักเรียน ── */

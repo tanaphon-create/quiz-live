@@ -13,7 +13,7 @@ export function applyTheme(id, { remember = false } = {}) {
   return id;
 }
 /** เปิดหน้าต่างเลือกธีม — onPick(id) ถูกเรียกทันทีที่แตะ (ดูตัวอย่างสด) */
-export function openThemePicker(onPick, { title = '🎨 เลือกธีมพื้นหลัง', note = 'นักเรียนทุกคนจะเห็นธีมเดียวกันบนมือถือ' } = {}) {
+export function openThemePicker(onPick, { title = '🎨 เลือกธีมพื้นหลัง', note = 'นักเรียนทุกคนจะเห็นธีมเดียวกันบนมือถือ · 🎵 เพลงในเกมเปลี่ยนตามธีม' } = {}) {
   let dlg = document.getElementById('thDlg');
   if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'thDlg'; dlg.className = 'th-dlg'; document.body.append(dlg); }
   const cur = document.documentElement.dataset.theme || savedTheme();
