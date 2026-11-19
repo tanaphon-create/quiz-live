@@ -43,8 +43,8 @@ svg.ghost .gh-fx { animation: gh-twinkle 1.8s ease-in-out infinite; transform-or
 @keyframes fog { to { transform: translateX(8vmax) scale(1.1); } }
 
 .mini-ghosts { position: absolute; inset: 0; pointer-events: none; }
-.mini-ghosts i { position: absolute; bottom: -90px; width: 64px; height: 64px; opacity: 0; transform: scale(var(--s)); animation: rise 7s linear infinite; animation-delay: var(--d); }
-@keyframes rise { 0% { transform: translateY(0) scale(var(--s)) rotate(-6deg); opacity: 0 } 12% { opacity: .55 } 50% { transform: translate(18px, -55vh) scale(var(--s)) rotate(6deg) } 85% { opacity: .45 } 100% { transform: translateY(-112vh) scale(var(--s)) rotate(-6deg); opacity: 0 } }
+.mini-ghosts i { position: absolute; bottom: -90px; width: 64px; height: 64px; opacity: 0; transform: scale(var(--s)); animation: ghostRise 7s linear infinite; animation-delay: var(--d); }
+@keyframes ghostRise { 0% { transform: translateY(0) scale(var(--s)) rotate(-6deg); opacity: 0 } 12% { opacity: .55 } 50% { transform: translate(18px, -55vh) scale(var(--s)) rotate(6deg) } 85% { opacity: .45 } 100% { transform: translateY(-112vh) scale(var(--s)) rotate(-6deg); opacity: 0 } }
 
 .in-stage { position: relative; width: min(56vw, 250px, 34vh); aspect-ratio: 1; margin-top: 4vh; }
 .in-ghost { width: 100%; height: 100%; opacity: 0; transform: translateY(40px) scale(.2); }

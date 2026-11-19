@@ -169,8 +169,8 @@
 .rk-s { font-size: 1.6rem; min-width: 110px; text-align: right; font-variant-numeric: tabular-nums; }
 
 .podium { flex: 1; display: flex; justify-content: center; align-items: flex-end; gap: 14px; min-height: 0; }
-.pod { width: clamp(140px, 20vw, 230px); display: flex; flex-direction: column; align-items: center; animation: rise .9s var(--delay) cubic-bezier(.3,1.3,.5,1) both; }
-@keyframes rise { from { transform: translateY(110%); opacity: 0; } }
+.pod { width: clamp(140px, 20vw, 230px); display: flex; flex-direction: column; align-items: center; animation: podRise .9s var(--delay) cubic-bezier(.3,1.3,.5,1) both; }
+@keyframes podRise { from { transform: translateY(110%); opacity: 0; } }
 .pod-av { width: 70%; position: relative; animation: bob 2s infinite; }
 .pod-av svg { width: 100%; display: block; filter: drop-shadow(0 8px 6px rgba(0,0,0,.35)); }
 .crown { position: absolute; top: -34%; left: 50%; transform: translateX(-50%); font-size: 3rem; }

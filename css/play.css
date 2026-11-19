@@ -190,8 +190,8 @@ body.flash-bad { background: linear-gradient(160deg, #C83A50, #7A1C2E); }
 .bubbles, .sparkles { position: absolute; inset: 0; pointer-events: none; }
 .bubbles i { position: absolute; bottom: -40px; width: var(--s); height: var(--s); border-radius: 50%;
   background: radial-gradient(circle at 32% 30%, rgba(255,255,255,.95) 0 18%, rgba(255,255,255,.25) 40%, rgba(255,182,214,.25) 70%, rgba(167,139,250,.3));
-  border: 1px solid rgba(255,255,255,.7); animation: rise var(--t) linear var(--dl) infinite; }
-@keyframes rise { 0% { transform: translate(0, 0); opacity: 0; } 10% { opacity: .9; } 50% { transform: translate(18px, -55vh); } 100% { transform: translate(-12px, -110vh); opacity: 0; } }
+  border: 1px solid rgba(255,255,255,.7); animation: bubbleRise var(--t) linear var(--dl) infinite; }
+@keyframes bubbleRise { 0% { transform: translate(0, 0); opacity: 0; } 10% { opacity: .9; } 50% { transform: translate(18px, -55vh); } 100% { transform: translate(-12px, -110vh); opacity: 0; } }
 /* ประกายระยิบ */
 .sparkles i { position: absolute; width: var(--s); height: var(--s); animation: twinkle 3.2s ease-in-out var(--dl) infinite; }
 .sparkles i::before { content: ''; position: absolute; inset: 0; background: #fff; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); filter: drop-shadow(0 0 4px rgba(255,200,230,.9)); }
@@ -203,11 +203,11 @@ body.flash-bad { background: linear-gradient(160deg, #C83A50, #7A1C2E); }
 @keyframes badgeIn { from { transform: rotate(-30deg) scale(0); opacity: 0; } }
 .intro-title { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: clamp(3.6rem, 19vw, 8.2rem); line-height: 1.25; white-space: nowrap; }
 .intro-title span { display: inline-block; text-shadow: 0 5px 0 #fff, 0 10px 24px rgba(140,110,200,.35);
-  animation: softDrop .9s calc(.25s + var(--i) * .11s) cubic-bezier(.34,1.56,.64,1) both, breathe 3.6s calc(1.6s + var(--i) * .22s) ease-in-out infinite; }
+  animation: softDrop .9s calc(.25s + var(--i) * .11s) cubic-bezier(.34,1.56,.64,1) both, lockerBreathe 3.6s calc(1.6s + var(--i) * .22s) ease-in-out infinite; }
 .intro-title span:nth-child(1) { color: #FF6F91; } .intro-title span:nth-child(2) { color: #9B7BFF; } .intro-title span:nth-child(3) { color: #2EC4A5; }
 .intro-title span:nth-child(4) { color: #FF9F43; } .intro-title span:nth-child(5) { color: #4FA8FF; }
 @keyframes softDrop { from { transform: translateY(-60px) scale(.6); opacity: 0; filter: blur(6px); } }
-@keyframes breathe { 50% { transform: translateY(-6px) rotate(-2deg); } }
+@keyframes lockerBreathe { 50% { transform: translateY(-6px) rotate(-2deg); } }
 .intro-tag { margin: 0; font-weight: 500; font-size: 1.1rem; color: #6A5C93; opacity: 0; animation: fadeUp .7s 1.15s forwards; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
