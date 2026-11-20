@@ -636,13 +636,19 @@ function renderReveal() {
         ${opts.mode === 'survival' ? (lastReveal.mercy ? '<span class="pill">😅 ผิดหมดทุกคน — ข้อนี้ไม่เสียหัวใจ</span>' : `<span class="pill">💔 ตกรอบ <b>${Object.values(res).filter((r) => r.outNow).length}</b> · ยังรอด <b>${Object.values(res).filter((r) => r.hearts > 0).length}</b> คน</span>`) : ''}
         ${fastest && opts.mode !== 'vote' ? `<span class="pill">⚡ เร็วที่สุด: <b>${esc(players[fastest[0]]?.name)}</b> ${(fastest[1].ms / 1000).toFixed(1)} วิ</span>` : ''}
         <span class="sp"></span>
-        <button class="btn gold big" id="toBoard">ดูอันดับ ›</button>
+        <button class="btn gold big" id="toBoard">${isLast() ? '🎉 ประกาศผล ›' : 'ดูอันดับ ›'}</button>
       </div>
     </div>`;
-  $('#toBoard').onclick = showBoard;
+  // ข้อสุดท้าย: ข้ามตารางอันดับ ไปลุ้นโพเดียมทีละอันดับเลย (ไม่ให้เห็นอันดับ 1 ก่อนประกาศ)
+  $('#toBoard').onclick = () => (isLast() ? finish() : showBoard());
   setTimeout(() => $('.reveal')?.classList.remove('suspense'), 1100);
 }
 
+function isLast() {
+  const res = lastReveal?.res || {};
+  const aliveN = Object.values(res).filter((r) => r.hearts > 0).length;
+  return qi >= order.length - 1 || (opts.mode === 'survival' && aliveN <= 1);
+}
 // อันดับ: ค่อย ๆ เปิดจากอันดับ 5 → 1 บนจอครูก่อน แล้วจึงส่งให้มือถือนักเรียน
 async function showBoard() {
   phase = 'board';
@@ -721,7 +727,7 @@ async function finish() {
     ? teams.map((t) => { const I = teamInfo(opts.mode, t.k); return { name: I.name, score: t.score, icon: `<div class="team-icon" style="--tc:${I.c}">${I.e}</div>` }; })
     : list.map((p) => ({ name: p.name, score: p.score, icon: renderAvatar(p.avatar, { bg: false }) }));
   const podium = [ent[1], ent[0], ent[2]];
-  const T3 = 0.4, T2 = 2.0, T1 = 5.0; // วินาทีที่แต่ละอันดับขึ้น
+  const T3 = 2.2, T2 = 5.6, T1 = 10.0; // วินาทีที่แต่ละอันดับขึ้น (กลองรัวก่อนทุกอันดับ)
   stage().innerHTML = `
     <div class="end">
       <h1 class="board-h">🎉 ${esc(quiz.title)} <small class="mode-tag">${MODES[opts.mode].icon} ${MODES[opts.mode].name}</small></h1>
@@ -747,9 +753,9 @@ async function finish() {
     return (p.hearts ?? 1) > 0 ? 'รอด ' + hearts(p.hearts ?? opts.hearts, opts.hearts) : `ตกรอบข้อ ${(p.outAt ?? 0) + 1}`;
   }
   const at = (s, fn) => setTimeout(() => phase === 'end' && fn(), s * 1000);
-  if (ent[2]) at(T3, () => sfx.rankStep(0));
-  if (ent[1]) at(T2, () => sfx.rankStep(2));
-  at(T1 - 2.2, () => sfx.drumroll(2.2));
+  if (ent[2]) { at(T3 - 1.4, () => sfx.drumroll(1.4)); at(T3, () => sfx.rankStep(0)); }
+  if (ent[1]) { at(T2 - 1.8, () => sfx.drumroll(1.8)); at(T2, () => sfx.rankStep(2)); }
+  at(T1 - 2.8, () => sfx.drumroll(2.8));
   at(T1, () => { sfx.fanfare(); confetti(220, 6000); });
   at(T1 + 1.2, () => DB.update(R, { 'meta/podiumDone': true }));
   $('#homeBtn').onclick = leave;
