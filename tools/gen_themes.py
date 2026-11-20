@@ -93,7 +93,21 @@ T['war'] = dict(name='สมรภูมิสงคราม', emoji='⚔️', 
   blobs='radial-gradient(22vmax 14vmax at 10% 14%,rgba(107,127,58,.20),transparent 70%),radial-gradient(18vmax 12vmax at 30% 70%,rgba(140,107,62,.16),transparent 70%),radial-gradient(24vmax 15vmax at 88% 20%,rgba(94,110,54,.18),transparent 70%),radial-gradient(20vmax 13vmax at 72% 88%,rgba(107,127,58,.18),transparent 70%),radial-gradient(16vmax 10vmax at 55% 40%,rgba(164,132,78,.12),transparent 70%)',
   tile=tile(260,260, helmet(48,54,1.1,o=.8)+ghost(196,170,.9,'#fff',.95)+helmet(196,154,.62,o=.95)+biplane(180,50,1,o=.6)+tank(70,200,1.05,.65)+roundel(120,120,9,.55)+flagpole(240,240,.8,o=.6)+mapline(20,120,.6)+star(30,240,5,'#B45309',.45)+star(240,100,4,'#6B7F3A',.5)), size=260)
 
-ORDER = ['ghost','candy','ocean','garden','sky','space','fruit','notebook','spooky','war']
+# ขาวดำคลาสสิก: ทั้งหน้าเป็นขาวดำแบบหนังเก่า (ปุ่มคำตอบยังมีรูปทรงบอก) — เพิ่ม filter: grayscale ด้านล่าง
+def mono_ghost(x,y,s): return (f"<g transform='translate({x} {y}) scale({s})'><path d='M-14 6 C-14 -12 -7 -18 0 -18 C7 -18 14 -12 14 6 L14 16 Q11 20 8 16 Q4 12 0 16 Q-4 20 -8 16 Q-11 12 -14 16 Z' fill='#fff' stroke='#222' stroke-width='2.2'/>"
+  "<circle cx='-5' cy='-3' r='2.6' fill='#222'/><circle cx='5' cy='-3' r='2.6' fill='#222'/><ellipse cx='-9' cy='3' rx='3' ry='1.8' fill='#999' opacity='.6'/><ellipse cx='9' cy='3' rx='3' ry='1.8' fill='#999' opacity='.6'/></g>")
+def mono_star(x,y,r,o): return f"<path d='M{x} {y-r} L{x+r*.3:.1f} {y-r*.3:.1f} L{x+r} {y} L{x+r*.3:.1f} {y+r*.3:.1f} L{x} {y+r} L{x-r*.3:.1f} {y+r*.3:.1f} L{x-r} {y} L{x-r*.3:.1f} {y-r*.3:.1f} Z' fill='#222' opacity='{o}'/>"
+mono_film = ("<g transform='translate(176 60) rotate(-12)' opacity='.55'><rect x='-30' y='-16' width='60' height='32' rx='3' fill='#2A2A2A'/>"
+  + ''.join(f"<rect x='{-26+i*11}' y='-13' width='6' height='4' rx='1' fill='#fff'/><rect x='{-26+i*11}' y='9' width='6' height='4' rx='1' fill='#fff'/>" for i in range(5))
+  + "<rect x='-24' y='-6' width='20' height='12' fill='#bbb'/><rect x='2' y='-6' width='20' height='12' fill='#ddd'/></g>")
+T['mono'] = dict(name='ขาวดำคลาสสิก', emoji='🎬', accent='#1A1A1A', hi='#555555',
+  bg='linear-gradient(165deg,#FFFFFF 0%,#EDEDED 55%,#F6F6F6 100%)',
+  blobs='radial-gradient(30vmax 22vmax at 8% 10%,rgba(0,0,0,.07),transparent 70%),radial-gradient(30vmax 24vmax at 92% 90%,rgba(0,0,0,.08),transparent 70%),radial-gradient(60vmax 50vmax at 50% 50%,transparent 60%,rgba(0,0,0,.10) 100%)',
+  tile=tile(240,240, mono_ghost(50,56,1.15)+mono_ghost(186,178,.85)+mono_film+mono_star(120,120,8,.45)+mono_star(34,200,5,.35)+mono_star(214,118,4,.35)+mono_star(96,26,4,.3)
+    +"<path d='M20 140 q14 -14 30 -4 t30 -4' fill='none' stroke='#555' stroke-width='2' stroke-dasharray='4 5' stroke-linecap='round' opacity='.5'/><circle cx='140' cy='210' r='5' fill='none' stroke='#444' stroke-width='2' opacity='.4'/>"), size=240)
+GRAY = ['mono']   # ธีมที่ทำให้ทั้งหน้าเป็นขาวดำ
+
+ORDER = ['ghost','candy','ocean','garden','sky','space','fruit','notebook','spooky','war','mono']
 css = ["/* ═════════ ธีมเกมคำถาม: พื้นหลังน่ารักหลายแบบ + ตัวอักษรอ่านง่าย (สร้างจาก gen/themes.py — โหลดเป็นไฟล์สุดท้าย) ═════════ */",
 """
 /* ── ตัวอักษร: แบบมีหัว (Looped) อ่านง่ายสำหรับนักเรียน ── */
@@ -122,6 +136,7 @@ body.qz.sky::after { inset: -260px; opacity: .72; background-image: var(--th-til
 for k in ORDER:
     t=T[k]
     css.append(f"html[data-theme='{k}'] body.qz {{ --th-bg: {t['bg']}; --th-blobs: {t['blobs']}; --th-tile: {uri(t['tile'])}; --th-size: {t['size']}px; --accent: {t['accent']}; --hi: {t['hi']}; }}")
+    if k in GRAY: css.append(f"html[data-theme='{k}'] {{ filter: grayscale(1); }}")
 css.append("""
 /* ── ตัวเลือกธีม ── */
 .th-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
@@ -141,6 +156,7 @@ css.append("""
 for k in ORDER:
     t=T[k]
     css.append(f".th-card[data-th='{k}'] i {{ background-image: {uri(t['tile'])}, {t['bg'] if t['bg'].startswith('linear') else 'linear-gradient('+t['bg']+','+t['bg']+')'}; }}")
+    if k in GRAY: css[-1] = css[-1][:-2] + ' filter: grayscale(1); }'
 open('/Users/thanaphonchintana/Desktop/Claude/quiz-live/css/themes.css','w',encoding='utf-8').write('\n'.join(css)+'\n')
 js = "// รายชื่อธีมเกมคำถาม (สีพื้นหลัง/ลายอยู่ใน css/themes.css)\nexport const THEMES = [\n" + ',\n'.join(f"  {{ id: '{k}', name: '{T[k]['name']}', emoji: '{T[k]['emoji']}' }}" for k in ORDER) + "\n];\n"
 open('/Users/thanaphonchintana/Desktop/Claude/quiz-live/js/themes-list.js','w',encoding='utf-8').write(js)
