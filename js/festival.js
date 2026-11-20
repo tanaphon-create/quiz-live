@@ -7,7 +7,7 @@
   const DB_URL = 'https://quizlive-wcw-default-rtdb.asia-southeast1.firebasedatabase.app';
   const PATH = '/quiz/site/festival.json';
   const KEY = 'gc_fest';
-  const VER = '20261119b';
+  const VER = '20261120a';
   const SRC = document.currentScript && document.currentScript.src;
   const ART = import(new URL('ghost.js?v=' + VER, SRC || location.href).href).catch(() => null);
 
@@ -34,6 +34,10 @@
       hub: ['ทหารผีน้อยพร้อมแล้ว! 🪖', 'เรียนประวัติศาสตร์ เพื่อสันติภาพ 🕊️', 'จัดแถว! ตรงไปข้างหน้า~', 'ภารกิจวันนี้: ตั้งใจเรียน ⭐'],
       play: ['ทหารกล้า ตอบให้ถูก! 🪖', 'บุกไปข้างหน้า! ⚔️', 'ชัยชนะอยู่ไม่ไกล ⭐', 'พร้อมรบยัง?'],
       hello: '⚔️ เรียนรู้สงคราม เพื่อรักษาสันติภาพ 🕊️', playHello: '🪖 ทหารกล้า ตอบไว ตอบถูก! ⭐' },
+    mono: { name: 'ขาวดำ', emoji: '🎬', greet: '🎬 ขาวดำคลาสสิก แบบหนังเก่า 🎞️', tag: '🎬 ธีมขาวดำ', pose: 'peek', windows: [],
+      hub: ['ฉากนี้ขาวดำ แต่ใจยังสดใส 🎬', 'แอ็กชัน! เริ่มเรียนได้ 🎞️', 'ผีน้อยยุคหนังเงียบ~', 'พร้อมเข้าฉากยัง?'],
+      play: ['แอ็กชัน! ตอบเลย 🎬', 'ฉากนี้ต้องตอบถูก 🎞️', 'พร้อมยัง?'],
+      hello: '🎬 ขาวดำคลาสสิก · หนังเก่าแสนอบอุ่น 🎞️', playHello: '🎬 แอ็กชัน! ตอบไว ตอบถูก 🎞️' },
   };
 
   /* ── อ่าน/เขียนการตั้งค่า ── */
@@ -95,6 +99,11 @@
   /* ═════════ ฉากหลังทุกหน้า ═════════ */
   const CSS = `
   #gcFest{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+  html[data-fest="mono"]{filter:grayscale(1)}
+  .gf-grain{position:absolute;inset:-20%;opacity:.09;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\");animation:gfGrain 1.2s steps(4) infinite}
+  @keyframes gfGrain{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
+  .gf-scr{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,.16);opacity:0;animation:gfScr var(--d,4s) linear infinite;animation-delay:var(--w,0s)}
+  @keyframes gfScr{0%,100%{opacity:0;transform:translateX(0)}8%{opacity:.8}45%{opacity:.25;transform:translateX(26px)}70%{opacity:.7}90%{opacity:0;transform:translateX(-12px)}}
   html[data-fest] .sky::before,html[data-fest] .sky::after{z-index:-2}
   #gcFestFront{position:fixed;inset:0;z-index:40;pointer-events:none;overflow:hidden}
   .gf-tint{position:absolute;inset:0}
@@ -163,6 +172,7 @@
   .lk-tag{display:inline-flex;align-items:center;gap:6px;margin-left:6px;padding:4px 12px;border-radius:999px;background:linear-gradient(90deg,var(--ft1,#FFB347),var(--ft2,#FF6FA0));color:#fff;font-weight:700;font-size:.85em;box-shadow:0 4px 12px rgba(255,140,80,.35)}`;
 
   const N = (phone, a, b) => (phone ? a : b);
+  const scratches = (n) => [...Array(n)].map((_, i) => `<i class="gf-scr" style="left:${(13 + i * 31) % 94}%;--d:${3 + (i % 3) * 1.4}s;--w:${-(i * 1.7).toFixed(1)}s"></i>`).join('');
   const lanterns = (n, cls = 'gf-lan') => [...Array(n)].map((_, i) => `<div class="${cls}" style="left:${(4 + i * (92 / n) + (i % 2) * 3).toFixed(0)}vw;--d:${20 + (i % 4) * 5}s;--w:${-(i * 3.1 + 1).toFixed(1)}s;--x:${(i % 2 ? 1 : -1) * (20 + i * 3)}px;--top:${(18 + (i * 37) % 55)}vh">${lantern}</div>`).join('');
   const stars = (n, cls = 'gf-star', maxTop = 60) => [...Array(n)].map((_, i) => `<i class="${cls}" style="left:${(7 + i * 83) % 97}%;top:${(4 + i * 29) % maxTop}%;--w:${-(i * .53).toFixed(2)}s"></i>`).join('');
   const clouds = (n, c, o) => [...Array(n)].map((_, i) => `<div class="gf-cl" style="top:${(3 + i * 11) % 34}%;--s:${120 + (i % 3) * 50}px;--d:${70 + i * 18}s;--w:${-(i * 23)}s;--o:${o};--l:${(10 + i * 27) % 90}vw">${cloud(c)}</div>`).join('');
@@ -198,6 +208,10 @@
         <div class="gf-hills">${hills}</div><div class="gf-flag" style="left:6%">${flag('#C2410C')}</div>${phone ? '' : `<div class="gf-flag" style="right:7%">${flag('#6B7F3A')}</div>`}
         <div class="gf-tank" style="--d:70s;--w:-20s;--l:30vw">${tank}</div>${planes}`,
         front: '', ft: ['#6B7F3A', '#B45309'] };
+    },
+    mono(phone) {
+      return { back: `<div class="gf-tint" style="background:radial-gradient(ellipse at 50% 45%,transparent 50%,rgba(0,0,0,.22))"></div><div class="gf-grain"></div>${scratches(N(phone, 2, 4))}`,
+        front: '', ft: ['#222222', '#777777'] };
     },
   };
 
@@ -276,6 +290,15 @@
   #intro.fx-war :is(.in-go,.intro-go){background:linear-gradient(135deg,#6B7F3A,#B45309);box-shadow:0 8px 0 #3E4A22,0 14px 34px rgba(80,90,40,.45)}
   #intro.fx-war .in-skip{background:rgba(255,255,255,.5);color:#2F3818}
   #intro.fx-war .hill{background:radial-gradient(ellipse at 50% 30%,rgba(255,240,190,.5),rgba(255,240,190,.1) 60%,transparent 72%)}
+  /* ขาวดำ: จอหนังเก่า เม็ดฟิล์ม รอยขีด */
+  #intro.fx-mono{background:radial-gradient(ellipse at 50% 40%,#5C5C5C 0%,#2B2B2B 60%,#0E0E0E 100%)!important}
+  #intro.fx-mono .in-title span{color:#fff;text-shadow:0 4px 0 #000,0 0 18px rgba(255,255,255,.35)}#intro.fx-mono .in-title span:nth-child(n+7){color:#D4D4D4}
+  #intro.fx-mono :is(.in-sub,.intro-tag,.intro-hint){color:#EDEDED}#intro.fx-mono .fx-hello{color:#fff;text-shadow:0 0 12px rgba(255,255,255,.4)}
+  #intro.fx-mono .intro-title span{text-shadow:0 5px 0 #000}
+  #intro.fx-mono :is(.in-go,.intro-go){background:linear-gradient(135deg,#F4F4F4,#A0A0A0);color:#111;box-shadow:0 8px 0 #000,0 14px 34px rgba(0,0,0,.55)}
+  #intro.fx-mono .in-skip{background:rgba(255,255,255,.16);color:#fff}
+  #intro.fx-mono .hill{background:radial-gradient(ellipse at 50% 30%,rgba(255,255,255,.3),rgba(255,255,255,.07) 60%,transparent 72%)}
+  #intro.fx-mono .gf-scr{background:rgba(255,255,255,.28)}#intro.fx-mono .gf-grain{opacity:.14}
   #intro.fx .gf-hills{height:20vh}#intro.fx .gf-tank{bottom:3vh;width:clamp(100px,16vmin,160px)}#intro.fx .gf-flag{bottom:14vh}
   @media (prefers-reduced-motion:reduce){#intro.fx *{animation-duration:.01s!important;animation-iteration-count:1!important}#intro.fx .gf-lan{bottom:auto;top:var(--top)}#intro.fx .gf-k{left:var(--l)}}
   @media (max-height:640px){.gc-intro.fx .in-stage{margin-top:min(12vh,90px)}}`;
@@ -290,6 +313,7 @@
     if (f === 'night') return `${stars(N(phone, 40, 80), 'gf-star', 75)}<div class="gf-cres"></div><i class="gf-shoot" style="--w:-1s"></i><i class="gf-shoot" style="--w:-4s;top:20%;left:35%"></i>${[...Array(N(phone, 8, 14))].map((_, i) => `<i class="gf-fly" style="left:${(9 + i * 37) % 92}%;top:${(40 + i * 23) % 50 + 40}%;--d:${4 + (i % 4)}s;--w:${-(i * .9).toFixed(1)}s;--x:${(i % 2 ? 1 : -1) * (30 + i * 6)}px;--y:${(i % 3 ? -1 : 1) * (24 + i * 4)}px"></i>`).join('')}`;
     if (f === 'rain') return `${clouds(N(phone, 4, 7), '#EEF2F9', .95)}${[...Array(N(phone, 40, 80))].map((_, i) => `<i class="gf-drop" style="left:${((i * 41) % 104)}%;--d:${(.7 + (i % 5) * .12).toFixed(2)}s;--w:${-(i * .19).toFixed(2)}s"></i>`).join('')}<div class="gf-puddle"></div>${[...Array(N(phone, 5, 9))].map((_, i) => `<i class="gf-rip" style="left:${(6 + i * 29) % 92}%;--b:${8 + (i % 3) * 14}px;--w:${-(i * .6).toFixed(1)}s"></i>`).join('')}`;
     if (f === 'war') return `<i class="gf-beam" style="left:8%;--w:-1s"></i><i class="gf-beam" style="left:70%;--w:-5s;animation-direction:alternate-reverse"></i>${clouds(N(phone, 2, 4), '#EFEADB', .9)}${[...Array(N(phone, 2, 3))].map((_, i) => `<div class="gf-plane" style="top:${10 + i * 12}%;--d:${14 + i * 5}s;--w:${-(i * 4)}s">${plane}</div>`).join('')}<div class="gf-hills">${hills}</div><div class="gf-flag" style="left:5%">${flag('#C2410C')}</div><div class="gf-flag" style="right:6%">${flag('#6B7F3A')}</div><div class="gf-tank" style="--d:30s;--w:-8s;--l:20vw">${tank}</div>`;
+    if (f === 'mono') return `<div class="gf-grain"></div>${scratches(N(phone, 3, 5))}`;
     return '';
   }
 

@@ -262,6 +262,11 @@ const THEME_SONGS = {
     lobby: { bpm: 112, prog: ['Dm', 'Bb', 'Gm', 'A'], drum: 'march', bass: 'march', pad: { type: 'sawtooth', vol: 0.018, filter: 700 }, lead: { type: 'sawtooth', vol: 0.045, filter: 1700, attack: 0.02, fifth: true }, mel: ['0---0.0.2---1.0.', '3---2.1.0-----..'] },
     question: { bpm: 144, prog: ['Dm', 'Bb', 'Gm', 'A'], drum: 'battle', bass: 'gallop', lead: { type: 'sawtooth', vol: 0.04, filter: 1500, attack: 0.01, fifth: true }, mel: ['0..0..0.2..1..0.', '3..3..2.1..0..c.'], fx: 'tick' },
   },
+  // ขาวดำ: เปียโนหนังเงียบ เบสเดิน
+  mono: {
+    lobby: { bpm: 132, prog: ['C', 'Am', 'Dm', 'G'], drum: 'soft', bass: 'walk', lead: { type: 'triangle', vol: 0.055, attack: 0.002 }, mel: ['0.2.4.2.3.2.1.0.', '2.1.0.1.2---....'] },
+    question: { bpm: 150, prog: ['Am', 'Dm', 'E', 'Am'], drum: 'drive', bass: 'walk', lead: { type: 'triangle', vol: 0.05, attack: 0.002 }, mel: '0.1.2.1.0.1.2.4.', fx: 'tick' },
+  },
 };
 for (const [th, v] of Object.entries(THEME_SONGS)) for (const [k, c] of Object.entries(v)) SONGS[`${th}:${k}`] = make(c);
 
