@@ -1,5 +1,5 @@
 // ฉากแม่น้ำคืนวันเพ็ญ: ฟ้า ดาว พระจันทร์ เงาจันทร์บนน้ำ ฝั่งวัด โคมลอย + กระทงทุกใบลอยไปตามสายน้ำ
-import { krathongSVG } from './krathong-art.js?v=20261122d';
+import { krathongSVG } from './krathong-art.js?v=20261122e';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const hash = (s) => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; };

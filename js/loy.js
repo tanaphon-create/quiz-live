@@ -1,8 +1,8 @@
 // ลอยกระทงออนไลน์ — จอนักเรียน: ใส่ PIN → เลขประจำตัว → ทำกระทง (ฐาน ใบตอง ดอกไม้ ของประดับ) → อธิษฐาน → ลอย
 import { connect, TS } from './db.js';
 import { $, $$, esc, show, toast } from './ui.js';
-import { OPTIONS, DEFAULT, normalize, randomDesign, krathongSVG } from './krathong-art.js?v=20261122d';
-import { createRiver } from './loy-river.js?v=20261122d';
+import { OPTIONS, DEFAULT, normalize, randomDesign, krathongSVG } from './krathong-art.js?v=20261122e';
+import { createRiver } from './loy-river.js?v=20261122e';
 
 let DB, uid = '', pin = '', R = '', meta = null, me = { sid: '', name: '' }, d = { ...DEFAULT }, step = 0, wish = '', showWish = false, mine = null;
 const qs = new URLSearchParams(location.search);

@@ -64,15 +64,15 @@ body.loy-host { background: #0B1033; }
 .loy-qr img, .loy-qr canvas { display: block; width: 104px; height: 104px; }
 .loy-qr::after { content: '🔍'; position: absolute; right: -7px; bottom: -7px; width: 26px; height: 26px; display: grid; place-items: center; background: #6C4DFF; color: #fff; font-size: .75rem; line-height: 1; border-radius: 50%; border: 2px solid #fff; }
 .loy-tb { position: fixed; left: 50%; bottom: 16px; translate: -50% 0; width: max-content; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 8px; max-width: calc(100vw - 24px); border-radius: 20px; background: rgba(10,12,40,.82); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 12px 34px rgba(0,0,0,.45); }
-.tb { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 18px; border: 1px solid rgba(255,255,255,.28); border-radius: 14px; background: rgba(255,255,255,.14); color: #fff; font: 600 1rem/1 var(--font-read); cursor: pointer; white-space: nowrap; transition: background .15s, transform .1s; }
-.tb:hover { background: rgba(255,255,255,.26); }
-.tb:active { transform: scale(.97); }
-.tb .i { font-size: 1.15rem; line-height: 1; }
-.tb.on { background: #FFC94D; border-color: #FFC94D; color: #2B2350; }
-.tb.warn { background: #FF6FA0; border-color: #FF6FA0; color: #fff; }
-.tb-main { background: #1FBF8F; border-color: #1FBF8F; color: #fff; }
-.tb-main:hover { background: #22D39E; }
-@media (max-width: 760px) { .tb { height: 42px; padding: 0 12px; font-size: .9rem; } }
+.ltb { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 18px; border: 1px solid rgba(255,255,255,.28); border-radius: 14px; background: rgba(255,255,255,.14); color: #fff; font: 600 1rem/1 var(--font-read); cursor: pointer; white-space: nowrap; transition: background .15s, transform .1s; }
+.ltb:hover { background: rgba(255,255,255,.26); }
+.ltb:active { transform: scale(.97); }
+.ltb .i { font-size: 1.15rem; line-height: 1; }
+.ltb.on { background: #FFC94D; border-color: #FFC94D; color: #2B2350; }
+.ltb.warn { background: #FF6FA0; border-color: #FF6FA0; color: #fff; }
+.ltb-main { background: #1FBF8F; border-color: #1FBF8F; color: #fff; }
+.ltb-main:hover { background: #22D39E; }
+@media (max-width: 760px) { .ltb { height: 42px; padding: 0 12px; font-size: .9rem; } }
 body.loy-host .qr-big { z-index: 2000; }
 .loy-host #scr-setup { background: linear-gradient(180deg, #F3EEFF, #FFF3E8); min-height: 100dvh; }
 .loy-setup .card { padding: 24px 26px; border-radius: 24px; display: grid; gap: 14px; }
