@@ -204,3 +204,5 @@ dialog:not([open]) { display: none !important; }
 /* 4 ปุ่มในหมวด → จัด 2×2 (ไม่ให้ปุ่มที่ 4 อยู่โดดเดี่ยว) */
 .tiles:has(> .gtile:nth-child(4):last-child) { grid-template-columns: repeat(2, 1fr); }
 .tiles:has(> .gtile:nth-child(4):last-child) > .gtile.wide { grid-column: auto; }
+.tiles.tiles-2 { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 640px) { .tiles.tiles-2 { grid-template-columns: 1fr; } }

@@ -7,9 +7,10 @@
   const DB_URL = 'https://quizlive-wcw-default-rtdb.asia-southeast1.firebasedatabase.app';
   const PATH = '/quiz/site/festival.json';
   const KEY = 'gc_fest';
-  const VER = '20261122b';
+  const VER = '20261122c';
   const SRC = document.currentScript && document.currentScript.src;
-  const ART = import(new URL('ghost.js?v=' + VER, SRC || location.href).href).catch(() => null);
+  const ART = Promise.all([import(new URL('ghost.js?v=' + VER, SRC || location.href).href), import(new URL('krathong-art.js?v=' + VER, SRC || location.href).href).catch(() => null)])
+    .then(([g, k]) => ({ ...g, kt: k })).catch(() => null);
 
   /* ── ธีมที่รองรับ ── windows = ช่วงแสดงอัตโนมัติ (เฉพาะเทศกาลที่มีวันที่) */
   const FESTS = {
@@ -142,6 +143,14 @@
   .gf-moon{position:absolute;top:max(14px,4vh);right:max(14px,5vw);width:clamp(54px,9vw,110px);aspect-ratio:1;border-radius:50%;
     background:radial-gradient(circle at 38% 36%,#FFFDF0 0 30%,#FFF1BF 62%,#FFE08A 100%);box-shadow:0 0 30px 10px rgba(255,226,140,.45),0 0 90px 40px rgba(255,214,120,.22);opacity:.95}
   .gf-cres{position:absolute;top:max(14px,4vh);right:max(14px,6vw);width:clamp(46px,7vw,90px);aspect-ratio:1;border-radius:50%;box-shadow:inset -14px 8px 0 0 #FFE9A6;filter:drop-shadow(0 0 16px rgba(255,230,160,.7));transform:rotate(-20deg)}
+  .gf-moon::after{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 62% 40%,rgba(214,190,120,.35) 0 9%,transparent 10%),radial-gradient(circle at 40% 66%,rgba(214,190,120,.3) 0 7%,transparent 8%),radial-gradient(circle at 72% 70%,rgba(214,190,120,.22) 0 5%,transparent 6%)}
+  .gf-shore{position:absolute;left:0;right:0;bottom:calc(clamp(54px,9vh,92px) - 1px);height:clamp(16px,3vh,30px);opacity:.42}
+  .gf-shore svg{display:block;width:100%;height:100%}
+  .gf-shl{animation:gf-tw 1.8s ease-in-out var(--w) infinite alternate}
+  .gf-mpath{position:absolute;top:4%;bottom:0;width:90px;translate:-50% 0}
+  .gf-gl{position:absolute;left:calc(50% + var(--l));height:2px;border-radius:2px;translate:-50% 0;background:linear-gradient(90deg,transparent,#FFF0BD,transparent);opacity:.25;animation:gf-glt 2.2s ease-in-out var(--w) infinite alternate}
+  @keyframes gf-glt{to{opacity:.95;transform:scaleX(1.4)}}
+  .gf-k .gf-kref{position:absolute;left:50%;top:66%;width:16%;height:60%;translate:-50% 0;border-radius:50%;background:radial-gradient(ellipse at 50% 20%,rgba(255,200,100,.6),rgba(255,170,60,.12) 55%,transparent 72%);filter:blur(1.5px)}
   .gf-water{position:absolute;left:0;right:0;bottom:0;height:clamp(54px,9vh,92px);background:linear-gradient(180deg,rgba(120,190,255,0),rgba(98,170,245,.45) 30%,rgba(70,140,230,.62))}
   .gf-wave{position:absolute;left:-50%;width:200%;height:14px;top:22%;opacity:.55;background:radial-gradient(14px 6px at 14px 7px,transparent 60%,rgba(255,255,255,.95) 64%,transparent 72%) 0 0/28px 14px repeat-x;animation:gf-wv 9s linear infinite}
   .gf-wave.w2{top:55%;opacity:.35;animation-duration:13s;animation-direction:reverse}
@@ -215,12 +224,19 @@
     ${[[48, 70, '#FF4D5E'], [72, 88, '#4FB3FF'], [40, 112, '#FFD23D'], [80, 118, '#FF8FD0'], [58, 132, '#FF4D5E'], [96, 140, '#4FB3FF'], [26, 142, '#3BD17A']].map(([x, y, c], i) => `<circle class="gf-orn" style="--w:${-i * .4}s" cx="${x}" cy="${y}" r="5.5" fill="${c}" stroke="#1E6B3C" stroke-width="1.5"/>`).join('')}
     <polygon points="60,4 65,16 78,17 68,25 71,38 60,31 49,38 52,25 42,17 55,16" fill="#FFD23D" stroke="#C99A00" stroke-width="2" stroke-linejoin="round"/></svg>`;
 
+  const KDES = [{ top: 'lotus-pink', side: 'marigold,jasmine' }, { base: 'bread', leaf: 'young', shape: 'round', top: 'rose', side: 'jasmine' }, { leaf: 'pandan', shape: 'tall', top: 'lotus-white', side: 'globe,jasmine' }, { base: 'coconut', top: 'orchid', side: 'orchid,marigold', coin: true }, { leaf: 'deep', top: 'marigold', side: 'marigold', ghost: true }];
+  const kSvg = (art, i) => (art.kt ? art.kt.krathongSVG({ ...KDES[i % KDES.length], candle: true, incense: i % 2 === 0 }) : art.krathongSVG({ lotus: ['#FF9CC0', '#FFD08A', '#C9B8FF', '#FFB4C8'][i % 4] }));
+  const glints = (n) => [...Array(n)].map((_, i) => `<i class="gf-gl" style="top:${(i * 9.7) % 92}%;--w:${-(i * .37).toFixed(2)}s;--l:${(i * 17) % 40 - 20}px;width:${16 + (i % 4) * 12}px"></i>`).join('');
+  const shoreSvg = `<svg viewBox="0 0 1200 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 46 C50 30 90 42 130 34 C170 24 200 40 240 32 C280 22 320 40 360 36 L360 60 L0 60 Z M840 36 C880 22 920 38 960 30 C1000 20 1040 36 1080 28 C1120 22 1160 34 1200 30 L1200 60 L840 60 Z" fill="#3B2F7A"/>
+    <path d="M560 60 L560 40 L570 40 L572 28 Q584 20 586 10 L588 0 L590 10 Q592 20 604 28 L606 40 L616 40 L616 60 Z M630 60 L630 46 L690 46 L700 38 L620 38 L630 46 Z" fill="#3B2F7A"/><path d="M0 54 L1200 52 L1200 60 L0 60 Z" fill="#3B2F7A"/>
+    ${[[100, 44], [220, 40], [330, 48], [588, 30], [660, 50], [900, 40], [1050, 38], [1150, 42]].map(([x, y], i) => `<circle class="gf-shl" style="--w:${-i * .6}s" cx="${x}" cy="${y}" r="3" fill="#FFC86B"/>`).join('')}</svg>`;
+
   const SCENES = {
     loykrathong(phone, art) {
-      const hues = ['#FF9CC0', '#FFB4C8', '#C9B8FF', '#FFC2D6', '#FFD08A'];
-      const ks = [...Array(N(phone, 3, 5))].map((_, i) => `<div class="gf-k" style="--d:${36 + i * 7}s;--w:${-(i * 13)}s;--l:${(8 + i * 18)}vw">${art.krathongSVG({ lotus: hues[i % 5] })}</div>`).join('');
-      return { back: `<div class="gf-tint" style="background:linear-gradient(180deg,rgba(124,92,255,.16),rgba(255,170,120,.12) 45%,rgba(255,214,150,.10) 70%,rgba(80,130,230,.18))"></div><div class="gf-moon"></div>${stars(N(phone, 6, 12), 'gf-spark')}${lanterns(N(phone, 5, 9))}<div class="gf-water"><i class="gf-wave"></i><i class="gf-wave w2"></i></div>${ks}`,
-        front: lanterns(N(phone, 4, 7)), ft: ['#FFB347', '#FF6FA0'] };
+      const ks = [...Array(N(phone, 3, 5))].map((_, i) => `<div class="gf-k" style="--d:${36 + i * 7}s;--w:${-(i * 13)}s;--l:${(8 + i * 18)}vw">${kSvg(art, i)}<i class="gf-kref"></i></div>`).join('');
+      return { back: `<div class="gf-tint" style="background:linear-gradient(180deg,rgba(60,50,170,.20),rgba(124,92,255,.12) 40%,rgba(255,170,120,.10) 70%,rgba(60,110,220,.20))"></div><div class="gf-moon"></div>${stars(N(phone, 8, 16), 'gf-spark')}${lanterns(N(phone, 5, 9))}
+        <div class="gf-shore">${shoreSvg}</div><div class="gf-water"><div class="gf-mpath" style="left:calc(100% - max(14px,5vw) - clamp(27px,4.5vw,55px))">${glints(N(phone, 6, 10))}</div><i class="gf-wave"></i><i class="gf-wave w2"></i></div>${ks}`,
+        front: '', ft: ['#FFB347', '#FF6FA0'] };
     },
     summer(phone) {
       const gulls = [...Array(N(phone, 2, 4))].map((_, i) => `<div class="gf-gull" style="top:${10 + i * 9}%;--d:${22 + i * 6}s;--w:${-(i * 7)}s">${gull}</div>`).join('');
@@ -301,6 +317,7 @@
   .intro.fx .lk-moon{display:none}
   /* ลอยกระทง & กลางคืน: ฟ้ามืด ตัวหนังสือสว่าง */
   #intro.fx-loykrathong{background:linear-gradient(180deg,#120F33 0%,#241D5C 38%,#4A3787 66%,#2E4C9A 100%)!important}
+  #intro.fx-loykrathong .gf-water{background:linear-gradient(180deg,#2B2A7A 0%,#1D2668 35%,#121B4E 100%)}#intro.fx-loykrathong .gf-wave{opacity:.3}
   #intro.fx-night{background:linear-gradient(180deg,#0B0A26 0%,#1C1850 45%,#33287A 80%,#3D3290 100%)!important}
   #intro.fx-loykrathong .in-title span,#intro.fx-night .in-title span{color:#FFE7A3;text-shadow:0 0 18px rgba(255,214,120,.55),0 4px 0 #2A2363}
   #intro.fx-loykrathong .in-title span:nth-child(n+7){color:#FFB9D3}#intro.fx-night .in-title span:nth-child(n+7){color:#C9B8FF}
@@ -356,9 +373,8 @@
 
   function introScene(f, phone, art) {
     if (f === 'loykrathong') {
-      const hues = ['#FF9CC0', '#FFD08A', '#C9B8FF', '#FFB4C8'];
-      const ks = [...Array(N(phone, 3, 5))].map((_, i) => `<div class="gf-k" style="--y:${[.1, .38, .2, .48, .28][i]};--d:${22 + i * 5}s;--w:${-(i * 6.3).toFixed(1)}s;--l:${10 + i * 18}%">${art.krathongSVG({ lotus: hues[i % 4] })}</div>`).join('');
-      return `${stars(N(phone, 26, 46), 'gf-star', 62)}<div class="gf-moon"></div>${lanterns(N(phone, 7, 12))}<div class="gf-water"><i class="gf-wave" style="top:16%"></i><i class="gf-wave w2" style="top:48%"></i></div>${ks}`;
+      const ks = [...Array(N(phone, 3, 5))].map((_, i) => `<div class="gf-k" style="--y:${[.1, .38, .2, .48, .28][i]};--d:${22 + i * 5}s;--w:${-(i * 6.3).toFixed(1)}s;--l:${10 + i * 18}%">${kSvg(art, i)}<i class="gf-kref"></i></div>`).join('');
+      return `${stars(N(phone, 26, 46), 'gf-star', 62)}<div class="gf-moon"></div>${lanterns(N(phone, 7, 12))}<div class="gf-shore" style="bottom:calc(24vh - 1px);height:5vh;opacity:.9">${shoreSvg.replace(/#3B2F7A/g, '#120F33')}</div><div class="gf-water"><div class="gf-mpath" style="left:50%;width:140px">${glints(N(phone, 10, 16))}</div><i class="gf-wave" style="top:16%"></i><i class="gf-wave w2" style="top:48%"></i></div>${ks}`;
     }
     if (f === 'summer') return `<div class="gf-sun"><b></b><i></i></div>${clouds(N(phone, 3, 5), '#fff', .95)}<div class="gf-sea"><i class="gf-wave" style="top:14%"></i><i class="gf-wave w2" style="top:34%"></i></div><div class="gf-palm" style="left:-14px;width:clamp(120px,22vmin,220px)">${palm}</div><div class="gf-palm" style="right:-18px;transform:scaleX(-1);width:clamp(120px,22vmin,220px)">${palm}</div>${[...Array(3)].map((_, i) => `<div class="gf-gull" style="top:${12 + i * 8}%;--d:${16 + i * 5}s;--w:${-(i * 5)}s">${gull}</div>`).join('')}`;
     if (f === 'night') return `${stars(N(phone, 40, 80), 'gf-star', 75)}<div class="gf-cres"></div><i class="gf-shoot" style="--w:-1s"></i><i class="gf-shoot" style="--w:-4s;top:20%;left:35%"></i>${[...Array(N(phone, 8, 14))].map((_, i) => `<i class="gf-fly" style="left:${(9 + i * 37) % 92}%;top:${(40 + i * 23) % 50 + 40}%;--d:${4 + (i % 4)}s;--w:${-(i * .9).toFixed(1)}s;--x:${(i % 2 ? 1 : -1) * (30 + i * 6)}px;--y:${(i % 3 ? -1 : 1) * (24 + i * 4)}px"></i>`).join('')}`;

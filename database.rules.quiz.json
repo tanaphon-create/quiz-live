@@ -95,6 +95,41 @@
             }
           }
         }
+      },
+      "loy": {
+        "$pin": {
+          ".read": "auth != null",
+          ".write": "auth != null && ((!data.exists() && auth.token.email === 'tanaphon@wangchan.ac.th' && auth.token.email_verified === true) || (data.exists() && data.child('meta/hostUid').val() === auth.uid))",
+          "items": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && root.child('quiz/loy/' + $pin + '/meta/state').val() === 'open'",
+              ".validate": "newData.hasChildren(['sid','name','d','at'])",
+              "sid": {
+                ".validate": "newData.isString() && newData.val().matches(/^[0-9]{1,10}$/)"
+              },
+              "name": {
+                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40"
+              },
+              "wish": {
+                ".validate": "newData.isString() && newData.val().length <= 150"
+              },
+              "showWish": {
+                ".validate": "newData.isBoolean()"
+              },
+              "at": {
+                ".validate": "newData.val() === now"
+              },
+              "d": {
+                "$k": {
+                  ".validate": "(newData.isString() && newData.val().length <= 60) || newData.isBoolean()"
+                }
+              },
+              "$other": {
+                ".validate": "false"
+              }
+            }
+          }
+        }
       }
     }
   }

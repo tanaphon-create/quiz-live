@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B1033">
+<title>ลอยกระทงออนไลน์ · Ghost Class</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/bright.css">
+<link rel="stylesheet" href="css/ghost.css">
+<link rel="stylesheet" href="css/readable.css">
+<link rel="stylesheet" href="css/loy.css">
+</head>
+<body class="loy-student">
+<div class="ls-bg" id="bg"></div>
+
+<!-- PIN -->
+<section class="screen on" id="scr-pin">
+  <div class="ls-center">
+    <form class="ls-card" id="pinForm">
+      <h2>🪷 ลอยกระทงออนไลน์</h2>
+      <p class="muted">ทำกระทงของตัวเอง ตกแต่งให้สวย แล้วอธิษฐาน กระทงของเราจะลอยบนจอใหญ่ในห้อง</p>
+      <label class="field"><span>รหัสกิจกรรม (PIN จากจอครู)</span><input class="input big-in" id="pinIn" inputmode="numeric" autocomplete="off" maxlength="7" placeholder="000000" required></label>
+      <button class="btn gold big">ถัดไป ›</button>
+    </form>
+  </div>
+</section>
+
+<!-- ข้อมูลนักเรียน -->
+<section class="screen" id="scr-info">
+  <div class="ls-center">
+    <form class="ls-card" id="infoForm">
+      <h2 id="infoTitle">🪷 ลอยกระทง</h2>
+      <p class="muted">ใส่เลขประจำตัวให้ถูกต้อง เพื่อรับคะแนนพิเศษจากการร่วมกิจกรรม</p>
+      <label class="field"><span>เลขประจำตัวนักเรียน</span><input class="input big-in" id="sidIn" inputmode="numeric" autocomplete="off" maxlength="10" required></label>
+      <label class="field"><span>ชื่อที่แสดงบนกระทง</span><input class="input" id="nameIn" autocomplete="name" maxlength="40" placeholder="เช่น ด.ญ.มะลิ หรือชื่อเล่น" required></label>
+      <button class="btn gold big">เริ่มทำกระทง ›</button>
+    </form>
+  </div>
+</section>
+
+<!-- ทำกระทง -->
+<section class="screen" id="scr-build">
+  <div class="ls-build">
+    <div class="ls-preview">
+      <div id="pvRiver"></div>
+      <div class="ls-title"><b id="bTitle">🪷 กระทงของฉัน</b><button class="loy-btn" id="rndBtn" type="button">🎲 สุ่มแบบ</button></div>
+      <div class="ls-mine"><div class="lr-bob" id="mine"></div></div>
+    </div>
+    <div class="ls-panel">
+      <nav class="ls-steps" id="steps"></nav>
+      <div id="stepBody"></div>
+      <div class="ls-nav"><button class="btn light" id="prevBtn" type="button">‹ ย้อนกลับ</button><button class="btn gold" id="nextBtn" type="button">ถัดไป ›</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ลอยแล้ว -->
+<section class="screen" id="scr-done">
+  <div class="ls-done"><div id="doneRiver"></div></div>
+  <div class="ls-done-card">
+    <h2>🙏 ลอยกระทงแล้ว!</h2>
+    <p id="doneMsg">ขอให้คำอธิษฐานเป็นจริง กระทงของเรากำลังลอยอยู่บนจอใหญ่</p>
+    <div class="row"><button class="loy-btn" id="editBtn">✏️ แก้ไขกระทง</button></div>
+  </div>
+  <div class="ls-float" id="floatMine" hidden></div>
+</section>
+
+<script type="module" src="js/loy.js"></script>
+</body>
+</html>
