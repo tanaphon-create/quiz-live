@@ -7,7 +7,7 @@
   const DB_URL = 'https://quizlive-wcw-default-rtdb.asia-southeast1.firebasedatabase.app';
   const PATH = '/quiz/site/festival.json';
   const KEY = 'gc_fest';
-  const VER = '20261122a';
+  const VER = '20261122b';
   const SRC = document.currentScript && document.currentScript.src;
   const ART = import(new URL('ghost.js?v=' + VER, SRC || location.href).href).catch(() => null);
 
@@ -38,6 +38,11 @@
       hub: ['ฉากนี้ขาวดำ แต่ใจยังสดใส 🎬', 'แอ็กชัน! เริ่มเรียนได้ 🎞️', 'ผีน้อยยุคหนังเงียบ~', 'พร้อมเข้าฉากยัง?'],
       play: ['แอ็กชัน! ตอบเลย 🎬', 'ฉากนี้ต้องตอบถูก 🎞️', 'พร้อมยัง?'],
       hello: '🎬 ขาวดำคลาสสิก · หนังเก่าแสนอบอุ่น 🎞️', playHello: '🎬 แอ็กชัน! ตอบไว ตอบถูก 🎞️' },
+    christmas: { name: 'คริสต์มาส', emoji: '🎄', greet: '🎄 Merry Christmas! สุขสันต์วันคริสต์มาส ⛄', tag: '🎄 เทศกาลคริสต์มาส', pose: 'santa',
+      windows: [['2026-12-15', '2026-12-31'], ['2027-12-15', '2027-12-31']],
+      hub: ['Merry Christmas! 🎄', 'ซานต้าผีน้อยมาแล้ว 🎅', 'หิมะตกแล้ว~ ❄️', 'ของขวัญคือความตั้งใจเรียน 🎁'],
+      play: ['Ho ho ho! ตอบเลย 🎅', 'ตอบถูกได้ของขวัญ 🎁', 'หิมะตกแล้ว พร้อมยัง? ❄️'],
+      hello: '🎄 Merry Christmas · สุขสันต์วันคริสต์มาส ⛄', playHello: '🎅 คริสต์มาสนี้ ตอบไว ตอบถูก! 🎁' },
     plain: { name: 'เรียบง่าย', emoji: '🤍', greet: '🤍 ธีมเรียบง่าย สบายตา', tag: '🤍 ธีมเรียบง่าย', pose: 'hello', windows: [], calm: true,
       hub: ['วันนี้สอนอะไรดี?', 'พร้อมแล้ว เริ่มได้เลย', 'ตั้งใจเรียนนะ'], play: ['พร้อมยัง?', 'ตั้งใจตอบนะ'],
       hello: '', playHello: '' },
@@ -103,6 +108,17 @@
   const CSS = `
   #gcFest{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
   html[data-fest="mono"]{filter:grayscale(1)}
+  .gf-snow{position:absolute;top:-12px;width:var(--s,6px);height:var(--s,6px);border-radius:50%;background:#fff;box-shadow:0 0 4px rgba(140,180,230,.9);opacity:.95;animation:gf-snowfall var(--d) linear var(--w) infinite}
+  @keyframes gf-snowfall{0%{transform:translate(0,0)}50%{transform:translate(var(--x),55vh)}100%{transform:translate(0,112vh)}}
+  .gf-lights{position:absolute;top:0;left:0;right:0;height:44px}
+  .gf-lights svg{position:absolute;inset:0;width:100%;height:40px}
+  .gf-bulb{position:absolute;top:15px;width:10px;height:15px;margin-left:-5px;border-radius:50% 50% 50% 50%/40% 40% 60% 60%;background:var(--c);box-shadow:0 0 10px 3px var(--c);animation:gf-blink 1.6s ease-in-out var(--w) infinite alternate}
+  .gf-bulb::before{content:'';position:absolute;top:-4px;left:2px;width:6px;height:5px;border-radius:2px;background:#3E4A3A}
+  @keyframes gf-blink{from{opacity:.45;box-shadow:0 0 3px 1px var(--c)}to{opacity:1}}
+  .gf-tree{position:absolute;bottom:0;width:clamp(90px,11vw,170px)}
+  .gf-tree svg{display:block;width:100%}
+  .gf-orn{animation:gf-blink 1.3s ease-in-out var(--w,0s) infinite alternate}
+  .gf-snowbank{position:absolute;left:0;right:0;bottom:0;height:clamp(40px,7vh,70px);background:radial-gradient(ellipse 60% 100% at 20% 100%,#fff 60%,transparent 61%),radial-gradient(ellipse 55% 90% at 75% 100%,#F4F9FF 60%,transparent 61%),linear-gradient(180deg,transparent 45%,#fff 46%);filter:drop-shadow(0 -2px 6px rgba(120,160,220,.25))}
   html[data-fest="plain"] body:not(.qz){background:#F6F6F4!important}
   html[data-fest="plain"] body:not(.qz).sky::before,html[data-fest="plain"] body:not(.qz).sky::after,html[data-fest="plain"] :is(.fog,.mini-ghosts,.sparkles,.bubbles,.clouds,.dawn){display:none!important}
   html[data-fest="plain"] svg.ghost .gh-body{animation:none!important}
@@ -173,7 +189,7 @@
   .gf-plane{position:absolute;width:clamp(60px,6vw,90px);left:-100px;animation:gf-fly var(--d) linear var(--w) infinite}.gf-plane svg{display:block;width:100%}
   .gf-prop{transform-box:fill-box;transform-origin:50% 50%;animation:gf-propsp .12s linear infinite alternate}
   @keyframes gf-propsp{to{transform:scaleY(.15)}}
-  @media (prefers-reduced-motion:reduce){#gcFest *,#gcFest *::before{animation:none!important}#gcFestFront{display:none}.gf-lan{bottom:auto;top:var(--top)}.gf-k{left:var(--l)}.gf-cl{left:var(--l)}.gf-tank{left:var(--l)}}
+  @media (prefers-reduced-motion:reduce){#gcFest *,#gcFest *::before{animation:none!important}#gcFestFront{display:none}.gf-snow{top:var(--top,30%)}.gf-lan{bottom:auto;top:var(--top)}.gf-k{left:var(--l)}.gf-cl{left:var(--l)}.gf-tank{left:var(--l)}}
   @media print{#gcFest,#gcFestFront,#gcFestHi{display:none!important}}
   #gcFestHi{position:fixed;left:50%;bottom:calc(clamp(54px,9vh,92px) + 14px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:60;
     display:flex;align-items:center;gap:10px;padding:10px 12px 10px 16px;border-radius:999px;background:rgba(255,255,255,.95);color:#3A2E5C;
@@ -188,6 +204,16 @@
   const lanterns = (n, cls = 'gf-lan') => [...Array(n)].map((_, i) => `<div class="${cls}" style="left:${(4 + i * (92 / n) + (i % 2) * 3).toFixed(0)}vw;--d:${20 + (i % 4) * 5}s;--w:${-(i * 3.1 + 1).toFixed(1)}s;--x:${(i % 2 ? 1 : -1) * (20 + i * 3)}px;--top:${(18 + (i * 37) % 55)}vh">${lantern}</div>`).join('');
   const stars = (n, cls = 'gf-star', maxTop = 60) => [...Array(n)].map((_, i) => `<i class="${cls}" style="left:${(7 + i * 83) % 97}%;top:${(4 + i * 29) % maxTop}%;--w:${-(i * .53).toFixed(2)}s"></i>`).join('');
   const clouds = (n, c, o) => [...Array(n)].map((_, i) => `<div class="gf-cl" style="top:${(3 + i * 11) % 34}%;--s:${120 + (i % 3) * 50}px;--d:${70 + i * 18}s;--w:${-(i * 23)}s;--o:${o};--l:${(10 + i * 27) % 90}vw">${cloud(c)}</div>`).join('');
+
+  const snow = (n, sm = 1) => [...Array(n)].map((_, i) => `<i class="gf-snow" style="left:${(3 + i * 37) % 99}%;--s:${((3 + (i % 4) * 2) * sm + 2).toFixed(1)}px;--d:${9 + (i % 5) * 3}s;--w:${-(i * 1.9).toFixed(1)}s;--x:${(i % 2 ? 1 : -1) * (14 + (i % 4) * 8)}px"></i>`).join('');
+  const lights = (n) => { const cs = ['#FF4D5E', '#FFD23D', '#3BD17A', '#4FB3FF', '#FF8FD0'];
+    const segs = [...Array(n)].map((_, i) => { const x0 = (i / n) * 1000, x1 = ((i + 1) / n) * 1000; return `M${x0.toFixed(1)} 3 Q${((x0 + x1) / 2).toFixed(1)} 34 ${x1.toFixed(1)} 3`; }).join(' ');
+    return `<div class="gf-lights"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path d="${segs}" stroke="#3E4A3A" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"/></svg>${[...Array(n)].map((_, i) => `<i class="gf-bulb" style="left:${((i + .5) / n * 100).toFixed(2)}%;--c:${cs[i % 5]};--w:${-(i * .37).toFixed(2)}s"></i>`).join('')}</div>`; };
+  const tree = `<svg viewBox="0 0 120 170" aria-hidden="true"><rect x="51" y="140" width="18" height="26" rx="3" fill="#8B5A2B"/>
+    <path d="M60 22 L100 78 L80 76 L110 118 L86 116 L116 150 L4 150 L34 116 L10 118 L40 76 L20 78 Z" fill="#2E9E5B" stroke="#1E6B3C" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M30 100 Q60 112 92 94 M22 134 Q60 146 100 128" stroke="#FFD23D" stroke-width="3" fill="none" stroke-linecap="round"/>
+    ${[[48, 70, '#FF4D5E'], [72, 88, '#4FB3FF'], [40, 112, '#FFD23D'], [80, 118, '#FF8FD0'], [58, 132, '#FF4D5E'], [96, 140, '#4FB3FF'], [26, 142, '#3BD17A']].map(([x, y, c], i) => `<circle class="gf-orn" style="--w:${-i * .4}s" cx="${x}" cy="${y}" r="5.5" fill="${c}" stroke="#1E6B3C" stroke-width="1.5"/>`).join('')}
+    <polygon points="60,4 65,16 78,17 68,25 71,38 60,31 49,38 52,25 42,17 55,16" fill="#FFD23D" stroke="#C99A00" stroke-width="2" stroke-linejoin="round"/></svg>`;
 
   const SCENES = {
     loykrathong(phone, art) {
@@ -220,6 +246,10 @@
         <div class="gf-hills">${hills}</div><div class="gf-flag" style="left:6%">${flag('#C2410C')}</div>${phone ? '' : `<div class="gf-flag" style="right:7%">${flag('#6B7F3A')}</div>`}
         <div class="gf-tank" style="--d:70s;--w:-20s;--l:30vw">${tank}</div>${planes}`,
         front: '', ft: ['#6B7F3A', '#B45309'] };
+    },
+    christmas(phone) {
+      return { back: `<div class="gf-tint" style="background:linear-gradient(180deg,rgba(170,210,255,.22),rgba(230,244,255,.10) 50%,rgba(200,230,255,.18))"></div>${lights(N(phone, 9, 18))}${snow(N(phone, 18, 34))}<div class="gf-snowbank"></div><div class="gf-tree" style="left:1.5vw">${tree}</div>${phone ? '' : `<div class="gf-tree" style="right:1.5vw;width:clamp(70px,8vw,120px)">${tree}</div>`}`,
+        front: snow(N(phone, 3, 6), .4), ft: ['#E53950', '#2FA866'] };
     },
     plain() { return { back: '', front: '', ft: ['#64748B', '#475569'] }; },
     mono(phone) {
@@ -296,6 +326,14 @@
   #intro.fx-rain .in-skip{background:rgba(255,255,255,.5);color:#1F3358}
   #intro.fx-rain .gf-drop{background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.8))}
   /* สงคราม: ฟ้ายามเย็นสีกากี ไฟฉายส่อง เครื่องบิน รถถัง */
+  #intro.fx-christmas{background:linear-gradient(180deg,#0E1F4A 0%,#1D3B7A 45%,#3D68A8 80%,#7FA6D6 100%)!important}
+  #intro.fx-christmas .in-title span{color:#fff;text-shadow:0 0 16px rgba(255,255,255,.5),0 4px 0 #8E1B2C}#intro.fx-christmas .in-title span:nth-child(n+7){color:#FF9AA8}
+  #intro.fx-christmas :is(.in-sub,.intro-tag,.intro-hint){color:#EAF3FF}#intro.fx-christmas .fx-hello{color:#FFE7A3;text-shadow:0 0 12px rgba(255,214,120,.6)}
+  #intro.fx-christmas .intro-title span{text-shadow:0 0 16px rgba(255,255,255,.35),0 5px 0 #8E1B2C}
+  #intro.fx-christmas :is(.in-go,.intro-go){background:linear-gradient(135deg,#E53950,#2FA866);box-shadow:0 8px 0 #8E1B2C,0 14px 34px rgba(229,57,80,.45)}
+  #intro.fx-christmas .in-skip{background:rgba(255,255,255,.16);color:#fff}
+  #intro.fx-christmas .hill{background:radial-gradient(ellipse at 50% 30%,rgba(255,255,255,.55),rgba(255,255,255,.12) 60%,transparent 72%)}
+  #intro.fx .gf-snow{position:absolute}
   #intro.fx-war{background:linear-gradient(180deg,#56653A 0%,#83915A 38%,#C4BC88 72%,#E6DCB4 100%)!important}
   #intro.fx-war .in-title span{color:#FFF4D6;text-shadow:0 4px 0 #3E4A22,0 8px 22px rgba(40,50,20,.45)}#intro.fx-war .in-title span:nth-child(n+7){color:#FFC56B}
   #intro.fx-war :is(.in-sub,.intro-tag,.intro-hint){color:#2F3818}#intro.fx-war .fx-hello{color:#7C2D12}
@@ -327,6 +365,7 @@
     if (f === 'rain') return `${clouds(N(phone, 4, 7), '#EEF2F9', .95)}${[...Array(N(phone, 40, 80))].map((_, i) => `<i class="gf-drop" style="left:${((i * 41) % 104)}%;--d:${(.7 + (i % 5) * .12).toFixed(2)}s;--w:${-(i * .19).toFixed(2)}s"></i>`).join('')}<div class="gf-puddle"></div>${[...Array(N(phone, 5, 9))].map((_, i) => `<i class="gf-rip" style="left:${(6 + i * 29) % 92}%;--b:${8 + (i % 3) * 14}px;--w:${-(i * .6).toFixed(1)}s"></i>`).join('')}`;
     if (f === 'war') return `<i class="gf-beam" style="left:8%;--w:-1s"></i><i class="gf-beam" style="left:70%;--w:-5s;animation-direction:alternate-reverse"></i>${clouds(N(phone, 2, 4), '#EFEADB', .9)}${[...Array(N(phone, 2, 3))].map((_, i) => `<div class="gf-plane" style="top:${10 + i * 12}%;--d:${14 + i * 5}s;--w:${-(i * 4)}s">${plane}</div>`).join('')}<div class="gf-hills">${hills}</div><div class="gf-flag" style="left:5%">${flag('#C2410C')}</div><div class="gf-flag" style="right:6%">${flag('#6B7F3A')}</div><div class="gf-tank" style="--d:30s;--w:-8s;--l:20vw">${tank}</div>`;
     if (f === 'mono') return `<div class="gf-grain"></div>${scratches(N(phone, 3, 5))}`;
+    if (f === 'christmas') return `${stars(N(phone, 14, 26), 'gf-star', 50)}${lights(N(phone, 8, 16))}${snow(N(phone, 34, 64))}<div class="gf-snowbank" style="height:${phone ? 7 : 14}vh"></div><div class="gf-tree" style="left:2vw;width:${phone ? '64px' : 'clamp(110px,22vmin,220px)'}">${tree}</div><div class="gf-tree" style="right:3vw;width:${phone ? '52px' : 'clamp(90px,16vmin,170px)'}">${tree}</div>`;
     return '';
   }
 

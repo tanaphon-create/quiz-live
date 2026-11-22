@@ -10,6 +10,7 @@ export const THEMES = [
   { id: 'notebook', name: 'สมุดวาดเล่น', emoji: '📒' },
   { id: 'spooky', name: 'ฮาโลวีนน่ารัก', emoji: '🎃' },
   { id: 'war', name: 'สมรภูมิสงคราม', emoji: '⚔️' },
+  { id: 'christmas', name: 'คริสต์มาส', emoji: '🎄' },
   { id: 'mono', name: 'ขาวดำคลาสสิก', emoji: '🎬' },
   { id: 'plain', name: 'เรียบง่าย', emoji: '🤍' }
 ];

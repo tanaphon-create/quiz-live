@@ -31,6 +31,7 @@ const POSES = {
   summer:  { arms: [DOWN_L, { to: [160, 92] }], eyes: 'open', mouth: 'open', acc: 'shades', prop: 'icecream', fx: 'sun' },
   umbrella:{ arms: [DOWN_L, { to: [142, 102], front: true }], eyes: 'happy', mouth: 'smile', prop: 'umbrella', fx: 'drops' },
   night:   { arms: [{ to: [42, 80] }, DOWN_R], eyes: 'sleep', mouth: 'small', acc: 'cap', prop: 'starstick', fx: 'night' },
+  santa:   { arms: [DOWN_L, { to: [150, 150], front: true }], eyes: 'happy', mouth: 'open', acc: 'santa', prop: 'gift', fx: 'snow' },
   soldier: { arms: [{ to: [38, 92] }, { to: [146, 72], front: true }], eyes: 'open', mouth: 'smile', acc: 'helmet', prop: 'warflag', fx: 'peace' },
 };
 
@@ -90,6 +91,10 @@ function acc(kind) {
       <path d="M62 38 C80 26 120 26 138 38" stroke="#9AAB66" stroke-width="6" fill="none" stroke-linecap="round" opacity=".8"/>
       <rect x="34" y="64" width="132" height="13" rx="6.5" fill="#5E6E36" stroke="${INK}" stroke-width="4"/>
       <circle cx="100" cy="45" r="11" fill="#F6F1DE" stroke="${INK}" stroke-width="2.5"/><polygon points="${starPts(100, 46, 7.5)}" fill="#C2410C"/></g>`;
+    case 'santa': return `<g><path d="M54 60 C58 22 96 6 128 18 C150 26 166 48 170 76 C160 62 150 52 138 48 L146 60 Z" fill="#E53950" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M78 30 C96 18 120 16 136 26" stroke="#FF7D8F" stroke-width="5" fill="none" stroke-linecap="round" opacity=".8"/>
+      <rect x="46" y="52" width="108" height="18" rx="9" fill="#fff" stroke="${INK}" stroke-width="4"/>
+      <circle cx="171" cy="80" r="11" fill="#fff" stroke="${INK}" stroke-width="4"/></g>`;
     default: return '';
   }
 }
@@ -111,6 +116,8 @@ function prop(kind) {
       <path d="M0 -26 Q-14 -4 -23 14 M0 -26 Q14 -4 23 14" stroke="#2C7FD0" stroke-width="3" fill="none"/><path d="M-46 14 Q-30 -20 0 -26 Q30 -20 46 14" stroke="#9FD8FF" stroke-width="3" fill="none" opacity=".7"/><circle cx="0" cy="-27" r="4" fill="${INK}"/></g></g>`;
     case 'warflag': return `<g><path d="M38 120 L38 10" stroke="#8C6B3E" stroke-width="5" stroke-linecap="round"/><circle cx="38" cy="9" r="4.5" fill="#D9B44A" stroke="${INK}" stroke-width="2"/>
       <path d="M36 14 Q22 8 8 15 L8 44 Q22 37 36 43 Z" fill="#6B7F3A" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/><polygon points="${starPts(22, 28, 8)}" fill="#F6F1DE"/></g>`;
+    case 'gift': return `<g transform="translate(150 152)"><rect x="-24" y="-20" width="48" height="38" rx="6" fill="#2FA866" stroke="${INK}" stroke-width="4"/><rect x="-5" y="-20" width="10" height="38" fill="#FFD23D"/><rect x="-24" y="-5" width="48" height="9" fill="#FFD23D"/>
+      <path d="M0 -21 C-14 -36 -26 -24 -12 -20 Z M0 -21 C14 -36 26 -24 12 -20 Z" fill="#E53950" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/></g>`;
     case 'starstick': return `<g><path d="M42 82 L32 30" stroke="#B07A4A" stroke-width="4" stroke-linecap="round"/><circle cx="30" cy="24" r="17" fill="#FFE27A" opacity=".35"/><polygon points="${starPts(30, 24, 13)}" fill="#FFD23D" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/></g>`;
     default: return '';
   }
@@ -127,12 +134,13 @@ function fx(kind) {
       <path d="M-3 3 C-2 -11 9 -17 17 -15 C13 -8 9 -2 5 4 Z" fill="#fff"/><path d="M-16 -2 L-21 0 L-16 1.5 Z" fill="#FFB23D" stroke-width="1.2"/>
       <circle cx="-12" cy="-3" r="1.2" fill="${INK}" stroke="none"/>
       <path d="M-20 1 Q-24 6 -21 11" fill="none" stroke="#3FAE5C" stroke-width="2"/><ellipse cx="-24" cy="5" rx="2.6" ry="1.4" fill="#5CC46F" stroke="none" transform="rotate(-40 -24 5)"/><ellipse cx="-18" cy="8" rx="2.6" ry="1.4" fill="#5CC46F" stroke="none" transform="rotate(30 -18 8)"/></g></g>`;
+    case 'snow': return `<g class="gh-fx" fill="#9FD0FF">${[[28, 40, 5], [184, 30, 4], [20, 120, 4], [188, 112, 5], [40, 170, 3]].map(([x, y, r]) => `<g transform="translate(${x} ${y})" stroke="#9FD0FF" stroke-width="2" stroke-linecap="round"><path d="M0 ${-r * 1.6} V${r * 1.6} M${-r * 1.4} ${-r * .8} L${r * 1.4} ${r * .8} M${-r * 1.4} ${r * .8} L${r * 1.4} ${-r * .8}"/></g>`).join('')}</g>`;
     case 'night': return `<g class="gh-fx"><path transform="translate(176 34)" d="M4 -12 A13 13 0 1 0 12 7 A9 9 0 1 1 4 -12 Z" fill="#FFE27A"/><polygon points="${starPts(150, 18, 5)}" fill="#C9B8FF"/><polygon points="${starPts(190, 76, 4)}" fill="#C9B8FF"/></g>`;
     default: return '';
   }
 }
 
-/** ผีน้อย Ghost Class — pose: hello|wave|cheer|book|game|board|bell|target|search|sleepy|love|peek|krathong|summer|umbrella|night|soldier */
+/** ผีน้อย Ghost Class — pose: hello|wave|cheer|book|game|board|bell|target|search|sleepy|love|peek|krathong|summer|umbrella|night|soldier|santa */
 export function ghost(pose = 'hello', { cls = '' } = {}) {
   const p = POSES[pose] || POSES.hello; const id = PFX + 'b' + (++uid);
   const body = `<path d="M100 30 C133 30 152 56 152 98 L152 160 Q146 173 136 165 Q127 157 118 168 Q109 179 100 168 Q91 157 82 168 Q73 179 64 165 Q54 157 48 160 L48 98 C48 56 67 30 100 30 Z" fill="url(#${id})" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>`;

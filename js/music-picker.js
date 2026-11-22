@@ -16,7 +16,7 @@ const CSS = `
 .mu-foot .mu-now { font-size: .9rem; color: var(--ink2, #6B6290); }
 @media (max-width: 420px) { .mu-pick { grid-template-columns: 1fr 1fr; } }`;
 
-const NEW = ['calm', 'lofi', 'chip', 'jazz', 'dance', 'kids', 'rock'];
+const NEW = ['christmas', 'calm', 'lofi', 'chip', 'jazz', 'dance', 'kids', 'rock'];
 const card = (p, cur) => `<button type="button" class="mu-card" data-mu="${p.id}" aria-pressed="${p.id === cur}"><span aria-hidden="true">${p.emoji}</span><b>${p.name}</b><small>${p.desc}</small></button>`;
 
 /** เปิดหน้าต่างเลือกเพลง · preview = ชื่อเพลงที่ใช้ฟังตัวอย่าง ('lobby' | 'classroom') */

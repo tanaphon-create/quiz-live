@@ -194,6 +194,8 @@ const FX = {
   pencil(s, t, ch, i) { if (s === 14 && (i >> 4) % 2 === 0) hiss(0.12, { t, vol: 0.04, type: 'bandpass', freq: 3500, q: 2, sweep: 5000 }); },
   drip(s, t, ch) { if (s % 2 === 1 && Math.random() < 0.3) note(NOTE(ch[Math.floor(Math.random() * 3)] + 36), 0.18, { t, type: 'sine', vol: 0.02, attack: 0.002 }); },
   firefly(s, t, ch, i) { if (s === 10 && (i >> 4) % 2) note(NOTE(ch[1] + 36), 0.8, { t, type: 'sine', vol: 0.016, attack: 0.15 }); },
+  sleigh(s, t) { if (s % 2 === 0) hiss(s % 4 === 0 ? 0.09 : 0.05, { t, vol: s % 4 === 0 ? 0.055 : 0.03, type: 'bandpass', freq: 9000, q: 2 }); },
+  chime(s, t, ch, i) { if (s === 12 && (i >> 4) % 2) { note(NOTE(ch[2] + 36), 0.9, { t, type: 'sine', vol: 0.03 }); note(NOTE(ch[2] + 36) * 2.76, 0.5, { t, type: 'sine', vol: 0.008 }); } },
   vinyl(s, t) { if (Math.random() < 0.35) hiss(0.012, { t: t + Math.random() * 0.05, vol: 0.025 + Math.random() * 0.03, type: 'bandpass', freq: 2500 + Math.random() * 3000, q: 1 }); },
   arp(s, t, ch) { note(NOTE(ch[s % 3] + 24), 0.06, { t, type: 'square', vol: 0.014, filter: 4000, attack: 0.001 }); },
   boing(s, t, ch, i) { if (s === 15 && (i >> 4) % 2) note(300, 0.22, { t, type: 'sine', vol: 0.05, slide: 900 }); },
@@ -291,6 +293,10 @@ const THEME_SONGS = {
     question: { bpm: 150, prog: ['Am', 'Dm', 'E', 'Am'], drum: 'drive', bass: 'walk', lead: { type: 'triangle', vol: 0.05, attack: 0.002 }, mel: '0.1.2.1.0.1.2.4.', fx: 'tick' },
   },
   /* ───── ชุดเพลงเพิ่มเติม (เลือกได้จากปุ่ม 🎼 เลือกเพลง) ───── */
+  christmas: {
+    lobby: { bpm: 120, prog: ['C', 'Am', 'F', 'G'], drum: 'pop', bass: 'oompah', skank: [4, 12], lead: { type: 'sine', vol: 0.06, oct: 12, attack: 0.002 }, mel: ['0.2.4.3.2---1.2.', '3.2.1.2.0-------'], fx: ['sleigh', 'chime'] },
+    question: { bpm: 146, prog: ['Am', 'F', 'C', 'G'], drum: 'drive', bass: 'eighth', lead: { type: 'sine', vol: 0.055, oct: 12, attack: 0.002 }, mel: '0.1.2.4.2.1.0.1.', fx: ['tick', 'sleigh'] },
+  },
   calm: {
     lobby: { bpm: 76, prog: ['C', 'G', 'Am', 'F'], bass: 'root', pad: { vol: 0.022 }, lead: { type: 'triangle', vol: 0.05, attack: 0.004 }, mel: ['2...1...0...1...', '2...4...2-------'] },
     question: { bpm: 112, prog: ['Am', 'F', 'C', 'G'], drum: 'soft', bass: 'root', pad: { vol: 0.015 }, lead: { type: 'triangle', vol: 0.045, attack: 0.004 }, mel: '0.1.2...1.0.2...', fx: 'tick' },
@@ -327,6 +333,7 @@ for (const [th, v] of Object.entries(THEME_SONGS)) for (const [k, c] of Object.e
 /* ───── ชุดเพลงที่ครูเลือกได้ (จำไว้ในเครื่อง) · 'auto' = เปลี่ยนตามธีม ───── */
 export const MUSIC_PACKS = [
   { id: 'auto', emoji: '🎨', name: 'ตามธีม', desc: 'เปลี่ยนเพลงตามธีมที่เลือก' },
+  { id: 'christmas', emoji: '🎄', name: 'คริสต์มาส', desc: 'กระดิ่งเลื่อน ระฆังใส' },
   { id: 'calm', emoji: '🎹', name: 'เปียโนเบา ๆ', desc: 'สงบ สบาย ไม่รบกวน' },
   { id: 'lofi', emoji: '☕', name: 'โลไฟชิล ๆ', desc: 'จังหวะช้า ผ่อนคลาย' },
   { id: 'chip', emoji: '👾', name: 'เกม 8 บิต', desc: 'เสียงเกมตู้ย้อนยุค' },

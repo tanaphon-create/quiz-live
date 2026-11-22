@@ -109,9 +109,20 @@ T['plain'] = dict(name='เรียบง่าย', emoji='🤍', accent='#475
   bg='linear-gradient(180deg,#FAFAF9 0%,#F3F4F6 100%)',
   blobs='linear-gradient(transparent,transparent)',
   tile=tile(240,240, "<circle cx='60' cy='60' r='1.6' fill='#CBD5E1'/><circle cx='180' cy='180' r='1.6' fill='#CBD5E1'/>"), size=240)
+def flake(x,y,r,c,o=1):
+    return f"<g transform='translate({x} {y})' stroke='{c}' stroke-width='2.2' stroke-linecap='round' opacity='{o}'><path d='M0 {-r} V{r} M{-r*.87:.1f} {-r/2:.1f} L{r*.87:.1f} {r/2:.1f} M{-r*.87:.1f} {r/2:.1f} L{r*.87:.1f} {-r/2:.1f}'/></g>"
+def xtree(x,y,s,o=1):
+    return (f"<g transform='translate({x} {y}) scale({s})' opacity='{o}'><rect x='-3' y='14' width='6' height='7' fill='#A0693A'/><path d='M0 -20 L12 -4 L6 -4 L15 10 L5 10 L17 16 L-17 16 L-5 10 L-15 10 L-6 -4 L-12 -4 Z' fill='#3BB273'/>"
+            "<circle cx='-4' cy='2' r='2' fill='#FF4D5E'/><circle cx='5' cy='8' r='2' fill='#FFD23D'/><circle cx='-7' cy='12' r='2' fill='#4FB3FF'/></g>" + star(x, y-21*s, 5*s, '#FFD23D'))
+def gift(x,y,s,c,o=1):
+    return f"<g transform='translate({x} {y}) scale({s})' opacity='{o}'><rect x='-10' y='-8' width='20' height='16' rx='2.5' fill='{c}'/><rect x='-2' y='-8' width='4' height='16' fill='#FFD23D'/><rect x='-10' y='-2' width='20' height='4' fill='#FFD23D'/><path d='M0 -8 C-6 -15 -11 -10 -5 -8 Z M0 -8 C6 -15 11 -10 5 -8 Z' fill='#FFD23D'/></g>"
+T['christmas'] = dict(name='คริสต์มาส', emoji='🎄', accent='#D62F45', hi='#1E9E5A',
+  bg='linear-gradient(165deg,#EEF6FF 0%,#FFF3F3 55%,#EFFAF3 100%)',
+  blobs='radial-gradient(32vmax 26vmax at 92% 8%,rgba(229,57,80,.16),transparent 70%),radial-gradient(32vmax 26vmax at 8% 90%,rgba(47,168,102,.18),transparent 70%)',
+  tile=tile(240,240, xtree(52,60,1.4)+gift(178,180,1.2,'#E53950',.9)+ghost(176,62,.9,'#fff',.95)+xtree(70,190,.9,.9)+flake(130,120,9,'#7CB8F0',.8)+flake(214,120,6,'#9FD0FF',.7)+flake(22,130,5,'#9FD0FF',.7)+flake(130,20,6,'#9FD0FF',.7)+dot(110,214,3,'#E53950',.5)+dot(230,230,2.5,'#2FA866',.5)), size=240)
 GRAY = ['mono']   # ธีมที่ทำให้ทั้งหน้าเป็นขาวดำ
 
-ORDER = ['ghost','candy','ocean','garden','sky','space','fruit','notebook','spooky','war','mono','plain']
+ORDER = ['ghost','candy','ocean','garden','sky','space','fruit','notebook','spooky','war','christmas','mono','plain']
 css = ["/* ═════════ ธีมเกมคำถาม: พื้นหลังน่ารักหลายแบบ + ตัวอักษรอ่านง่าย (สร้างจาก gen/themes.py — โหลดเป็นไฟล์สุดท้าย) ═════════ */",
 """
 /* ── ตัวอักษร: แบบมีหัว (Looped) อ่านง่ายสำหรับนักเรียน ── */
