@@ -149,6 +149,23 @@ $('#setupForm').onsubmit = async (e) => {
   b.disabled = false; b.textContent = 'เปิดห้องสอบ ›';
 };
 
+/* ───────── QR ขยายเต็มจอ ───────── */
+let qrHref = '';
+function openQr() {
+  if (!qrHref) return;
+  $('#qrBigImg').innerHTML = '';
+  const size = Math.floor(Math.min(innerWidth * 0.55, innerHeight * 0.78));
+  if (window.QRCode) new QRCode($('#qrBigImg'), { text: qrHref, width: size, height: size, colorDark: '#2B2350', colorLight: '#ffffff' });
+  $('#qrBigUrl').textContent = $('#pUrl').textContent;
+  $('#qrBigPin').textContent = $('#pPin').textContent;
+  $('#qrBig').hidden = false; sfx.whoosh();
+}
+const closeQr = () => ($('#qrBig').hidden = true);
+$('#pQr').onclick = openQr; $('#pQrBtn').onclick = openQr;
+$('#qrClose').onclick = closeQr;
+$('#qrBig').onclick = (e) => e.target === $('#qrBig') && closeQr();
+addEventListener('keydown', (e) => e.key === 'Escape' && closeQr());
+
 /* ───────── คุมสอบ ───────── */
 let tickH = null;
 function stop() { unsubs.forEach((u) => typeof u === 'function' && u()); unsubs = []; clearInterval(tickH); }
@@ -161,6 +178,7 @@ function openProctor(p) {
   $('#pUrl').textContent = url.host + url.pathname;
   $('#pPin').textContent = p.replace(/(\d{3})(\d{3})/, '$1 $2');
   $('#pQr').innerHTML = ''; if (window.QRCode) new QRCode($('#pQr'), { text: url.href, width: 150, height: 150, colorDark: '#2B2350', colorLight: '#ffffff' });
+  qrHref = url.href;
   $('#pFeed').innerHTML = '<li class="muted">ยังไม่มี</li>'; $('#pAlert').hidden = true; $('#pWarn').hidden = true;
   show('proctor');
   let first = true;
