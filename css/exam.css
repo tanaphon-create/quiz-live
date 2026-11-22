@@ -118,3 +118,4 @@
 .ex-dlg::backdrop { background: rgba(30,20,70,.5); }
 .ex-dlg h3 { margin: 0 0 6px; } .ex-dlg p { margin: 0 0 14px; }
 @media (max-width: 560px) { .ex-top { flex-wrap: wrap; } .ex-leave { order: 3; } .ex-qt { font-size: 1.15rem; } }
+.ex-grid2 { align-items: start; } .ex-grid2 .field { align-content: start; }
