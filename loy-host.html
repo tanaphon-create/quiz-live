@@ -19,7 +19,7 @@
 <style>.gc-wait :is(#loginBtn,#switchBtn,.small-link){display:none!important}
 .gc-wait #loginMsg{font-size:0!important}.gc-wait #loginMsg::before{content:'🔐 กำลังเข้าสู่ระบบอัตโนมัติ…';display:block;font-size:1.05rem;font-weight:600}</style>
 </head>
-<body class="sky">
+<body class="sky loy-host">
 
 <!-- ล็อกอินครู -->
 <section class="screen on" id="scr-login">
@@ -64,18 +64,25 @@
   <div class="loy-stage" id="river"></div>
   <div class="loy-top">
     <div class="loy-card loy-join">
-      <button class="loy-qr" id="lQr" title="คลิกเพื่อขยาย QR" aria-label="ขยาย QR"></button>
-      <div><h1 id="lName"></h1><div class="muted">สแกน หรือเข้า <b id="lUrl"></b></div><div class="loy-pin" id="lPin"></div></div>
+      <div class="lj-title" id="lName"></div>
+      <div class="lj-body">
+        <button class="loy-qr" id="lQr" title="แตะเพื่อขยาย QR" aria-label="ขยาย QR"></button>
+        <div class="lj-info">
+          <span class="lj-lbl">รหัส PIN</span>
+          <div class="loy-pin" id="lPin"></div>
+          <span class="lj-count">🪷 <b id="lCount">0</b> กระทงในแม่น้ำ</span>
+        </div>
+      </div>
+      <span class="lj-url">หรือเข้าเว็บ <b id="lUrl"></b></span>
     </div>
-    <div class="loy-card loy-count"><b id="lCount">0</b><span>กระทงในแม่น้ำ</span></div>
-    <div class="loy-tools">
-      <button class="loy-btn" id="musicBtn" title="เปิด/ปิดเพลง">🎵 เพลง</button>
-      <button class="loy-btn" id="wishBtn">💬 คำอธิษฐาน</button>
-      <button class="loy-btn" id="stateBtn">⏸ ปิดรับกระทง</button>
-      <button class="loy-btn green" id="bonusBtn">📒 บันทึกคะแนนพิเศษ</button>
-      <button class="loy-btn" id="listBtn">📋 รายชื่อ</button>
-      <button class="loy-btn" id="backBtn">⚙ กิจกรรมอื่น</button>
-    </div>
+    <nav class="loy-tb" aria-label="เครื่องมือ">
+      <button class="tb" id="musicBtn" title="เปิด/ปิดเพลง"><span class="i">🎵</span><span class="t">เพลง</span></button>
+      <button class="tb" id="wishBtn" title="แสดง/ซ่อนคำอธิษฐาน"><span class="i">💬</span><span class="t">คำอธิษฐาน</span></button>
+      <button class="tb" id="stateBtn" title="เปิด/ปิดรับกระทง"><span class="i">⏸</span><span class="t">ปิดรับ</span></button>
+      <button class="tb" id="listBtn" title="รายชื่อผู้ร่วมกิจกรรม"><span class="i">📋</span><span class="t">รายชื่อ</span></button>
+      <button class="tb tb-main" id="bonusBtn" title="บันทึกคะแนนพิเศษลงสมุดคะแนน"><span class="i">📒</span><span class="t">บันทึกคะแนน</span></button>
+      <button class="tb tb-icon" id="backBtn" title="กลับไปหน้ากิจกรรม" aria-label="กลับไปหน้ากิจกรรม"><span class="i">⚙</span></button>
+    </nav>
   </div>
   <div class="loy-empty" id="lEmpty">🪷 รอกระทงใบแรก…<br><small>ให้นักเรียนสแกน QR มุมซ้ายบน</small></div>
 </section>

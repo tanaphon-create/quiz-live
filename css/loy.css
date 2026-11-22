@@ -47,28 +47,38 @@
 /* ── จอครู ── */
 body.loy-host { background: #0B1033; }
 .loy-stage { position: fixed; inset: 0; }
-.loy-top { position: fixed; left: 14px; right: 14px; top: 12px; z-index: 500; display: flex; gap: 10px; align-items: flex-start; pointer-events: none; }
+.loy-top { position: fixed; left: 16px; right: 16px; top: 14px; z-index: 500; display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; pointer-events: none; font-family: var(--font-read); }
 .loy-top > * { pointer-events: auto; }
-.loy-card { background: rgba(14,18,54,.72); color: #F4EEFF; border: 1px solid rgba(255,255,255,.14); border-radius: 20px; padding: 12px 16px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 10px 30px rgba(0,0,0,.35); font-family: var(--font-read); }
-.loy-join { display: flex; gap: 14px; align-items: center; }
-.loy-join h1 { margin: 0; font-size: 1.25rem; color: #FFE7A3; }
-.loy-join .muted { color: #C9C2F0; font-size: .85rem; }
-.loy-pin { font: 700 2.2rem/1 'Fredoka', sans-serif; letter-spacing: .06em; color: #fff; }
-.loy-qr { background: #fff; border: 0; padding: 6px; border-radius: 12px; cursor: zoom-in; position: relative; }
-.loy-qr img, .loy-qr canvas { display: block; }
-.loy-qr::after { content: '🔍'; position: absolute; right: -6px; bottom: -6px; background: #2B2350; color: #fff; font-size: .7rem; padding: 2px 5px; border-radius: 99px; }
-.loy-count { text-align: center; min-width: 110px; }
-.loy-count b { display: block; font: 700 2.4rem/1 'Fredoka', sans-serif; color: #FFC94D; }
-.loy-count span { font-size: .85rem; color: #D8D0FF; }
-.loy-tools { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 52%; }
-.loy-tools .btn { min-height: 40px; }
+.loy-card { background: rgba(12,16,48,.78); color: #F4EEFF; border: 1px solid rgba(255,255,255,.14); border-radius: 20px; padding: 14px 16px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+.loy-join { display: grid; gap: 10px; width: 340px; }
+.lj-title { font: 700 1.15rem/1.35 var(--font-read); color: #FFE7A3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lj-body { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+.lj-info { display: grid; gap: 2px; min-width: 0; }
+.lj-lbl { font-size: .8rem; color: #B9B1E6; }
+.loy-pin { font: 700 2.1rem/1.05 'Fredoka', var(--font-read), sans-serif; letter-spacing: .04em; color: #fff; white-space: nowrap; }
+.lj-url { font-size: .82rem; color: #B9B1E6; word-break: break-all; line-height: 1.4; }
+.lj-url b { color: #E8E2FF; font-weight: 600; }
+.lj-count { margin-top: 6px; font-size: .95rem; color: #F4EEFF; }
+.lj-count b { font: 700 1.3rem/1 'Fredoka', var(--font-read); color: #FFC94D; }
+.loy-qr { background: #fff; border: 0; padding: 6px; border-radius: 12px; cursor: zoom-in; position: relative; line-height: 0; }
+.loy-qr img, .loy-qr canvas { display: block; width: 104px; height: 104px; }
+.loy-qr::after { content: '🔍'; position: absolute; right: -7px; bottom: -7px; width: 26px; height: 26px; display: grid; place-items: center; background: #6C4DFF; color: #fff; font-size: .75rem; line-height: 1; border-radius: 50%; border: 2px solid #fff; }
+.loy-tb { display: flex; gap: 8px; padding: 8px; border-radius: 18px; background: rgba(12,16,48,.78); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+.tb { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 44px; min-width: 44px; padding: 0 14px; border: 0; border-radius: 12px; background: rgba(255,255,255,.08); color: #F4EEFF; font: 600 .95rem/1 var(--font-read); cursor: pointer; white-space: nowrap; transition: background .15s, transform .1s; }
+.tb:hover { background: rgba(255,255,255,.18); }
+.tb:active { transform: scale(.97); }
+.tb .i { font-size: 1.1rem; line-height: 1; }
+.tb.on { background: #FFC94D; color: #2B2350; }
+.tb.warn { background: #FF6FA0; color: #fff; }
+.tb-main { background: #1FBF8F; color: #fff; }
+.tb-main:hover { background: #22D39E; }
+.tb-icon { padding: 0; width: 44px; }
+@media (max-width: 1180px) { .tb .t { display: none; } .tb { padding: 0; width: 44px; } }
+body.loy-host .qr-big { z-index: 2000; }
 .loy-btn { border: 1px solid rgba(255,255,255,.22); background: rgba(14,18,54,.72); color: #fff; border-radius: 999px; padding: 8px 14px; font: 600 .92rem/1.2 var(--font-read); cursor: pointer; backdrop-filter: blur(8px); }
 .loy-btn:hover { background: rgba(40,44,100,.85); }
-.loy-btn.on { background: #FFC94D; color: #2B2350; border-color: #FFC94D; }
-.loy-btn.pink { background: #FF6FA0; border-color: #FF6FA0; }
-.loy-btn.green { background: #1FBF8F; border-color: #1FBF8F; }
 .loy-closed { position: fixed; left: 50%; bottom: 18px; translate: -50% 0; z-index: 500; }
-.loy-empty { position: fixed; left: 50%; top: 60%; translate: -50% -50%; z-index: 400; color: #E8E2FF; text-align: center; font: 600 1.2rem/1.6 var(--font-read); text-shadow: 0 2px 10px rgba(0,0,0,.5); }
+.loy-empty { font-family: var(--font-read); position: fixed; left: 50%; top: 62%; translate: -50% -50%; z-index: 400; color: #E8E2FF; text-align: center; font: 600 1.2rem/1.6 var(--font-read); text-shadow: 0 2px 10px rgba(0,0,0,.5); }
 .loy-setup { max-width: 760px; margin: 24px auto; padding: 0 16px; display: grid; gap: 16px; }
 .loy-setup .card h1 { margin: 0 0 6px; }
 .loy-list { display: grid; gap: 8px; }

@@ -69,15 +69,15 @@ function openRiver(p) {
   const url = new URL('loy.html', location.href); url.search = '?pin=' + p; joinHref = url.href;
   $('#lUrl').textContent = url.host + url.pathname;
   $('#lPin').textContent = p.replace(/(\d{3})(\d{3})/, '$1 $2');
-  $('#lQr').innerHTML = ''; if (window.QRCode) new QRCode($('#lQr'), { text: joinHref, width: 96, height: 96, colorDark: '#2B2350', colorLight: '#ffffff' });
+  $('#lQr').innerHTML = ''; if (window.QRCode) new QRCode($('#lQr'), { text: joinHref, width: 208, height: 208, colorDark: '#2B2350', colorLight: '#ffffff' });
   show('river');
   river = createRiver($('#river'), { showWish: true });
   let first = true;
   unsubs.push(DB.on(`${R}/meta`, (m) => {
     meta = m; if (!m) { toast('กิจกรรมนี้ถูกลบแล้ว'); return openSetup(); }
-    $('#lName').textContent = '🪷 ' + m.title;
-    $('#stateBtn').textContent = m.state === 'open' ? '⏸ ปิดรับกระทง' : '▶ เปิดรับกระทง';
-    $('#stateBtn').classList.toggle('pink', m.state !== 'open');
+    $('#lName').textContent = '🪷 ' + m.title; $('#lName').title = m.title;
+    $('#stateBtn').innerHTML = m.state === 'open' ? '<span class="i">⏸</span><span class="t">ปิดรับ</span>' : '<span class="i">▶</span><span class="t">เปิดรับอีกครั้ง</span>';
+    $('#stateBtn').classList.toggle('warn', m.state !== 'open');
     $('#wishBtn').classList.toggle('on', !!m.showWish); river?.setShowWish(!!m.showWish);
   }));
   unsubs.push(DB.on(`${R}/items`, (v) => {
