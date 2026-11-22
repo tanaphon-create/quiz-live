@@ -56,13 +56,15 @@ try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.ad
       <p class="hint" id="quizInfo"></p>
       <div class="ex-grid2">
         <label class="field"><span>เวลาทำข้อสอบ (นาที)</span><input class="input" type="number" id="dur" min="1" max="300" value="30" required></label>
-        <label class="field"><span>ออกนอกหน้าจอได้ไม่เกิน (ครั้ง)</span><input class="input" type="number" id="maxLeave" min="0" max="20" value="2" required>
-          <small class="hint">ออกครั้งถัดไปจะถูกล็อก และแจ้งที่จอคุมสอบ</small></label>
+        <label class="field"><span>ออกนอกหน้าจอได้ไม่เกิน (ครั้ง)</span><input class="input" type="number" id="maxLeave" min="1" max="20" value="2" required>
+          <small class="hint">ทุกครั้งที่ออกจะเตือนทั้งนักเรียนและจอครู · เกินนี้ข้อสอบถูกล็อก</small></label>
+        <label class="field"><span>เกณฑ์ผ่าน (% ของคะแนนเต็ม)</span><input class="input" type="number" id="passPct" min="1" max="100" value="50" required>
+          <small class="hint">ไม่ผ่านสอบแก้ตัวได้ · ทำได้เกินเกณฑ์ได้คะแนนเท่าเกณฑ์</small></label>
       </div>
       <div class="ex-checks">
         <label class="ex-chk"><input type="checkbox" id="shufQ" checked><span>สุ่มลำดับข้อ</span></label>
         <label class="ex-chk"><input type="checkbox" id="shufC" checked><span>สุ่มลำดับตัวเลือก <small>(ข้อถูก/ผิดไม่สลับ)</small></span></label>
-        <label class="ex-chk"><input type="checkbox" id="showScore" checked><span>ให้นักเรียนเห็นคะแนนหลังส่ง</span></label>
+        <label class="ex-chk"><input type="checkbox" id="showScore"><span>ให้เห็นคะแนนทันทีที่ส่ง <small>(ปกติจะเห็นเมื่อครูกด “เฉลยและแจ้งคะแนน”)</small></span></label>
       </div>
       <div class="row end"><button class="btn gold big" id="openBtn">เปิดห้องสอบ ›</button></div>
     </form>
@@ -95,14 +97,17 @@ try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.ad
     </aside>
     <section class="ex-main">
       <div class="ex-alert" id="pAlert" hidden></div>
+      <div class="ex-alert warn" id="pWarn" hidden></div>
+      <div class="card ex-actions" id="pActions"></div>
       <div class="card ex-tbl-wrap">
-        <table class="ex-tbl"><thead><tr><th>เลขประจำตัว</th><th>ชื่อ</th><th>สถานะ</th><th>ทำแล้ว</th><th>ออกนอกจอ</th><th>เวลาเหลือ</th><th>คะแนน</th><th></th></tr></thead>
-          <tbody id="pRows"><tr><td colspan="8" class="muted ex-empty">รอนักเรียนเข้าห้องสอบ…</td></tr></tbody></table>
+        <table class="ex-tbl"><thead><tr><th>เลขประจำตัว</th><th>ชื่อ</th><th>สถานะ</th><th>ทำแล้ว</th><th>ออกนอกจอ</th><th>เวลาเหลือ</th><th>คะแนน</th><th>ผล</th><th></th></tr></thead>
+          <tbody id="pRows"><tr><td colspan="9" class="muted ex-empty">รอนักเรียนเข้าห้องสอบ…</td></tr></tbody></table>
       </div>
     </section>
   </main>
 </section>
 
+<dialog class="ex-dlg wide" id="exDlg"><div id="exDlgBody"></div></dialog>
 <script type="module" src="js/exam-host.js"></script>
 <script src="js/festival.js?v=20261120a" defer></script>
 </body>

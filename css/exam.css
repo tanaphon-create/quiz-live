@@ -119,3 +119,27 @@
 .ex-dlg h3 { margin: 0 0 6px; } .ex-dlg p { margin: 0 0 14px; }
 @media (max-width: 560px) { .ex-top { flex-wrap: wrap; } .ex-leave { order: 3; } .ex-qt { font-size: 1.15rem; } }
 .ex-grid2 { align-items: start; } .ex-grid2 .field { align-content: start; }
+
+.ex-alert.warn { background: #F59E0B; color: #2B1A00; box-shadow: 0 10px 30px rgba(245,158,11,.35); }
+.ex-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 14px; }
+.ex-act-note { font-weight: 600; color: var(--ex-ink2); } .ex-act-note.ok { color: var(--ex-ok); }
+.ex-round { display: inline-block; font-size: .75rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #FFE8C7; color: #9A4A00; vertical-align: middle; }
+.ex-dlg.wide { width: min(720px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: auto; }
+.ex-dlg .ex-chk { margin: 6px 0 14px; }
+.ex-mini { max-height: 180px; overflow: auto; margin: 0 0 12px; padding-left: 1.2em; display: grid; gap: 2px; }
+.ex-warn-line { color: var(--ex-bad); font-weight: 600; }
+.ex-done-dlg { text-align: center; display: grid; gap: 6px; justify-items: center; }
+.ex-done-dlg .row { justify-self: stretch; }
+/* นักเรียน: ผลสอบ + เฉลย */
+.ex-pass { display: inline-block; margin-top: 8px; padding: 6px 16px; border-radius: 999px; font-weight: 700; }
+.ex-pass.ok { background: var(--ex-ok-s); color: var(--ex-ok); } .ex-pass.no { background: var(--ex-bad-s); color: var(--ex-bad); }
+.ex-review { text-align: left; display: grid; gap: 10px; margin-top: 14px; width: 100%; }
+.ex-review h3 { margin: 6px 0 0; font-size: 1.05rem; }
+.ex-rv { border: 1px solid var(--ex-line); border-radius: 14px; padding: 10px 12px; display: grid; gap: 4px; background: #fff; }
+.ex-rv.ok { border-color: #9BE3C4; background: #F3FCF8; } .ex-rv.no { border-color: #F7B8C3; background: #FFF6F8; }
+.ex-rv b { font-weight: 600; line-height: 1.5; } .ex-rv small { color: var(--ex-ink2); line-height: 1.5; }
+.ex-rv .mk { font-weight: 700; } .ex-rv.ok .mk { color: var(--ex-ok); } .ex-rv.no .mk { color: var(--ex-bad); }
+.ex-done { width: min(560px, calc(100vw - 32px)); }
+.ex-form .ex-grid2 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 700px) { .ex-form .ex-grid2 { grid-template-columns: 1fr; } }
+.ex-dlg .row { display: flex; flex-direction: row; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap; }

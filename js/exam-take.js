@@ -30,6 +30,7 @@ $('#infoForm').onsubmit = async (e) => {
   const sid = $('#sidIn').value.replace(/\s/g, ''), name = $('#nameIn').value.trim().replace(/\s+/g, ' ');
   if (!/^\d{1,10}$/.test(sid)) return toast('ใส่เลขประจำตัวเป็นตัวเลขเท่านั้น');
   if (!name) return toast('พิมพ์ชื่อ-สกุลก่อน');
+  if (meta.retakeOf && !(await DB.get(`${R}/allow/${sid}`))) return toast('เลขประจำตัวนี้ไม่อยู่ในรายชื่อสอบแก้ตัว — ตรวจเลขอีกครั้ง หรือแจ้งครู', 4500);
   const all = (await DB.get(`${R}/students`)) || {};
   if (Object.entries(all).some(([u, s]) => u !== uid && String(s.sid) === sid)) return toast('เลขประจำตัวนี้เข้าห้องสอบแล้ว — แจ้งครูคุมสอบ', 4000);
   paper = (await DB.get(`${R}/paper`)) || [];
@@ -46,10 +47,11 @@ async function enter(resume) {
   resumed = resume;
   if (!paper.length) paper = (await DB.get(`${R}/paper`)) || [];
   subs.forEach((u) => typeof u === 'function' && u()); subs = [];
-  subs.push(DB.on(`${R}/meta`, (m) => { if (m) { meta = m; route(); } }));
+  subs.push(DB.on(`${R}/meta`, (m) => { if (m) { meta = m; route(); renderScore(); } }));
   subs.push(DB.on(`${R}/students/${uid}`, (s) => { if (s) { me = s; route(); } }));
   subs.push(DB.on(`${R}/ans/${uid}`, (v) => { ans = v || {}; if (routed === 'exam') { renderQ(); renderGrid(); } }));
-  subs.push(DB.on(`${R}/results/${uid}`, (r) => renderScore(r)));
+  subs.push(DB.on(`${R}/results/${uid}`, (r) => { myRes = r; renderScore(); }));
+  subs.push(DB.on(`${R}/reveal`, (v) => { revealKey = v?.key || null; renderScore(); }));
   try { Promise.resolve(DB.set(`${R}/students/${uid}/online`, true)).catch(() => {}); Promise.resolve(DB.onDisconnect(`${R}/students/${uid}/online`, false)).catch(() => {}); } catch {}
 }
 
@@ -68,7 +70,8 @@ function route() {
         `${meta.shuffleQ || meta.shuffleC ? 'ข้อสอบของแต่ละคน<b>สลับลำดับไม่เหมือนกัน</b>' : 'ตอบทุกข้อให้ครบ'}`,
         `ระหว่างสอบ <b>ห้ามสลับแอป เปิดแท็บอื่น ออกจากเต็มจอ หรือรีเฟรช</b>`,
         `ออกนอกหน้าจอได้ไม่เกิน <b>${meta.maxLeave} ครั้ง</b> — ครั้งถัดไป<b>ข้อสอบจะถูกล็อก</b>และแจ้งครูคุมสอบทันที`,
-        'คำตอบบันทึกอัตโนมัติทุกครั้งที่เลือก หมดเวลาระบบส่งให้เอง',
+        'คำตอบบันทึกอัตโนมัติทุกครั้งที่เลือก <b>หมดเวลาระบบส่งให้อัตโนมัติ</b>',
+        `เกณฑ์ผ่าน <b>${passScore()} คะแนน</b> จาก ${meta.n}${meta.round ? ' · <b>สอบแก้ตัว: ทำได้เกินเกณฑ์จะได้คะแนนเท่าเกณฑ์ผ่าน</b>' : ' · ไม่ผ่านสอบแก้ตัวได้'}`,
       ].map((t) => `<li>${t}</li>`).join('');
       $('#rWait').textContent = meta.state === 'open' ? '' : 'ห้องสอบปิดแล้ว';
       show('rules');
@@ -149,8 +152,26 @@ async function submit(auto) {
   catch (err) { console.error(err); sending = false; if (!auto) { toast('ส่งไม่สำเร็จ ลองอีกครั้ง'); arm(); } return; }
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
 }
-function renderScore(r) {
-  $('#dScore').innerHTML = meta?.showScore && r ? `<div class="ex-score"><small>คะแนนของฉัน</small><b>${r.score}</b><span>/ ${r.total}</span></div>` : '<p class="hint">ครูจะแจ้งคะแนนภายหลัง</p>';
+let myRes = null, revealKey = null;
+const passScore = () => Math.max(1, Math.ceil(((meta?.n || 0) * (meta?.passPct ?? 50)) / 100));
+function renderScore() {
+  const r = myRes, show = meta && (meta.revealed || meta.showScore);
+  if (!show || !r) { $('#dScore').innerHTML = `<p class="hint">${meta?.revealed ? 'กำลังโหลดคะแนน…' : '⏳ รอครูกด “เฉลยและแจ้งคะแนน” เมื่อทุกคนส่งครบ'}</p>`; return; }
+  const pass = r.pass ?? passScore(), ok = r.score >= pass;
+  let h = `<div class="ex-score"><small>คะแนนที่ทำได้</small><b>${r.score}</b><span>/ ${r.total}</span></div>
+    <span class="ex-pass ${ok ? 'ok' : 'no'}">${ok ? '🎉 ผ่านเกณฑ์' : '❌ ยังไม่ผ่านเกณฑ์'} (เกณฑ์ ${pass} คะแนน)</span>`;
+  if (meta.round && ok && r.score > pass) h += `<p class="hint">สอบแก้ตัว: ได้คะแนนเท่าเกณฑ์ผ่าน <b>${pass} คะแนน</b></p>`;
+  if (!ok && !meta.round) h += '<p class="hint">ครูจะเปิดสอบแก้ตัวให้ภายหลัง</p>';
+  if (meta.revealed && r.marks && me?.order) {
+    h += `<div class="ex-review"><h3>📋 ตรวจคำตอบ</h3>${me.order.map((qi, k) => {
+      const q = paper[qi]; if (!q) return '';
+      const good = r.marks[qi] === '1', mine = ans['q' + qi];
+      return `<div class="ex-rv ${good ? 'ok' : 'no'}"><span class="mk">${good ? '✓ ถูก' : '✗ ผิด'} · ข้อ ${k + 1}</span><b>${esc(q.text)}</b>
+        <small>คำตอบของฉัน: ${mine != null ? esc(q.choices[mine]) : '<i>ไม่ได้ตอบ</i>'}</small>
+        ${revealKey && !good ? `<small>คำตอบที่ถูก: <b>${esc(q.choices[revealKey[qi]])}</b></small>` : ''}</div>`;
+    }).join('')}</div>`;
+  }
+  $('#dScore').innerHTML = h;
 }
 
 /* ───────── ล็อกหน้าจอ ───────── */

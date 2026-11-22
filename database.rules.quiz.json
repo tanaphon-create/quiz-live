@@ -58,20 +58,40 @@
       },
       "exams": {
         "$pin": {
-          ".read": "auth != null",
           ".write": "auth != null && ((!data.exists() && auth.token.email === 'tanaphon@wangchan.ac.th' && auth.token.email_verified === true) || (data.exists() && data.child('meta/hostUid').val() === auth.uid))",
+          "meta": {
+            ".read": "auth != null"
+          },
+          "paper": {
+            ".read": "auth != null"
+          },
+          "allow": {
+            ".read": "auth != null"
+          },
+          "reveal": {
+            ".read": "auth != null"
+          },
           "students": {
+            ".read": "auth != null",
             "$uid": {
-              ".write": "auth != null && auth.uid === $uid && root.child('quiz/exams/' + $pin + '/meta/state').val() === 'open' && ((!data.exists() && newData.child('status').val() === 'ready' && newData.child('leaves').val() === 0 && !newData.child('extra').exists() && !newData.child('startAt').exists()) || (data.exists() && newData.exists() && data.child('status').val() !== 'submitted' && (data.child('status').val() !== 'locked' || newData.child('status').val() === 'locked') && (data.child('status').val() === 'ready' || newData.child('status').val() !== 'ready') && newData.child('leaves').val() >= data.child('leaves').val() && (data.child('extra').exists() ? newData.child('extra').val() === data.child('extra').val() : !newData.child('extra').exists()) && (data.child('startAt').exists() ? newData.child('startAt').val() === data.child('startAt').val() : (!newData.child('startAt').exists() || (newData.child('startAt').val() <= now && newData.child('startAt').val() >= now - 60000))) && (newData.child('status').val() !== 'doing' || newData.child('startAt').exists())))",
+              ".write": "auth != null && auth.uid === $uid && root.child('quiz/exams/' + $pin + '/meta/state').val() === 'open' && ((!data.exists() && (!root.child('quiz/exams/' + $pin + '/meta/retakeOf').exists() || root.child('quiz/exams/' + $pin + '/allow/' + newData.child('sid').val()).exists()) && newData.child('status').val() === 'ready' && newData.child('leaves').val() === 0 && !newData.child('extra').exists() && !newData.child('startAt').exists()) || (data.exists() && newData.exists() && data.child('status').val() !== 'submitted' && (data.child('status').val() !== 'locked' || newData.child('status').val() === 'locked') && (data.child('status').val() === 'ready' || newData.child('status').val() !== 'ready') && newData.child('leaves').val() >= data.child('leaves').val() && (data.child('extra').exists() ? newData.child('extra').val() === data.child('extra').val() : !newData.child('extra').exists()) && (data.child('startAt').exists() ? newData.child('startAt').val() === data.child('startAt').val() : (!newData.child('startAt').exists() || (newData.child('startAt').val() <= now && newData.child('startAt').val() >= now - 60000))) && (newData.child('status').val() !== 'doing' || newData.child('startAt').exists())))",
               ".validate": "newData.child('sid').isString() && newData.child('sid').val().length <= 12 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('leaves').isNumber()"
             }
           },
           "ans": {
+            ".read": "auth != null && root.child('quiz/exams/' + $pin + '/meta/hostUid').val() === auth.uid",
             "$uid": {
+              ".read": "auth != null && auth.uid === $uid",
               "$q": {
                 ".write": "auth != null && auth.uid === $uid && root.child('quiz/exams/' + $pin + '/meta/state').val() === 'open' && root.child('quiz/exams/' + $pin + '/students/' + $uid + '/status').val() === 'doing' && now <= root.child('quiz/exams/' + $pin + '/students/' + $uid + '/startAt').val() + root.child('quiz/exams/' + $pin + '/meta/duration').val() * 60000 + 15000",
                 ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0 && newData.val() <= 3)"
               }
+            }
+          },
+          "results": {
+            ".read": "auth != null && root.child('quiz/exams/' + $pin + '/meta/hostUid').val() === auth.uid",
+            "$uid": {
+              ".read": "auth != null && auth.uid === $uid"
             }
           }
         }
