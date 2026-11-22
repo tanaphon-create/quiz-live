@@ -36,7 +36,7 @@
 .lr-new .lr-bob::after { content: ''; position: absolute; left: 50%; top: 80%; width: 110%; aspect-ratio: 4/1; translate: -50% -50%; border-radius: 50%; border: 2px solid rgba(255,236,190,.55); animation: lr-ripple 1.6s ease-out 3; }
 @keyframes lr-ripple { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
 .lr-new .lr-name { background: #FF6FA0; color: #fff; }
-.lr-bubble { position: absolute; z-index: 300; translate: -50% -100%; max-width: min(380px, 80%); padding: 10px 16px; border-radius: 18px; background: rgba(255,255,255,.96); color: var(--loy-ink); box-shadow: 0 12px 30px rgba(0,0,0,.35); font-family: var(--font-read, system-ui); text-align: center; opacity: 0; transform: translateY(10px); transition: opacity .4s, transform .4s; pointer-events: none; }
+.lr-bubble { position: absolute; z-index: 300; translate: -50% -100%; width: max-content; max-width: min(380px, 80vw); padding: 10px 16px; border-radius: 18px; background: rgba(255,255,255,.96); color: var(--loy-ink); box-shadow: 0 12px 30px rgba(0,0,0,.35); font-family: var(--font-read, system-ui); text-align: center; opacity: 0; transform: translateY(10px); transition: opacity .4s, transform .4s; pointer-events: none; }
 .lr-bubble.on { opacity: 1; transform: none; }
 .lr-bubble::after { content: ''; position: absolute; left: 50%; bottom: -8px; translate: -50% 0; border: 8px solid transparent; border-bottom: 0; border-top-color: rgba(255,255,255,.96); }
 .lr-bubble b { display: block; font-size: 1.05rem; }
@@ -63,18 +63,26 @@ body.loy-host { background: #0B1033; }
 .loy-qr { background: #fff; border: 0; padding: 6px; border-radius: 12px; cursor: zoom-in; position: relative; line-height: 0; }
 .loy-qr img, .loy-qr canvas { display: block; width: 104px; height: 104px; }
 .loy-qr::after { content: '🔍'; position: absolute; right: -7px; bottom: -7px; width: 26px; height: 26px; display: grid; place-items: center; background: #6C4DFF; color: #fff; font-size: .75rem; line-height: 1; border-radius: 50%; border: 2px solid #fff; }
-.loy-tb { display: flex; gap: 8px; padding: 8px; border-radius: 18px; background: rgba(12,16,48,.78); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,.35); }
-.tb { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 44px; min-width: 44px; padding: 0 14px; border: 0; border-radius: 12px; background: rgba(255,255,255,.08); color: #F4EEFF; font: 600 .95rem/1 var(--font-read); cursor: pointer; white-space: nowrap; transition: background .15s, transform .1s; }
-.tb:hover { background: rgba(255,255,255,.18); }
+.loy-tb { position: fixed; left: 50%; bottom: 16px; translate: -50% 0; width: max-content; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 8px; max-width: calc(100vw - 24px); border-radius: 20px; background: rgba(10,12,40,.82); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 12px 34px rgba(0,0,0,.45); }
+.tb { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 18px; border: 1px solid rgba(255,255,255,.28); border-radius: 14px; background: rgba(255,255,255,.14); color: #fff; font: 600 1rem/1 var(--font-read); cursor: pointer; white-space: nowrap; transition: background .15s, transform .1s; }
+.tb:hover { background: rgba(255,255,255,.26); }
 .tb:active { transform: scale(.97); }
-.tb .i { font-size: 1.1rem; line-height: 1; }
-.tb.on { background: #FFC94D; color: #2B2350; }
-.tb.warn { background: #FF6FA0; color: #fff; }
-.tb-main { background: #1FBF8F; color: #fff; }
+.tb .i { font-size: 1.15rem; line-height: 1; }
+.tb.on { background: #FFC94D; border-color: #FFC94D; color: #2B2350; }
+.tb.warn { background: #FF6FA0; border-color: #FF6FA0; color: #fff; }
+.tb-main { background: #1FBF8F; border-color: #1FBF8F; color: #fff; }
 .tb-main:hover { background: #22D39E; }
-.tb-icon { padding: 0; width: 44px; }
-@media (max-width: 1180px) { .tb .t { display: none; } .tb { padding: 0; width: 44px; } }
+@media (max-width: 760px) { .tb { height: 42px; padding: 0 12px; font-size: .9rem; } }
 body.loy-host .qr-big { z-index: 2000; }
+.loy-host #scr-setup { background: linear-gradient(180deg, #F3EEFF, #FFF3E8); min-height: 100dvh; }
+.loy-setup .card { padding: 24px 26px; border-radius: 24px; display: grid; gap: 14px; }
+.loy-setup .card h1 { font-size: clamp(1.35rem, 3vw, 1.7rem); line-height: 1.35; margin: 0; }
+.loy-setup .card h3 { margin: 0; }
+.loy-setup .card .muted { margin: 0; line-height: 1.6; }
+.loy-setup .field { display: grid; gap: 6px; margin: 0; }
+.loy-setup .l-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.loy-setup #openBtn { justify-self: start; }
+@media (max-width: 560px) { .loy-setup .l-grid { grid-template-columns: 1fr; } .loy-setup .card { padding: 18px; } .loy-row b { min-width: 100%; } }
 .loy-btn { border: 1px solid rgba(255,255,255,.22); background: rgba(14,18,54,.72); color: #fff; border-radius: 999px; padding: 8px 14px; font: 600 .92rem/1.2 var(--font-read); cursor: pointer; backdrop-filter: blur(8px); }
 .loy-btn:hover { background: rgba(40,44,100,.85); }
 .loy-closed { position: fixed; left: 50%; bottom: 18px; translate: -50% 0; z-index: 500; }

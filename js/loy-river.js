@@ -1,5 +1,5 @@
 // ฉากแม่น้ำคืนวันเพ็ญ: ฟ้า ดาว พระจันทร์ เงาจันทร์บนน้ำ ฝั่งวัด โคมลอย + กระทงทุกใบลอยไปตามสายน้ำ
-import { krathongSVG } from './krathong-art.js';
+import { krathongSVG } from './krathong-art.js?v=20261122d';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const hash = (s) => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; };
@@ -29,7 +29,7 @@ export function createRiver(root, { showWish = true, max = 150, compact = false 
     const depth = 0.1 + hash(uid + 'd') * 0.88;              // 0 = ไกล (ใกล้ฝั่ง) · 1 = ใกล้คนดู
     const dur = (compact ? 70 : 110) - depth * 45;
     const phase = fresh ? 0.22 + Math.random() * 0.4 : hash(uid + 'p');
-    el.style.cssText = `--top:${(depth * 74).toFixed(1)}%;--w:${(compact ? 15 : 5.5) + depth * (compact ? 18 : 8.5)}%;--d:${dur.toFixed(1)}s;--delay:${(-dur * phase).toFixed(1)}s;--bob:${(2.6 + hash(uid) * 1.6).toFixed(2)}s;z-index:${Math.round(depth * 100)}`;
+    el.style.cssText = `--top:${(depth * (compact ? 74 : 60)).toFixed(1)}%;--w:${(compact ? 15 : 5.5) + depth * (compact ? 18 : 8.5)}%;--d:${dur.toFixed(1)}s;--delay:${(-dur * phase).toFixed(1)}s;--bob:${(2.6 + hash(uid) * 1.6).toFixed(2)}s;z-index:${Math.round(depth * 100)}`;
   }
   function render(uid, it) {
     let el = els.get(uid); const key = JSON.stringify([it.d, it.name, it.wish, it.showWish]);

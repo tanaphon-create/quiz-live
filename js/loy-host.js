@@ -4,7 +4,7 @@ import { connect, isTeacher, TS } from './db.js';
 import { $, $$, esc, show, toast } from './ui.js';
 import { sfx, music, musicOn, unlock, setMusicTheme } from './sound.js';
 import { SCOREBOOK_API } from './config.js';
-import { createRiver } from './loy-river.js';
+import { createRiver } from './loy-river.js?v=20261122d';
 
 let DB, me = null, pin = '', R = '', meta = null, items = {}, unsubs = [], river = null, joinHref = '';
 setMusicTheme('loykrathong');
