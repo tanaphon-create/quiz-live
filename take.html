@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F7FC">
+<title>ทำข้อสอบ · Ghost Class</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/bright.css">
+<link rel="stylesheet" href="css/ghost.css">
+<link rel="stylesheet" href="css/readable.css">
+<link rel="stylesheet" href="css/exam.css">
+</head>
+<body class="sky ex-student">
+
+<!-- ใส่ PIN -->
+<section class="screen on" id="scr-pin">
+  <div class="ex-center">
+    <div class="logo big"><span class="mark gmark" aria-hidden="true"></span><span class="brand"><small>สอบนอกตาราง</small><span>Ghost <b>Class</b></span></span></div>
+    <form class="card ex-card" id="pinForm">
+      <h2>📝 เข้าห้องสอบ</h2>
+      <label class="field"><span>รหัสห้องสอบ (PIN)</span><input class="input big-in" id="pinIn" inputmode="numeric" autocomplete="off" maxlength="7" placeholder="000000" required></label>
+      <button class="btn gold big">ถัดไป ›</button>
+    </form>
+  </div>
+</section>
+
+<!-- ข้อมูลนักเรียน -->
+<section class="screen" id="scr-info">
+  <div class="ex-center">
+    <form class="card ex-card" id="infoForm">
+      <h2 id="infoTitle">ข้อสอบ</h2>
+      <label class="field"><span>เลขประจำตัวนักเรียน</span><input class="input big-in" id="sidIn" inputmode="numeric" autocomplete="off" maxlength="10" required></label>
+      <label class="field"><span>ชื่อ-สกุล</span><input class="input" id="nameIn" autocomplete="name" maxlength="40" required></label>
+      <button class="btn gold big">เข้าห้องสอบ ›</button>
+    </form>
+  </div>
+</section>
+
+<!-- กติกา / เริ่มสอบ -->
+<section class="screen" id="scr-rules">
+  <div class="ex-center">
+    <div class="card ex-card ex-rules">
+      <h2 id="rTitle"></h2>
+      <p class="ex-who" id="rWho"></p>
+      <ul class="ex-rlist" id="rList"></ul>
+      <button class="btn gold big" id="startBtn">เริ่มทำข้อสอบ ▶</button>
+      <p class="hint" id="rWait"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ทำข้อสอบ -->
+<section class="screen" id="scr-exam">
+  <header class="ex-top">
+    <div class="ex-top-l"><b id="eTitle"></b><small id="eWho"></small></div>
+    <span class="ex-leave" id="eLeave"></span>
+    <span class="ex-timer" id="eTimer">--:--</span>
+  </header>
+  <main class="ex-paper">
+    <div class="ex-prog"><i id="eProg"></i></div>
+    <article class="card ex-q" id="eQ"></article>
+    <nav class="ex-nav">
+      <button class="btn light" id="prevBtn">‹ ข้อก่อนหน้า</button>
+      <button class="btn light" id="nextBtn">ข้อถัดไป ›</button>
+    </nav>
+    <div class="card ex-grid" id="eGrid"></div>
+    <div class="row end"><button class="btn green big" id="submitBtn">ส่งข้อสอบ ✓</button></div>
+  </main>
+</section>
+
+<!-- ส่งแล้ว -->
+<section class="screen" id="scr-done">
+  <div class="ex-center">
+    <div class="card ex-card ex-done">
+      <div class="ex-big">✅</div>
+      <h2>ส่งข้อสอบเรียบร้อย</h2>
+      <p id="dWho" class="muted"></p>
+      <div id="dScore"></div>
+    </div>
+  </div>
+</section>
+
+<!-- เตือนออกนอกจอ -->
+<div class="ex-overlay warn" id="warnOv" hidden>
+  <div class="ex-ov-card">
+    <div class="ex-big">⚠️</div>
+    <h2>ห้ามออกจากหน้าข้อสอบ</h2>
+    <p id="warnTxt"></p>
+    <button class="btn gold big" id="backBtn">กลับไปทำข้อสอบ</button>
+  </div>
+</div>
+<!-- ถูกล็อก -->
+<div class="ex-overlay lock" id="lockOv" hidden>
+  <div class="ex-ov-card">
+    <div class="ex-big">🔒</div>
+    <h2>ข้อสอบถูกล็อก</h2>
+    <p>ออกนอกหน้าจอเกินจำนวนที่กำหนด<br>ระบบแจ้งครูคุมสอบแล้ว — <b>รอครูปลดล็อก</b> ห้ามปิดหน้านี้</p>
+    <p class="hint" id="lockTxt"></p>
+  </div>
+</div>
+<!-- ยืนยันส่ง -->
+<dialog class="ex-dlg" id="confirmDlg">
+  <h3>ส่งข้อสอบ?</h3>
+  <p id="confirmTxt"></p>
+  <div class="row end"><button class="btn light" value="no" id="cNo">กลับไปตรวจ</button><button class="btn green" id="cYes">ส่งเลย</button></div>
+</dialog>
+
+<script type="module" src="js/exam-take.js"></script>
+</body>
+</html>

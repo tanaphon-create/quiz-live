@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สอบนอกตาราง (คุมสอบ) · Ghost Class</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/bright.css">
+<link rel="stylesheet" href="css/ghost.css">
+<link rel="stylesheet" href="css/readable.css">
+<link rel="stylesheet" href="css/exam.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>/* ล็อกอินครั้งเดียวใช้ทุกระบบ: เคยล็อกอินครูในเครื่องนี้ → ไม่โชว์ปุ่มล็อกอิน ระหว่างรอระบบเข้าให้อัตโนมัติ */
+try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.add('gc-wait');setTimeout(function(){document.documentElement.classList.remove('gc-wait')},12000)}}catch(e){}</script>
+<style>.gc-wait :is(#loginBtn,#switchBtn,.small-link){display:none!important}
+.gc-wait #loginMsg{font-size:0!important}.gc-wait #loginMsg::before{content:'🔐 กำลังเข้าสู่ระบบอัตโนมัติ…';display:block;font-size:1.05rem;font-weight:600}</style>
+</head>
+<body class="sky ex-teacher">
+
+<!-- ล็อกอินครู -->
+<section class="screen on" id="scr-login">
+  <div class="login-wrap">
+    <div class="logo big"><span class="mark gmark" aria-hidden="true"></span><span class="brand"><small>สอบนอกตาราง</small><span>Ghost <b>Class</b></span></span></div>
+    <div class="login-card card">
+      <h2>เข้าสู่ระบบสำหรับครู</h2>
+      <p class="muted">ใช้บัญชี Google ของโรงเรียนที่ได้รับอนุญาตเท่านั้น</p>
+      <button class="btn big g-btn" id="loginBtn">เข้าสู่ระบบด้วย Google</button>
+      <button class="btn light" id="switchBtn" hidden>สลับบัญชี</button>
+      <p class="login-msg" id="loginMsg">กำลังตรวจสอบการเข้าสู่ระบบ…</p>
+    </div>
+    <a class="muted small-link" href="./">← เมนูรวม</a>
+  </div>
+</section>
+
+<!-- ตั้งค่าห้องสอบ -->
+<section class="screen" id="scr-setup">
+  <header class="topbar">
+    <a class="home-link" href="./" title="เมนูรวม Ghost Class" aria-label="เมนูรวม"><img src="img/ghost.svg" alt=""></a>
+    <div class="logo"><span class="mark gmark" aria-hidden="true"></span><span class="brand"><small>สอบนอกตาราง</small><span>Ghost <b>Class</b></span></span></div>
+    <span class="sp"></span>
+    <a class="btn ghost sm" href="host.html">📝 แก้ชุดคำถาม</a>
+    <span class="pill who" id="who"></span>
+  </header>
+  <main class="ex-wrap">
+    <div class="ex-open card" id="openList" hidden></div>
+    <form class="card ex-form" id="setupForm">
+      <h1>📝 เปิดห้องสอบนอกตาราง</h1>
+      <p class="muted">นักเรียนแต่ละคนได้ลำดับข้อและลำดับตัวเลือกไม่เหมือนกัน · เฉลยอยู่ที่เครื่องครูเท่านั้น</p>
+      <label class="field"><span>ชุดข้อสอบ (จากคลังคำถามในเกมคำถาม)</span>
+        <select class="input" id="quizSel" required></select></label>
+      <p class="hint" id="quizInfo"></p>
+      <div class="ex-grid2">
+        <label class="field"><span>เวลาทำข้อสอบ (นาที)</span><input class="input" type="number" id="dur" min="1" max="300" value="30" required></label>
+        <label class="field"><span>ออกนอกหน้าจอได้ไม่เกิน (ครั้ง)</span><input class="input" type="number" id="maxLeave" min="0" max="20" value="2" required>
+          <small class="hint">ออกครั้งถัดไปจะถูกล็อก และแจ้งที่จอคุมสอบ</small></label>
+      </div>
+      <div class="ex-checks">
+        <label class="ex-chk"><input type="checkbox" id="shufQ" checked><span>สุ่มลำดับข้อ</span></label>
+        <label class="ex-chk"><input type="checkbox" id="shufC" checked><span>สุ่มลำดับตัวเลือก <small>(ข้อถูก/ผิดไม่สลับ)</small></span></label>
+        <label class="ex-chk"><input type="checkbox" id="showScore" checked><span>ให้นักเรียนเห็นคะแนนหลังส่ง</span></label>
+      </div>
+      <div class="row end"><button class="btn gold big" id="openBtn">เปิดห้องสอบ ›</button></div>
+    </form>
+  </main>
+</section>
+
+<!-- จอคุมสอบ -->
+<section class="screen" id="scr-proctor">
+  <header class="topbar">
+    <a class="home-link" href="./" title="เมนูรวม Ghost Class" aria-label="เมนูรวม"><img src="img/ghost.svg" alt=""></a>
+    <div class="ex-title"><small>สอบนอกตาราง · คุมสอบ</small><b id="pTitle"></b></div>
+    <span class="sp"></span>
+    <span class="pill" id="pState"></span>
+    <button class="btn ghost sm" id="addTime">＋5 นาที</button>
+    <button class="btn ghost sm" id="csvBtn">⤓ CSV</button>
+    <button class="btn light sm" id="backBtn">← ห้องสอบอื่น</button>
+    <button class="btn sm ex-danger" id="closeBtn">ปิดห้องสอบ</button>
+  </header>
+  <main class="ex-proc">
+    <aside class="ex-side">
+      <div class="card ex-join">
+        <small>เข้าห้องสอบที่</small>
+        <b class="ex-url" id="pUrl"></b>
+        <div class="ex-pin" id="pPin"></div>
+        <div class="ex-qr" id="pQr"></div>
+        <p class="hint" id="pRule"></p>
+      </div>
+      <div class="ex-stats" id="pStats"></div>
+      <div class="card ex-feed"><h3>🔔 เหตุการณ์</h3><ol id="pFeed"><li class="muted">ยังไม่มี</li></ol></div>
+    </aside>
+    <section class="ex-main">
+      <div class="ex-alert" id="pAlert" hidden></div>
+      <div class="card ex-tbl-wrap">
+        <table class="ex-tbl"><thead><tr><th>เลขประจำตัว</th><th>ชื่อ</th><th>สถานะ</th><th>ทำแล้ว</th><th>ออกนอกจอ</th><th>เวลาเหลือ</th><th>คะแนน</th><th></th></tr></thead>
+          <tbody id="pRows"><tr><td colspan="8" class="muted ex-empty">รอนักเรียนเข้าห้องสอบ…</td></tr></tbody></table>
+      </div>
+    </section>
+  </main>
+</section>
+
+<script type="module" src="js/exam-host.js"></script>
+<script src="js/festival.js?v=20261120a" defer></script>
+</body>
+</html>

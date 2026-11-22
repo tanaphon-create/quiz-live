@@ -200,3 +200,7 @@ dialog:not([open]) { display: none !important; }
 .intro-badge { display: inline-flex; align-items: center; gap: 6px; }
 .ib-ghost { width: 26px; height: 26px; }
 @media (prefers-reduced-motion: reduce) { .logo .mark.gmark { animation: none; } }
+
+/* 4 ปุ่มในหมวด → จัด 2×2 (ไม่ให้ปุ่มที่ 4 อยู่โดดเดี่ยว) */
+.tiles:has(> .gtile:nth-child(4):last-child) { grid-template-columns: repeat(2, 1fr); }
+.tiles:has(> .gtile:nth-child(4):last-child) > .gtile.wide { grid-column: auto; }
