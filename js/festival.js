@@ -7,7 +7,7 @@
   const DB_URL = 'https://quizlive-wcw-default-rtdb.asia-southeast1.firebasedatabase.app';
   const PATH = '/quiz/site/festival.json';
   const KEY = 'gc_fest';
-  const VER = '20261120a';
+  const VER = '20261122a';
   const SRC = document.currentScript && document.currentScript.src;
   const ART = import(new URL('ghost.js?v=' + VER, SRC || location.href).href).catch(() => null);
 
@@ -38,6 +38,9 @@
       hub: ['ฉากนี้ขาวดำ แต่ใจยังสดใส 🎬', 'แอ็กชัน! เริ่มเรียนได้ 🎞️', 'ผีน้อยยุคหนังเงียบ~', 'พร้อมเข้าฉากยัง?'],
       play: ['แอ็กชัน! ตอบเลย 🎬', 'ฉากนี้ต้องตอบถูก 🎞️', 'พร้อมยัง?'],
       hello: '🎬 ขาวดำคลาสสิก · หนังเก่าแสนอบอุ่น 🎞️', playHello: '🎬 แอ็กชัน! ตอบไว ตอบถูก 🎞️' },
+    plain: { name: 'เรียบง่าย', emoji: '🤍', greet: '🤍 ธีมเรียบง่าย สบายตา', tag: '🤍 ธีมเรียบง่าย', pose: 'hello', windows: [], calm: true,
+      hub: ['วันนี้สอนอะไรดี?', 'พร้อมแล้ว เริ่มได้เลย', 'ตั้งใจเรียนนะ'], play: ['พร้อมยัง?', 'ตั้งใจตอบนะ'],
+      hello: '', playHello: '' },
   };
 
   /* ── อ่าน/เขียนการตั้งค่า ── */
@@ -62,7 +65,7 @@
     if (!f) { delete document.documentElement.dataset.fest; window.dispatchEvent(new CustomEvent('gc-fest', { detail: { fest: null, mode: cfg.mode || 'auto' } })); return; }
     document.documentElement.dataset.fest = f;
     const art = await ART; if (my !== seq) return;
-    render(f, art); introTheme(f, art);
+    render(f, art); if (!FESTS[f].calm) introTheme(f, art);
     window.dispatchEvent(new CustomEvent('gc-fest', { detail: { fest: f, mode: cfg.mode || 'auto' } }));
   }
   function clear() {
@@ -100,6 +103,15 @@
   const CSS = `
   #gcFest{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
   html[data-fest="mono"]{filter:grayscale(1)}
+  html[data-fest="plain"] body:not(.qz){background:#F6F6F4!important}
+  html[data-fest="plain"] body:not(.qz).sky::before,html[data-fest="plain"] body:not(.qz).sky::after,html[data-fest="plain"] :is(.fog,.mini-ghosts,.sparkles,.bubbles,.clouds,.dawn){display:none!important}
+  html[data-fest="plain"] svg.ghost .gh-body{animation:none!important}
+  html[data-fest="plain"] .gc-intro,html[data-fest="plain"] #intro.intro{background:#F6F6F4!important}
+  html[data-fest="plain"] .gc-hero{background:#fff;color:#2B2F3A;box-shadow:0 1px 0 #E5E7EB,0 6px 18px rgba(15,23,42,.05);border:1px solid #E5E7EB}
+  html[data-fest="plain"] .gc-hero::before,html[data-fest="plain"] .gc-hero::after{display:none}
+  html[data-fest="plain"] .gc-hero .hero-tag{background:#F1F5F9;color:#475569}
+  html[data-fest="plain"] .gc-hero p{color:#64748B;opacity:1}
+  html[data-fest="plain"] .gtile{box-shadow:0 1px 0 #E5E7EB,0 4px 12px rgba(15,23,42,.04)!important}
   .gf-grain{position:absolute;inset:-20%;opacity:.09;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\");animation:gfGrain 1.2s steps(4) infinite}
   @keyframes gfGrain{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
   .gf-scr{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,.16);opacity:0;animation:gfScr var(--d,4s) linear infinite;animation-delay:var(--w,0s)}
@@ -209,6 +221,7 @@
         <div class="gf-tank" style="--d:70s;--w:-20s;--l:30vw">${tank}</div>${planes}`,
         front: '', ft: ['#6B7F3A', '#B45309'] };
     },
+    plain() { return { back: '', front: '', ft: ['#64748B', '#475569'] }; },
     mono(phone) {
       return { back: `<div class="gf-tint" style="background:radial-gradient(ellipse at 50% 45%,transparent 50%,rgba(0,0,0,.22))"></div><div class="gf-grain"></div>${scratches(N(phone, 2, 4))}`,
         front: '', ft: ['#222222', '#777777'] };
@@ -227,7 +240,7 @@
     if (hg) { if (!hg.dataset.orig) hg.dataset.orig = hg.innerHTML; hg.innerHTML = art.ghost(FESTS[f].pose); }
     const ht = document.querySelector('.hero-tag');
     if (ht && !document.querySelector('.lk-tag')) ht.insertAdjacentHTML('afterend', `<span class="lk-tag">${FESTS[f].tag}</span>`);
-    if (reduce()) return;
+    if (reduce() || FESTS[f].calm) return;
     const it = document.getElementById('intro'); if (it && !it.hidden) return;   // หน้าที่มี INTRO ทักทายใน INTRO แล้ว
     let shown = false; try { shown = sessionStorage.getItem('gc_fest_hi_' + f) === '1'; sessionStorage.setItem('gc_fest_hi_' + f, '1'); } catch (e) {}
     if (shown) return;
@@ -364,7 +377,7 @@
   window.GCFest = {
     FESTS: Object.fromEntries(Object.entries(FESTS).map(([k, f]) => [k, { name: f.name, emoji: f.emoji, windows: f.windows }])),
     get: () => ({ mode: read().mode || 'auto', active: current }),
-    decorateIntro: async () => { if (current) introTheme(current, await ART); },
+    decorateIntro: async () => { if (current && !FESTS[current].calm) introTheme(current, await ART); },
     /** บันทึกโหมด ('auto' | 'off' | ชื่อธีม) — ต้องส่ง idToken ของครู ทุกเครื่องจึงเห็นตรงกัน */
     async set(mode, idToken) {
       const v = { mode, at: Date.now() };

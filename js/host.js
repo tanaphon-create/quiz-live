@@ -5,6 +5,7 @@ import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, M
 import { SAMPLE } from './sample.js';
 import { SCOREBOOK_API } from './config.js';
 import { applyTheme, savedTheme, openThemePicker } from './themes.js';
+import { openMusicPicker } from './music-picker.js';
 applyTheme(savedTheme());
 // เพลงตามธีม: ใช้ธีมเกมที่ครูเลือก · ถ้ายังเป็นค่าเริ่มต้น 👻 ใช้ธีมทั้งเว็บ (ลอยกระทง ฤดูร้อน กลางคืน ฝน สงคราม) แทน
 const syncMusic = () => {
@@ -405,7 +406,8 @@ $('#crowd').onclick = (e) => {
   if (p && confirm(`นำ “${p.name}” ออกจากห้อง?`)) DB.remove(`${R}/players/${b.dataset.uid}`);
 };
 const pickTheme = () => openThemePicker((id) => { syncMusic(); if (R && phase !== '') DB.update(R, { 'meta/theme': id }).catch(() => {}); });
-$('#themeBtn').onclick = pickTheme; $('#themeBtnHome').onclick = () => openThemePicker(() => syncMusic(), { note: 'ใช้กับเกมถัดไป นักเรียนจะเห็นธีมเดียวกันบนมือถือ · 🎵 เพลงในเกมเปลี่ยนตามธีม' });
+$('#musicPick').onclick = () => openMusicPicker({ preview: 'lobby' }); $('#musicPickHome').onclick = () => openMusicPicker({ preview: 'lobby' });
+$('#themeBtn').onclick = pickTheme; $('#themeBtnHome').onclick = () => openThemePicker(() => syncMusic(), { note: 'ใช้กับเกมถัดไป นักเรียนจะเห็นธีมเดียวกันบนมือถือ · 🎵 เพลงเปลี่ยนตามธีม (เลือกเพลงเองได้ที่ปุ่ม 🎼)' });
 $('#musicBtn').onclick = () => { const on = !musicOn(); music(on ? 'lobby' : null); $('#musicBtn').classList.toggle('on', on); };
 $('#lobbyCancel').onclick = async () => { if (confirm('ยกเลิกห้องนี้?')) { await DB.update(R, { 'meta/state': 'end', 'meta/cancelled': true }); leave(); } };
 $('#muteBtn').onclick = () => { setMuted(!isMuted()); $('#muteBtn').textContent = isMuted() ? '🔇' : '🔊'; };

@@ -46,6 +46,7 @@ try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.ad
     <span class="sp"></span>
     <span class="pill" id="modeBadge">กำลังเชื่อมต่อ…</span>
     <button class="btn ghost sm" id="themeBtnHome" title="เลือกธีมพื้นหลังเกม">🎨 ธีม</button>
+    <button class="btn ghost sm" id="musicPickHome" title="เลือกเพลงประกอบเกม">🎼 เพลง</button>
     <a class="btn ghost sm" href="../score-book/" title="กลับไปสมุดคะแนน">← สมุดคะแนน</a>
     <a class="btn ghost sm" href="live.html" title="จอคะแนนกลุ่ม ปุ่มกดแข่ง สุ่มตอบ ความคิดเห็น">🖥 โหมดห้องเรียน</a>
     <span class="pill who" id="who"></span>
@@ -120,7 +121,8 @@ try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.ad
     <label class="tog"><input type="checkbox" id="optShuffle"><span></span>สลับลำดับข้อ</label>
     <span class="sp"></span>
     <button class="btn ghost" id="themeBtn" title="เลือกธีมพื้นหลัง">🎨 ธีม</button>
-    <button class="icon-btn" id="musicBtn" title="เพลง">🎵</button>
+    <button class="icon-btn" id="musicBtn" title="เปิด/ปิดเพลง">🎵</button>
+    <button class="btn ghost" id="musicPick" title="เลือกเพลงประกอบ">🎼 เลือกเพลง</button>
     <button class="btn ghost" id="lobbyCancel">ยกเลิก</button>
     <button class="btn gold big" id="startBtn" disabled>เริ่มเกม ▶</button>
   </footer>
@@ -179,6 +181,6 @@ try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.ad
 </dialog>
 
 <script type="module" src="js/host.js"></script>
-<script src="js/festival.js?v=20261120a" defer></script>
+<script src="js/festival.js?v=20261122a" defer></script>
 </body>
 </html>

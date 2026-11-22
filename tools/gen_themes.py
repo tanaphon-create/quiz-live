@@ -105,9 +105,13 @@ T['mono'] = dict(name='ขาวดำคลาสสิก', emoji='🎬', acce
   blobs='radial-gradient(30vmax 22vmax at 8% 10%,rgba(0,0,0,.07),transparent 70%),radial-gradient(30vmax 24vmax at 92% 90%,rgba(0,0,0,.08),transparent 70%),radial-gradient(60vmax 50vmax at 50% 50%,transparent 60%,rgba(0,0,0,.10) 100%)',
   tile=tile(240,240, mono_ghost(50,56,1.15)+mono_ghost(186,178,.85)+mono_film+mono_star(120,120,8,.45)+mono_star(34,200,5,.35)+mono_star(214,118,4,.35)+mono_star(96,26,4,.3)
     +"<path d='M20 140 q14 -14 30 -4 t30 -4' fill='none' stroke='#555' stroke-width='2' stroke-dasharray='4 5' stroke-linecap='round' opacity='.5'/><circle cx='140' cy='210' r='5' fill='none' stroke='#444' stroke-width='2' opacity='.4'/>"), size=240)
+T['plain'] = dict(name='เรียบง่าย', emoji='🤍', accent='#475569', hi='#94A3B8',
+  bg='linear-gradient(180deg,#FAFAF9 0%,#F3F4F6 100%)',
+  blobs='linear-gradient(transparent,transparent)',
+  tile=tile(240,240, "<circle cx='60' cy='60' r='1.6' fill='#CBD5E1'/><circle cx='180' cy='180' r='1.6' fill='#CBD5E1'/>"), size=240)
 GRAY = ['mono']   # ธีมที่ทำให้ทั้งหน้าเป็นขาวดำ
 
-ORDER = ['ghost','candy','ocean','garden','sky','space','fruit','notebook','spooky','war','mono']
+ORDER = ['ghost','candy','ocean','garden','sky','space','fruit','notebook','spooky','war','mono','plain']
 css = ["/* ═════════ ธีมเกมคำถาม: พื้นหลังน่ารักหลายแบบ + ตัวอักษรอ่านง่าย (สร้างจาก gen/themes.py — โหลดเป็นไฟล์สุดท้าย) ═════════ */",
 """
 /* ── ตัวอักษร: แบบมีหัว (Looped) อ่านง่ายสำหรับนักเรียน ── */
@@ -135,7 +139,8 @@ body.qz.sky::after { inset: -260px; opacity: .72; background-image: var(--th-til
 """]
 for k in ORDER:
     t=T[k]
-    css.append(f"html[data-theme='{k}'] body.qz {{ --th-bg: {t['bg']}; --th-blobs: {t['blobs']}; --th-tile: {uri(t['tile'])}; --th-size: {t['size']}px; --accent: {t['accent']}; --hi: {t['hi']}; }}")
+    sel = f"html[data-theme='{k}'] body.qz" + (", html[data-fest='plain'][data-theme='ghost'] body.qz, html[data-fest='plain']:not([data-theme]) body.qz" if k == 'plain' else '')
+    css.append(f"{sel} {{ --th-bg: {t['bg']}; --th-blobs: {t['blobs']}; --th-tile: {uri(t['tile'])}; --th-size: {t['size']}px; --accent: {t['accent']}; --hi: {t['hi']}; }}")
     if k in GRAY: css.append(f"html[data-theme='{k}'] {{ filter: grayscale(1); }}")
 css.append("""
 /* ── ตัวเลือกธีม ── */

@@ -2,6 +2,7 @@
 import { connect, TS, isTeacher } from './db.js';
 import { SCOREBOOK_API } from './config.js';
 import { sfx, setMuted, isMuted, unlock, music, currentSong } from './sound.js';
+import { openMusicPicker } from './music-picker.js';
 import { $, $$, esc, wait, show, toast, confetti, VCOLORS, MASCOTS, mascotOf } from './ui.js';
 import { renderAvatar } from './avatar.js';
 const av = (g) => renderAvatar(mascotOf(g), { bg: false });
@@ -126,6 +127,7 @@ function bgmFor() {
     : tab === 'buzz' && buzz.armed && !Object.keys(presses).length ? 'question' : 'classroom';
   if (currentSong() !== want) music(want);
 }
+$('#lvMusicPick').onclick = () => openMusicPicker({ preview: 'classroom' });
 $('#lvMusic').onclick = () => { bgm = !bgm; try { localStorage.setItem('quizlive:bgm', bgm ? '1' : '0'); } catch {} unlock(); bgmFor(); toast(bgm ? '🎵 เปิดเพลงประกอบ' : 'ปิดเพลงประกอบ'); };
 
 const main = () => $('#liveMain');

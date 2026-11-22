@@ -143,6 +143,23 @@ const DR = {
     if (sn[s]) snare(t, sn[s]);
     if (i % 64 === 0) crash(t, 0.2);
   },
+  // โลไฟ: กลองบูมแบ็ปนุ่ม ๆ
+  boom(s, t) { if (s === 0 || s === 7 || s === 10) kick(t, 0.34); if (s === 4 || s === 12) { hiss(0.12, { t, vol: 0.09, freq: 1800 }); note(180, 0.06, { t, type: 'triangle', vol: 0.06 }); } if (s % 2 === 0) hat(t, 0.02); },
+  // 8-bit: เสียงเกมตู้
+  chip(s, t) { if (s % 4 === 0) note(120, 0.08, { t, type: 'square', vol: 0.12, slide: 50, attack: 0.001 }); if (s === 4 || s === 12) hiss(0.07, { t, vol: 0.12, freq: 2000 }); if (s % 2 === 0) hiss(0.02, { t, vol: 0.03, freq: 9000 }); if (tempoMul > 1 && s % 2) hiss(0.03, { t, vol: 0.05, freq: 3000 }); },
+  // แจ๊สสวิง: ฉาบไรด์ + ไฮแฮตจังหวะ 2, 4
+  swing(s, t, i, sd) {
+    const sw = (sd || 0.12) * 0.33;
+    if (s % 4 === 0) hiss(0.25, { t, vol: 0.035, type: 'bandpass', freq: 7000, q: 1.5 });
+    if (s === 6 || s === 14) hiss(0.18, { t: t + sw, vol: 0.03, type: 'bandpass', freq: 7000, q: 1.5 });
+    if (s === 4 || s === 12) hiss(0.05, { t, vol: 0.05, freq: 7500 });
+    if (s === 0 || s === 10) kick(t, 0.2);
+    if (tempoMul > 1 && s % 2) snare(t, 0.06);
+  },
+  // แดนซ์: กระเดื่องทุกจังหวะ + ไฮแฮตเปิดตบท้าย
+  four(s, t, i) { if (s % 4 === 0) kick(t, 0.5); if (s === 4 || s === 12) { snare(t, 0.16); hiss(0.1, { t, vol: 0.08, freq: 1200 }); } if (s % 4 === 2) hat(t, 0.07, true); else if (s % 2) hat(t, 0.025); if (i % 64 === 0) crash(t, 0.14); if (tempoMul > 1 && s % 2) snare(t, 0.07); },
+  // ร็อก
+  rock(s, t, i) { if (s === 0 || s === 8 || s === 10) kick(t, 0.5); if (s === 4 || s === 12) snare(t, 0.3); hat(t, s % 2 ? 0.03 : 0.05); if (i % 64 === 0) crash(t, 0.2); if (tempoMul > 1 && s % 2) snare(t, 0.1); },
   // กลองศึก (ตื่นเต้น)
   battle(s, t, i) {
     if (s % 4 === 0) kick(t, 0.55);
@@ -163,6 +180,9 @@ const BASS = {
   reggae(s, t, ch) { if ([0, 3, 6, 10].includes(s)) note(NOTE((s === 6 ? ch[2] : ch[0]) - 24), 0.22, { t, type: 'sine', vol: 0.24 }); },
   walk(s, t, ch) { if (s % 4 === 0) note(NOTE(ch[0] - 24 + [0, 3, 5, 6][s / 4]), 0.24, { t, type: 'triangle', vol: 0.18 }); },
   march(s, t, ch) { if (s === 0 || s === 8) note(NOTE(ch[0] - 24), 0.35, { t, type: 'sawtooth', vol: 0.11, filter: 600 }); if (s === 4 || s === 12) note(NOTE(ch[2] - 24), 0.25, { t, type: 'sawtooth', vol: 0.08, filter: 600 }); },
+  octave(s, t, ch) { if (s % 2 === 0) note(NOTE(ch[0] - 24) * (s % 4 === 2 ? 2 : 1), 0.14, { t, type: 'sawtooth', vol: 0.1, filter: 1100 }); },
+  oompah(s, t, ch) { if (s === 0 || s === 8) note(NOTE(ch[0] - 24), 0.22, { t, type: 'triangle', vol: 0.2 }); if (s === 4 || s === 12) note(NOTE(ch[2] - 24), 0.2, { t, type: 'triangle', vol: 0.15 }); },
+  power(s, t, ch) { if (s % 2 === 0) { const f = NOTE(ch[0] - 24); note(f, 0.13, { t, type: 'sawtooth', vol: 0.08, filter: 800 }); note(f * 1.498, 0.13, { t, type: 'sawtooth', vol: 0.05, filter: 800 }); } },
   gallop(s, t, ch) { if (s % 4 !== 1) note(NOTE(ch[0] - 24), 0.09, { t, type: 'sawtooth', vol: 0.11, filter: 700 }); },
 };
 const FX = {
@@ -174,6 +194,9 @@ const FX = {
   pencil(s, t, ch, i) { if (s === 14 && (i >> 4) % 2 === 0) hiss(0.12, { t, vol: 0.04, type: 'bandpass', freq: 3500, q: 2, sweep: 5000 }); },
   drip(s, t, ch) { if (s % 2 === 1 && Math.random() < 0.3) note(NOTE(ch[Math.floor(Math.random() * 3)] + 36), 0.18, { t, type: 'sine', vol: 0.02, attack: 0.002 }); },
   firefly(s, t, ch, i) { if (s === 10 && (i >> 4) % 2) note(NOTE(ch[1] + 36), 0.8, { t, type: 'sine', vol: 0.016, attack: 0.15 }); },
+  vinyl(s, t) { if (Math.random() < 0.35) hiss(0.012, { t: t + Math.random() * 0.05, vol: 0.025 + Math.random() * 0.03, type: 'bandpass', freq: 2500 + Math.random() * 3000, q: 1 }); },
+  arp(s, t, ch) { note(NOTE(ch[s % 3] + 24), 0.06, { t, type: 'square', vol: 0.014, filter: 4000, attack: 0.001 }); },
+  boing(s, t, ch, i) { if (s === 15 && (i >> 4) % 2) note(300, 0.22, { t, type: 'sine', vol: 0.05, slide: 900 }); },
   boo(s, t, ch, i) { if (s === 0 && (i >> 4) % 2) note(NOTE(ch[2] + 24), 0.9, { t, type: 'sine', vol: 0.022, slide: NOTE(ch[2] + 23), attack: 0.2 }); },
 };
 function parseMel(str) {
@@ -193,7 +216,7 @@ function make(c) {
     bpm: c.bpm, prog: c.prog,
     step(i, t, ch, sd) {
       const s = i % 16, bar = Math.floor(i / 16);
-      c.drum && DR[c.drum](s, t, i);
+      c.drum && DR[c.drum](s, t, i, sd);
       c.bass && BASS[c.bass](s, t, ch);
       if (c.skank?.includes(s)) ch.forEach((n) => note(NOTE(n + 12), 0.09, { t, type: 'triangle', vol: 0.032 }));
       if (c.pad && s === 0) ch.forEach((n) => note(NOTE(n), sd * 15, { t, type: c.pad.type || 'sine', vol: c.pad.vol || 0.025, attack: 0.3, filter: c.pad.filter || null }));
@@ -267,15 +290,89 @@ const THEME_SONGS = {
     lobby: { bpm: 132, prog: ['C', 'Am', 'Dm', 'G'], drum: 'soft', bass: 'walk', lead: { type: 'triangle', vol: 0.055, attack: 0.002 }, mel: ['0.2.4.2.3.2.1.0.', '2.1.0.1.2---....'] },
     question: { bpm: 150, prog: ['Am', 'Dm', 'E', 'Am'], drum: 'drive', bass: 'walk', lead: { type: 'triangle', vol: 0.05, attack: 0.002 }, mel: '0.1.2.1.0.1.2.4.', fx: 'tick' },
   },
+  /* ───── ชุดเพลงเพิ่มเติม (เลือกได้จากปุ่ม 🎼 เลือกเพลง) ───── */
+  calm: {
+    lobby: { bpm: 76, prog: ['C', 'G', 'Am', 'F'], bass: 'root', pad: { vol: 0.022 }, lead: { type: 'triangle', vol: 0.05, attack: 0.004 }, mel: ['2...1...0...1...', '2...4...2-------'] },
+    question: { bpm: 112, prog: ['Am', 'F', 'C', 'G'], drum: 'soft', bass: 'root', pad: { vol: 0.015 }, lead: { type: 'triangle', vol: 0.045, attack: 0.004 }, mel: '0.1.2...1.0.2...', fx: 'tick' },
+    think: { bpm: 66, prog: ['F', 'C', 'Dm', 'Bb'], bass: 'root', pad: { vol: 0.025 }, lead: { type: 'sine', vol: 0.04 }, mel: ['2-------1-------', '0-------2-------'] },
+  },
+  lofi: {
+    lobby: { bpm: 80, prog: ['F', 'Em', 'Dm', 'C'], drum: 'boom', bass: 'root', pad: { type: 'triangle', vol: 0.022, filter: 1400 }, lead: { type: 'sine', vol: 0.05 }, mel: ['2...1.0.....4-2.', '1...0.....2-1...'], fx: 'vinyl' },
+    question: { bpm: 104, prog: ['Am', 'F', 'C', 'G'], drum: 'boom', bass: 'eighth', pad: { type: 'triangle', vol: 0.018, filter: 1400 }, lead: { type: 'sine', vol: 0.05 }, mel: '0.1.2.1.0...2.1.', fx: ['tick', 'vinyl'] },
+  },
+  chip: {
+    lobby: { bpm: 140, prog: ['C', 'G', 'Am', 'F'], drum: 'chip', bass: 'eighth', lead: { type: 'square', vol: 0.03, filter: 5000, attack: 0.001 }, mel: ['3.3.4.5.4.3.1...', '2.2.1.0.1.2.0...'], fx: 'arp' },
+    question: { bpm: 160, prog: ['Am', 'F', 'G', 'E'], drum: 'chip', bass: 'eighth', lead: { type: 'square', vol: 0.028, filter: 5000, attack: 0.001 }, mel: '0.1.2.3.2.1.0.1.', fx: ['tick', 'arp'] },
+  },
+  jazz: {
+    lobby: { bpm: 118, prog: ['Dm', 'G', 'C', 'Am'], drum: 'swing', bass: 'walk', skank: [6, 14], lead: { type: 'triangle', vol: 0.05, attack: 0.003 }, mel: ['2.1.0...2.4.3...', '1-0.2.1.0-------'] },
+    question: { bpm: 152, prog: ['Dm', 'G', 'C', 'A'], drum: 'swing', bass: 'walk', skank: [6, 14], lead: { type: 'triangle', vol: 0.045, attack: 0.003 }, mel: '0.1.2.3.2.1.0.2.', fx: 'tick' },
+  },
+  dance: {
+    lobby: { bpm: 126, prog: ['Am', 'F', 'C', 'G'], drum: 'four', bass: 'octave', pad: { type: 'sawtooth', vol: 0.016, filter: 1600 }, lead: { type: 'square', vol: 0.026, filter: 3200 }, mel: ['0.0.2.0.3.0.2.1.', '0.0.2.0.4-3-2-..'] },
+    question: { bpm: 140, prog: ['Am', 'F', 'C', 'E'], drum: 'four', bass: 'octave', lead: { type: 'square', vol: 0.025, filter: 3200 }, mel: '0.2.1.2.0.2.1.2.', fx: 'tick' },
+  },
+  kids: {
+    lobby: { bpm: 116, prog: ['C', 'F', 'G', 'C'], drum: 'pop', bass: 'oompah', skank: [4, 12], lead: { type: 'square', vol: 0.03, filter: 3500 }, mel: ['0.0.1.2.2.1.0...', '1.1.2.4.3---....'], fx: 'boing' },
+    question: { bpm: 140, prog: ['C', 'F', 'G', 'C'], drum: 'drive', bass: 'oompah', skank: [4, 12], lead: { type: 'square', vol: 0.028, filter: 3500 }, mel: '0.1.2.0.1.2.4...', fx: ['tick', 'boing'] },
+  },
+  rock: {
+    lobby: { bpm: 128, prog: ['Am', 'F', 'C', 'G'], drum: 'rock', bass: 'power', lead: { type: 'sawtooth', vol: 0.03, filter: 2200, fifth: true }, mel: ['0---2.1.0---4---', '3---2.1.2-------'] },
+    question: { bpm: 152, prog: ['Am', 'G', 'F', 'E'], drum: 'rock', bass: 'power', lead: { type: 'sawtooth', vol: 0.028, filter: 2200, fifth: true }, mel: '0.0.2.0.3.0.2.1.', fx: 'tick' },
+  },
 };
+THEME_SONGS.plain = THEME_SONGS.calm;   // ธีมเรียบง่าย ใช้เพลงเปียโนเบา ๆ
 for (const [th, v] of Object.entries(THEME_SONGS)) for (const [k, c] of Object.entries(v)) SONGS[`${th}:${k}`] = make(c);
+
+/* ───── ชุดเพลงที่ครูเลือกได้ (จำไว้ในเครื่อง) · 'auto' = เปลี่ยนตามธีม ───── */
+export const MUSIC_PACKS = [
+  { id: 'auto', emoji: '🎨', name: 'ตามธีม', desc: 'เปลี่ยนเพลงตามธีมที่เลือก' },
+  { id: 'calm', emoji: '🎹', name: 'เปียโนเบา ๆ', desc: 'สงบ สบาย ไม่รบกวน' },
+  { id: 'lofi', emoji: '☕', name: 'โลไฟชิล ๆ', desc: 'จังหวะช้า ผ่อนคลาย' },
+  { id: 'chip', emoji: '👾', name: 'เกม 8 บิต', desc: 'เสียงเกมตู้ย้อนยุค' },
+  { id: 'jazz', emoji: '🎷', name: 'แจ๊สสวิง', desc: 'ขยับตัวเบา ๆ' },
+  { id: 'dance', emoji: '🪩', name: 'แดนซ์มันส์ ๆ', desc: 'ตื๊ด ๆ ปลุกพลัง' },
+  { id: 'kids', emoji: '🎠', name: 'สนุกสดใส', desc: 'น่ารัก ขำ ๆ' },
+  { id: 'rock', emoji: '🎸', name: 'ร็อกเร้าใจ', desc: 'กลองหนัก กีตาร์แรง' },
+  { id: 'lobby', emoji: '👻', name: 'ผีน้อย (เดิม)', desc: 'เพลงเริ่มต้นของเว็บ' },
+  { id: 'candy', emoji: '🍭', name: 'ร้านขนมหวาน', desc: 'ป๊อปหวาน ๆ' },
+  { id: 'ocean', emoji: '🐠', name: 'ใต้ทะเล', desc: 'เร็กเก้ ฟองอากาศ' },
+  { id: 'garden', emoji: '🌸', name: 'สวนดอกไม้', desc: 'นกร้อง สดชื่น' },
+  { id: 'sky', emoji: '🌈', name: 'ฟ้าใส', desc: 'สดใส ลอยฟ้า' },
+  { id: 'space', emoji: '🪐', name: 'อวกาศ', desc: 'ซินธ์ ดาวระยิบ' },
+  { id: 'fruit', emoji: '🍓', name: 'ผลไม้', desc: 'ลาติน กระฉับกระเฉง' },
+  { id: 'notebook', emoji: '📒', name: 'สมุดวาดเล่น', desc: 'นุ่ม ๆ เสียงดินสอ' },
+  { id: 'spooky', emoji: '🎃', name: 'ฮาโลวีน', desc: 'หลอน ๆ น่ารัก' },
+  { id: 'loykrathong', emoji: '🪷', name: 'ไทยรำวง', desc: 'ฉิ่ง ฉับ กลอง' },
+  { id: 'summer', emoji: '☀️', name: 'ฤดูร้อน', desc: 'ชายหาด สนุก' },
+  { id: 'night', emoji: '🌙', name: 'กลางคืน', desc: 'หิ่งห้อย เงียบสงบ' },
+  { id: 'rain', emoji: '☔', name: 'ฝนพรำ', desc: 'หยดฝน ละมุน' },
+  { id: 'war', emoji: '⚔️', name: 'สงคราม', desc: 'แตรทหาร กลองศึก' },
+  { id: 'mono', emoji: '🎬', name: 'หนังเงียบ', desc: 'เปียโนเบสเดิน' },
+];
+const MKEY = 'gc_music';
+let mPick = (() => { try { const v = localStorage.getItem(MKEY); return MUSIC_PACKS.some((p) => p.id === v) ? v : 'auto'; } catch { return 'auto'; } })();
+export const getMusicPick = () => mPick;
+/** เลือกชุดเพลง — ถ้าเพลงเล่นอยู่จะสลับทันที */
+export function setMusicPick(id, { remember = true } = {}) {
+  if (!MUSIC_PACKS.some((p) => p.id === id)) id = 'auto';
+  mPick = id; if (remember) { try { localStorage.setItem(MKEY, id); } catch {} }
+  if (loopH && base) music(base);
+}
+function resolve(name) {
+  if (mPick !== 'auto') {
+    if (mPick === 'lobby') return SONGS[name];   // ชุดเดิมของเว็บ
+    return SONGS[`${mPick}:${name}`] || (name === 'classroom' && SONGS[`${mPick}:lobby`]) || SONGS[name];
+  }
+  return SONGS[`${mTheme}:${name}`] || SONGS[name];
+}
 
 let base = null, mTheme = 'ghost';
 /** เปลี่ยนชุดเพลงตามธีม — ถ้าเพลงเล่นอยู่จะสลับเป็นเพลงของธีมใหม่ทันที */
 export function setMusicTheme(id) { if (id === mTheme) return; mTheme = id; if (loopH && base) music(base); }
 export function music(name) {
   clearInterval(loopH); loopH = null; song = null; tempoMul = 1; base = name;
-  const pick = name && (SONGS[`${mTheme}:${name}`] || SONGS[name]);
+  const pick = name && resolve(name);
   if (!pick || muted) return;
   song = pick;
   const c = ac();
@@ -291,7 +388,7 @@ export function music(name) {
   }, 40);
 }
 export const musicOn = () => !!loopH;
-export const currentSong = () => (loopH ? Object.keys(SONGS).find((k) => SONGS[k] === song) : null);
+export const currentSong = () => (loopH ? base : null);
 export const hurry = (on) => { tempoMul = on ? 1.3 : 1; };
 
 /* ───── เสียงเอฟเฟกต์ ───── */
