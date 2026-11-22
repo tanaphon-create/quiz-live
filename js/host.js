@@ -229,6 +229,7 @@ const dbReady = connect({ host: true }).then((d) => {
 }).catch((e) => {
   console.error(e);
   $('#modeBadge').textContent = '🔴 เชื่อมต่อไม่ได้';
+  document.documentElement.classList.remove('gc-wait');
   toast('เชื่อมต่อ Firebase ไม่ได้ — ตรวจ js/config.js และเปิด Anonymous Auth', 6000);
 });
 
@@ -240,13 +241,13 @@ async function onUser(u) {
     authed = u.uid;
     $('#who').textContent = u.email;
     $('#loginMsg').textContent = 'กำลังโหลดชุดคำถาม…';
-    try { await loadBank(u.uid); } catch (e) { console.error(e); $('#loginMsg').textContent = 'โหลดชุดคำถามไม่ได้ — ลองรีเฟรช'; return; }
-    renderHome(); show('home');
+    try { await loadBank(u.uid); } catch (e) { console.error(e); document.documentElement.classList.remove('gc-wait'); $('#loginMsg').textContent = 'โหลดชุดคำถามไม่ได้ — ลองรีเฟรช'; return; }
+    renderHome(); show('home'); document.documentElement.classList.remove('gc-wait');
     return;
   }
   authed = ''; quizzes = []; bankPath = '';
   if (phase) leave();
-  show('login');
+  show('login'); document.documentElement.classList.remove('gc-wait');
   const wrong = u && !u.isAnonymous;
   $('#loginMsg').innerHTML = wrong ? `⛔ อีเมล <b>${esc(u.email)}</b> ไม่มีสิทธิ์เข้าหน้าครู` : '';
   $('#loginBtn').hidden = !!wrong;

@@ -14,14 +14,14 @@ let wrong = new Set(), award = 1, randKind = 'student', randDone = new Set(), ra
 
 /* ───────── เชื่อมต่อ + ล็อกอิน (ใช้ร่วมกับสมุดคะแนน) ───────── */
 const ready = connect({ host: true }).then((d) => { DB = d; d.onUser(onUser); return d; })
-  .catch((e) => { console.error(e); $('#loginMsg').textContent = 'เชื่อมต่อไม่ได้ — ตรวจอินเทอร์เน็ตแล้วรีเฟรช'; });
+  .catch((e) => { console.error(e); document.documentElement.classList.remove('gc-wait'); $('#loginMsg').textContent = 'เชื่อมต่อไม่ได้ — ตรวจอินเทอร์เน็ตแล้วรีเฟรช'; });
 async function onUser(u) {
   if (u && isTeacher(u)) {
     if (authed === u.uid) return;
-    authed = u.uid; show('setup'); loadBooks();
+    authed = u.uid; show('setup'); document.documentElement.classList.remove('gc-wait'); loadBooks();
     return;
   }
-  authed = ''; show('login');
+  authed = ''; show('login'); document.documentElement.classList.remove('gc-wait');
   const wrongAcc = u && !u.isAnonymous;
   $('#loginMsg').innerHTML = wrongAcc ? `⛔ อีเมล <b>${esc(u.email)}</b> ไม่มีสิทธิ์` : '';
   $('#loginBtn').hidden = !!wrongAcc; $('#switchBtn').hidden = !wrongAcc;

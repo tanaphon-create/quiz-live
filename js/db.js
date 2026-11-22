@@ -23,6 +23,8 @@ async function firebaseDB(host) {
   const app = initializeApp(FIREBASE, 'quizlive');
   const auth = A.getAuth(app);
   await auth.authStateReady();
+  // จำไว้ว่าเครื่องนี้ล็อกอินครูอยู่ (ทุกหน้าใช้ร่วมกัน) — หน้าอื่นจะไม่โชว์ปุ่มล็อกอินระหว่างรอ
+  A.onAuthStateChanged(auth, (u) => { try { isTeacher(u) ? localStorage.setItem('gc_teacher', '1') : localStorage.removeItem('gc_teacher'); } catch {} });
   if (!host && !auth.currentUser) await A.signInAnonymously(auth);
   const db = D.getDatabase(app);
   const r = (p) => D.ref(db, p);

@@ -14,6 +14,10 @@
 <link rel="stylesheet" href="css/ghost.css">
 <link rel="stylesheet" href="css/themes.css">
 <link rel="stylesheet" href="css/readable.css">
+<script>/* ล็อกอินครั้งเดียวใช้ทุกระบบ: เคยล็อกอินครูในเครื่องนี้ → ไม่โชว์ปุ่มล็อกอิน ระหว่างรอระบบเข้าให้อัตโนมัติ */
+try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.add('gc-wait');setTimeout(function(){document.documentElement.classList.remove('gc-wait')},12000)}}catch(e){}</script>
+<style>.gc-wait :is(#loginBtn,#switchBtn,#gateLogin,#gateSwitch,.small-link,.gate-note){display:none!important}
+.gc-wait :is(#loginMsg,#gateMsg){font-size:0!important}.gc-wait :is(#loginMsg,#gateMsg)::before{content:'🔐 กำลังเข้าสู่ระบบอัตโนมัติ…';display:block;font-size:1.05rem;font-weight:600}</style>
 </head>
 <body class="sky qz">
 <script>try{var t=localStorage.getItem("gc_theme");document.documentElement.dataset.theme=t||"ghost"}catch(e){document.documentElement.dataset.theme="ghost"}</script>
