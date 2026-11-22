@@ -168,3 +168,13 @@
 .ed-warn { color: var(--ex-bad); }
 .ed-add { justify-self: start; }
 @media (max-width: 600px) { .ed-ch { grid-template-columns: 1fr; } }
+
+.ex-list li { grid-template-columns: auto auto 1fr auto; }
+.ex-list li .ex-pick { grid-row: span 2; width: 18px; height: 18px; accent-color: #D93A52; }
+.ex-list li .ex-badge { grid-row: span 2; }
+.ex-list li small { grid-column: 3; }
+.ex-list li .ex-row-act { grid-column: 4; grid-row: 1 / span 2; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.ex-list li.sub { margin-left: 26px; background: #FBFAFF; border: 1px dashed var(--ex-line); }
+.btn.sm.ex-danger:disabled { opacity: .45; }
+#moreRooms { margin-top: 10px; }
+@media (max-width: 600px) { .ex-list li { grid-template-columns: auto 1fr; } .ex-list li .ex-badge { grid-row: auto; } .ex-list li b, .ex-list li small { grid-column: 1 / -1; } .ex-list li .ex-row-act { grid-column: 1 / -1; grid-row: auto; justify-content: flex-start; } .ex-list li .ex-pick { grid-row: auto; } }

@@ -65,17 +65,67 @@ function drawBank() {
 async function saveSet(s) { await DB.set(`quiz/banks/${me}/examSets/${s.id}`, JSON.parse(JSON.stringify(s))); sets[s.id] = s; }
 $('#quizSel').onchange = quizInfo; $('#passPct').oninput = quizInfo;
 
+let showAll = false;
 async function renderOpenList() {
-  const pins = Object.keys(exams).sort((a, b) => (exams[b].createdAt || 0) - (exams[a].createdAt || 0)).slice(0, 15);
-  const metas = await Promise.all(pins.map((p) => DB.get(`quiz/exams/${p}/meta`).catch(() => null)));
-  const rows = pins.map((p, i) => ({ p, m: metas[i] })).filter((x) => x.m);
-  $('#openList').hidden = !rows.length;
-  $('#openList').innerHTML = `<h2>ห้องสอบของฉัน</h2><ul class="ex-list">${rows.map(({ p, m }) => `<li>
-      <span class="ex-badge ${m.state}">${m.state === 'open' ? '🟢 เปิดอยู่' : m.revealed ? '📢 เฉลยแล้ว' : '⚪ ปิดแล้ว'}</span>
-      <b>${esc(m.title)}${m.round ? ` <small class="ex-round">สอบแก้ตัวรอบ ${m.round}</small>` : ''}</b><small>PIN ${p} · ${new Date(m.createdAt).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}</small>
-      <button class="btn light sm" data-pin="${p}">${m.state === 'open' ? 'เข้าจอคุมสอบ' : 'ดูผล'}</button></li>`).join('')}</ul>`;
+  const all = Object.keys(exams);
+  const metas = Object.fromEntries(await Promise.all(all.map(async (p) => [p, await DB.get(`quiz/exams/${p}/meta`).catch(() => null)])));
+  // จัดกลุ่ม: ห้องสอบหลัก + สอบแก้ตัวแต่ละรอบอยู่ใต้ห้องหลัก
+  const roots = all.filter((p) => metas[p] && !metas[p].retakeOf).sort((a, b) => (metas[b].createdAt || 0) - (metas[a].createdAt || 0));
+  const kids = (r) => all.filter((p) => metas[p]?.retakeOf === r).sort((a, b) => (metas[a].round || 0) - (metas[b].round || 0));
+  const orphans = all.filter((p) => metas[p]?.retakeOf && !metas[metas[p].retakeOf]);
+  const shown = showAll ? roots : roots.slice(0, 8);
+  const badge = (m) => `<span class="ex-badge ${m.state}">${m.state === 'open' ? '🟢 เปิดอยู่' : m.revealed ? '📢 เฉลยแล้ว' : '⚪ ปิดแล้ว'}</span>`;
+  const row = (p, sub) => { const m = metas[p]; return `<li class="${sub ? 'sub' : ''}">
+      <input type="checkbox" class="ex-pick" data-pick="${p}" aria-label="เลือกห้อง ${p}">
+      ${badge(m)}
+      <b>${sub ? '↳ ' : ''}${esc(m.title)}${m.round ? ` <small class="ex-round">สอบแก้ตัวรอบ ${m.round}</small>` : ''}</b>
+      <small>PIN ${p} · ${new Date(m.createdAt).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}</small>
+      <span class="ex-row-act"><button class="btn light sm" data-pin="${p}">${m.state === 'open' ? 'เข้าจอคุมสอบ' : 'ดูผล'}</button>
+      ${m.state === 'open' ? `<button class="btn light sm" data-close="${p}" title="ปิดรับคำตอบ">ปิดห้อง</button>` : ''}
+      <button class="btn light sm ex-danger" data-del="${p}" title="ลบห้องสอบ">🗑</button></span></li>`; };
+  const total = roots.length + orphans.length;
+  $('#openList').hidden = !total;
+  if (!total) return;
+  $('#openList').innerHTML = `<div class="bk-head"><div><h2>🗂 ห้องสอบของฉัน <small class="muted">(${total} ห้อง)</small></h2><p class="muted">ติ๊กเลือกหลายห้องแล้วลบพร้อมกันได้ · ลบห้องหลักจะลบสอบแก้ตัวทุกรอบของห้องนั้นด้วย</p></div>
+      <div class="row"><button class="btn light sm" id="pickAll">เลือกห้องที่ปิดแล้วทั้งหมด</button><button class="btn sm ex-danger" id="delPicked" disabled>🗑 ลบที่เลือก</button></div></div>
+    <ul class="ex-list">${shown.map((r) => row(r) + kids(r).map((k) => row(k, true)).join('')).join('')}${orphans.map((p) => row(p, true)).join('')}</ul>
+    ${roots.length > 8 ? `<button class="btn light sm" id="moreRooms">${showAll ? 'แสดงน้อยลง' : `แสดงทั้งหมด (${roots.length})`}</button>` : ''}`;
+  renderOpenList.metas = metas; renderOpenList.kids = kids;
 }
-$('#openList').onclick = (e) => { const b = e.target.closest('[data-pin]'); if (b) openProctor(b.dataset.pin); };
+// ลบห้องสอบ (ครูกดเอง + ยืนยันก่อนเสมอ) — ลบทั้งห้องใน quiz/exams และเฉลยในคลังครู
+async function deleteRooms(pins) {
+  const metas = renderOpenList.metas || {}, kids = renderOpenList.kids || (() => []);
+  const set = new Set(); pins.forEach((p) => { set.add(p); if (!metas[p]?.retakeOf) kids(p).forEach((k) => set.add(k)); });
+  const list = [...set];
+  const open = list.filter((p) => metas[p]?.state === 'open').length;
+  if (!confirm(`ลบห้องสอบ ${list.length} ห้อง?\n${list.map((p) => `• ${metas[p]?.title || ''}${metas[p]?.round ? ` (สอบแก้ตัวรอบ ${metas[p].round})` : ''} — PIN ${p}`).join('\n')}\n\n${open ? `⚠️ มี ${open} ห้องที่ยังเปิดสอบอยู่\n` : ''}คำตอบและคะแนนในห้องจะหายถาวร กู้คืนไม่ได้\n(คะแนนที่บันทึกลงสมุดคะแนนแล้ว ยังอยู่ในสมุดคะแนนตามเดิม)`)) return;
+  for (const p of list) {
+    await DB.remove(`quiz/exams/${p}`);
+    await DB.remove(`quiz/banks/${me}/exams/${p}`);
+    delete exams[p];
+    if (sessionStorage.getItem('gc_exam_pin') === p) sessionStorage.removeItem('gc_exam_pin');
+  }
+  toast(`ลบห้องสอบแล้ว ${list.length} ห้อง`); await renderOpenList();
+}
+async function closeFromList(p) {
+  const st = (await DB.get(`quiz/exams/${p}/students`)) || {};
+  const left = Object.values(st).filter((s) => s.status !== 'submitted').length;
+  if (!confirm(`ปิดห้องสอบ PIN ${p}?${left ? ` นักเรียน ${left} คนที่ยังไม่ส่ง จะถูกส่งข้อสอบอัตโนมัติ` : ''}`)) return;
+  const upd = { 'meta/state': 'closed', 'meta/closedAt': DB.now() };
+  for (const [u, s] of Object.entries(st)) if (s.status !== 'submitted') Object.assign(upd, { [`students/${u}/status`]: 'submitted', [`students/${u}/submittedAt`]: DB.now(), [`students/${u}/forced`]: true });
+  await DB.update(`quiz/exams/${p}`, upd); toast('ปิดห้องสอบแล้ว'); await renderOpenList();
+}
+const picked = () => [...document.querySelectorAll('#openList [data-pick]:checked')].map((c) => c.dataset.pick);
+$('#openList').onchange = () => { const b = $('#delPicked'); if (b) { const n = picked().length; b.disabled = !n; b.textContent = n ? `🗑 ลบที่เลือก (${n})` : '🗑 ลบที่เลือก'; } };
+$('#openList').onclick = (e) => {
+  const g = (k) => e.target.closest(`[data-${k}]`)?.dataset[k];
+  if (g('pin')) return openProctor(g('pin'));
+  if (g('del')) return deleteRooms([g('del')]);
+  if (g('close')) return closeFromList(g('close'));
+  if (e.target.closest('#delPicked')) return deleteRooms(picked());
+  if (e.target.closest('#moreRooms')) { showAll = !showAll; return renderOpenList(); }
+  if (e.target.closest('#pickAll')) { document.querySelectorAll('#openList [data-pick]').forEach((c) => { c.checked = renderOpenList.metas[c.dataset.pick]?.state !== 'open'; }); $('#openList').onchange(); }
+};
 
 async function newPin() {
   for (let i = 0; i < 10; i++) { const c = String(100000 + Math.floor(Math.random() * 900000)); if (!(await DB.get(`quiz/exams/${c}/meta`))) return c; }
