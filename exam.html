@@ -43,15 +43,15 @@ try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.ad
     <a class="home-link" href="./" title="เมนูรวม Ghost Class" aria-label="เมนูรวม"><img src="img/ghost.svg" alt=""></a>
     <div class="logo"><span class="mark gmark" aria-hidden="true"></span><span class="brand"><small>สอบนอกตาราง</small><span>Ghost <b>Class</b></span></span></div>
     <span class="sp"></span>
-    <a class="btn ghost sm" href="host.html">📝 แก้ชุดคำถาม</a>
     <span class="pill who" id="who"></span>
   </header>
   <main class="ex-wrap">
     <div class="ex-open card" id="openList" hidden></div>
+    <section class="card bk" id="bank"></section>
     <form class="card ex-form" id="setupForm">
       <h1>📝 เปิดห้องสอบนอกตาราง</h1>
       <p class="muted">นักเรียนแต่ละคนได้ลำดับข้อและลำดับตัวเลือกไม่เหมือนกัน · เฉลยอยู่ที่เครื่องครูเท่านั้น</p>
-      <label class="field"><span>ชุดข้อสอบ (จากคลังคำถามในเกมคำถาม)</span>
+      <label class="field"><span>ชุดข้อสอบ (จากคลังข้อสอบด้านบน)</span>
         <select class="input" id="quizSel" required></select></label>
       <p class="hint" id="quizInfo"></p>
       <div class="ex-grid2">
@@ -69,6 +69,17 @@ try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.ad
       <div class="row end"><button class="btn gold big" id="openBtn">เปิดห้องสอบ ›</button></div>
     </form>
   </main>
+</section>
+
+<!-- แก้ไขชุดข้อสอบ -->
+<section class="screen" id="scr-editor">
+  <header class="topbar">
+    <button class="btn light sm" id="edBack">‹ กลับ</button>
+    <input class="input ed-title" id="edTitle" maxlength="120" placeholder="ชื่อชุดข้อสอบ" aria-label="ชื่อชุดข้อสอบ">
+    <span class="pill" id="edCount"></span>
+    <button class="btn gold" id="edSave">💾 บันทึก</button>
+  </header>
+  <main class="ex-wrap ed-wrap" id="edBody"></main>
 </section>
 
 <!-- จอคุมสอบ -->

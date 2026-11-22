@@ -5,8 +5,9 @@ import { connect, isTeacher } from './db.js';
 import { $, esc, show, toast } from './ui.js';
 import { sfx, unlock } from './sound.js';
 import { SCOREBOOK_API } from './config.js';
+import { usable, renderBank, openEditor } from './exam-bank.js';
 
-let DB, me = null, quizzes = [], exams = {};
+let DB, me = null, quizzes = [], exams = {}, sets = {};
 let pin = '', meta = null, key = [], students = {}, ans = {}, results = {}, unsubs = [], family = null;
 const seenLeaves = {}, seenStatus = {}, feed = [];
 let autoAt = 0, autoHold = false, revealing = false;
@@ -34,15 +35,16 @@ $('#loginBtn').onclick = async () => { if (!(await ready)) return; try { await D
 $('#switchBtn').onclick = () => DB.signOut();
 
 /* ───────── ตั้งค่า ───────── */
-const usable = (q) => q && (q.type === 'mc' || q.type === 'tf') && String(q.text || '').trim();
 const passOf = (m, total) => Math.max(1, Math.ceil((total * (m?.passPct ?? 50)) / 100));
 async function loadSetup() {
-  const v = (await DB.get(`quiz/banks/${me}/quizzes`)) || {};
-  quizzes = Object.values(v).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).filter((q) => (q.questions || []).some(usable));
+  sets = (await DB.get(`quiz/banks/${me}/examSets`)) || {};
+  Object.values(sets).forEach((s) => { s.questions = s.questions || []; });
+  drawBank();
+  quizzes = Object.values(sets).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).filter((q) => q.questions.some(usable));
   exams = (await DB.get(`quiz/banks/${me}/exams`)) || {};
   $('#quizSel').innerHTML = quizzes.length
     ? quizzes.map((q) => `<option value="${esc(q.id)}">${esc(q.title)} (${q.questions.filter(usable).length} ข้อ)</option>`).join('')
-    : '<option value="">ยังไม่มีชุดคำถาม — สร้างที่หน้าเกมคำถามก่อน</option>';
+    : '<option value="">ยังไม่มีชุดข้อสอบที่พร้อมใช้ — สร้างหรือนำเข้าในคลังข้อสอบก่อน</option>';
   $('#openBtn').disabled = !quizzes.length;
   quizInfo();
   await renderOpenList();
@@ -51,8 +53,16 @@ function quizInfo() {
   const q = quizzes.find((x) => x.id === $('#quizSel').value);
   if (!q) { $('#quizInfo').textContent = ''; return; }
   const all = q.questions.length, ok = q.questions.filter(usable).length, pass = passOf({ passPct: +$('#passPct').value || 50 }, ok);
-  $('#quizInfo').textContent = `${ok} ข้อ (ข้อละ 1 คะแนน) · ผ่านเมื่อได้ ${pass} คะแนนขึ้นไป` + (all > ok ? ` · ข้ามข้อที่ไม่มีโจทย์ ${all - ok} ข้อ` : '');
+  $('#quizInfo').textContent = `${ok} ข้อ (ข้อละ 1 คะแนน) · ผ่านเมื่อได้ ${pass} คะแนนขึ้นไป` + (all > ok ? ` · ข้ามข้อที่ยังไม่สมบูรณ์ ${all - ok} ข้อ` : '');
 }
+function drawBank() {
+  renderBank($('#bank'), sets, {
+    edit: (s, isNew) => { show('editor'); openEditor(s, { onSave: async (x) => { await saveSet(x); s.id = x.id; }, onClose: async () => { await loadSetup(); show('setup'); } }); if (isNew) $('#edTitle').select(); },
+    save: async (s) => { await saveSet(s); await loadSetup(); },
+    remove: async (id) => { await DB.remove(`quiz/banks/${me}/examSets/${id}`); delete sets[id]; await loadSetup(); toast('ลบชุดข้อสอบแล้ว'); },
+  });
+}
+async function saveSet(s) { await DB.set(`quiz/banks/${me}/examSets/${s.id}`, JSON.parse(JSON.stringify(s))); sets[s.id] = s; }
 $('#quizSel').onchange = quizInfo; $('#passPct').oninput = quizInfo;
 
 async function renderOpenList() {
@@ -82,7 +92,7 @@ $('#setupForm').onsubmit = async (e) => {
       passPct: Math.min(100, Math.max(1, +$('#passPct').value || 50)), shuffleQ: $('#shufQ').checked, shuffleC: $('#shufC').checked, showScore: $('#showScore').checked, createdAt: Date.now() };
     const paper = qs.map((x) => ({ type: x.type, text: x.text, image: x.image || '', choices: (x.choices || []).slice(0, x.type === 'tf' ? 2 : 4).map((c) => String(c ?? '')) }));
     await DB.set(`quiz/exams/${p}`, { meta: m, paper });
-    const rec = { title: q.title, quizId: q.id, key: qs.map((x) => +x.correct || 0), createdAt: m.createdAt };
+    const rec = { title: q.title, setId: q.id, key: qs.map((x) => +x.correct || 0), createdAt: m.createdAt };
     await DB.set(`quiz/banks/${me}/exams/${p}`, rec); exams[p] = rec;
     openProctor(p);
   } catch (err) { console.error(err); toast('เปิดห้องสอบไม่สำเร็จ ลองใหม่อีกครั้ง'); }

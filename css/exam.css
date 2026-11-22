@@ -143,3 +143,28 @@
 .ex-form .ex-grid2 { grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 700px) { .ex-form .ex-grid2 { grid-template-columns: 1fr; } }
 .ex-dlg .row { display: flex; flex-direction: row; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* ── คลังข้อสอบ + ตัวแก้ไข ── */
+.bk { padding: 20px 22px; }
+.bk-head { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px; }
+.bk-head h2 { margin: 0; font-size: 1.25rem; } .bk-head p { margin: 2px 0 0; font-size: .9rem; }
+.bk-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.bk-list li { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 14px; background: #F7F5FF; }
+.bk-list li > div { display: grid; min-width: 0; } .bk-list li b { overflow: hidden; text-overflow: ellipsis; } .bk-list li small { color: var(--ex-ink2); }
+.bk-empty { margin: 6px 0 0; padding: 18px; border-radius: 14px; border: 2px dashed var(--ex-line); color: var(--ex-ink2); text-align: center; }
+.ed-wrap { max-width: 860px; }
+.ed-title { flex: 1; min-width: 160px; font-weight: 700; font-size: 1.1rem !important; }
+.ed-q { padding: 14px 16px; display: grid; gap: 10px; }
+.ed-q.bad { border-color: #F7B8C3; }
+.ed-q-h { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ed-q-h .seg { display: inline-flex; background: #F1EEFC; border-radius: 12px; padding: 3px; margin-left: 6px; }
+.ed-q-h .seg button { padding: 5px 12px; border-radius: 9px; font-size: .88rem; font-weight: 600; color: var(--ex-ink2); }
+.ed-q-h .seg button.on { background: #fff; color: var(--ex-info); box-shadow: 0 2px 6px rgba(60,48,130,.12); }
+.ed-text { resize: vertical; min-height: 64px; line-height: 1.5; }
+.ed-ch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ed-c { display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 10px; border-radius: 14px; border: 2px solid transparent; }
+.ed-c.on { border-color: #22C58B; background: var(--ex-ok-s); }
+.ed-c input[type=radio] { width: 20px; height: 20px; accent-color: #119868; flex: none; }
+.ed-warn { color: var(--ex-bad); }
+.ed-add { justify-self: start; }
+@media (max-width: 600px) { .ed-ch { grid-template-columns: 1fr; } }
