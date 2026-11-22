@@ -30,7 +30,7 @@ $('#infoForm').onsubmit = async (e) => {
   const sid = $('#sidIn').value.replace(/\s/g, ''), name = $('#nameIn').value.trim().replace(/\s+/g, ' ');
   if (!/^\d{1,10}$/.test(sid)) return toast('ใส่เลขประจำตัวเป็นตัวเลขเท่านั้น');
   if (!name) return toast('พิมพ์ชื่อ-สกุลก่อน');
-  if (meta.retakeOf && !(await DB.get(`${R}/allow/${sid}`))) return toast('เลขประจำตัวนี้ไม่อยู่ในรายชื่อสอบแก้ตัว — ตรวจเลขอีกครั้ง หรือแจ้งครู', 4500);
+  if (meta.retakeOf && !(myKind = await DB.get(`${R}/allow/${sid}`))) return toast('เลขประจำตัวนี้ไม่อยู่ในรายชื่อสอบแก้ตัว — ตรวจเลขอีกครั้ง หรือแจ้งครู', 4500);
   const all = (await DB.get(`${R}/students`)) || {};
   if (Object.entries(all).some(([u, s]) => u !== uid && String(s.sid) === sid)) return toast('เลขประจำตัวนี้เข้าห้องสอบแล้ว — แจ้งครูคุมสอบ', 4000);
   paper = (await DB.get(`${R}/paper`)) || [];
@@ -45,6 +45,7 @@ $('#infoForm').onsubmit = async (e) => {
 
 async function enter(resume) {
   resumed = resume;
+  if (meta?.retakeOf && !myKind) { const mine = await DB.get(`${R}/students/${uid}`); if (mine?.sid) myKind = await DB.get(`${R}/allow/${mine.sid}`); }
   if (!paper.length) paper = (await DB.get(`${R}/paper`)) || [];
   subs.forEach((u) => typeof u === 'function' && u()); subs = [];
   subs.push(DB.on(`${R}/meta`, (m) => { if (m) { meta = m; route(); renderScore(); } }));
@@ -71,7 +72,7 @@ function route() {
         `ระหว่างสอบ <b>ห้ามสลับแอป เปิดแท็บอื่น ออกจากเต็มจอ หรือรีเฟรช</b>`,
         `ออกนอกหน้าจอได้ไม่เกิน <b>${meta.maxLeave} ครั้ง</b> — ครั้งถัดไป<b>ข้อสอบจะถูกล็อก</b>และแจ้งครูคุมสอบทันที`,
         'คำตอบบันทึกอัตโนมัติทุกครั้งที่เลือก <b>หมดเวลาระบบส่งให้อัตโนมัติ</b>',
-        `เกณฑ์ผ่าน <b>${passScore()} คะแนน</b> จาก ${meta.n}${meta.round ? ' · <b>สอบแก้ตัว: ทำได้เกินเกณฑ์จะได้คะแนนเท่าเกณฑ์ผ่าน</b>' : ' · ไม่ผ่านสอบแก้ตัวได้'}`,
+        `เกณฑ์ผ่าน <b>${passScore()} คะแนน</b> จาก ${meta.n}${!meta.round ? ' · ไม่ผ่านสอบแก้ตัวได้' : myKind === 'makeup' ? ' · <b>สอบซ่อม: ได้คะแนนตามที่ทำได้จริง</b>' : ' · <b>สอบแก้ตัว: ทำได้เกินเกณฑ์จะได้คะแนนเท่าเกณฑ์ผ่าน</b>'}`,
       ].map((t) => `<li>${t}</li>`).join('');
       $('#rWait').textContent = meta.state === 'open' ? '' : 'ห้องสอบปิดแล้ว';
       show('rules');
@@ -152,7 +153,7 @@ async function submit(auto) {
   catch (err) { console.error(err); sending = false; if (!auto) { toast('ส่งไม่สำเร็จ ลองอีกครั้ง'); arm(); } return; }
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
 }
-let myRes = null, revealKey = null;
+let myRes = null, revealKey = null, myKind = null;
 const passScore = () => Math.max(1, Math.ceil(((meta?.n || 0) * (meta?.passPct ?? 50)) / 100));
 function renderScore() {
   const r = myRes, show = meta && (meta.revealed || meta.showScore);
@@ -160,7 +161,7 @@ function renderScore() {
   const pass = r.pass ?? passScore(), ok = r.score >= pass;
   let h = `<div class="ex-score"><small>คะแนนที่ทำได้</small><b>${r.score}</b><span>/ ${r.total}</span></div>
     <span class="ex-pass ${ok ? 'ok' : 'no'}">${ok ? '🎉 ผ่านเกณฑ์' : '❌ ยังไม่ผ่านเกณฑ์'} (เกณฑ์ ${pass} คะแนน)</span>`;
-  if (meta.round && ok && r.score > pass) h += `<p class="hint">สอบแก้ตัว: ได้คะแนนเท่าเกณฑ์ผ่าน <b>${pass} คะแนน</b></p>`;
+  if (meta.round && ok && r.score > pass && myKind !== 'makeup') h += `<p class="hint">สอบแก้ตัว: ได้คะแนนเท่าเกณฑ์ผ่าน <b>${pass} คะแนน</b></p>`;
   if (!ok && !meta.round) h += '<p class="hint">ครูจะเปิดสอบแก้ตัวให้ภายหลัง</p>';
   if (meta.revealed && r.marks && me?.order) {
     h += `<div class="ex-review"><h3>📋 ตรวจคำตอบ</h3>${me.order.map((qi, k) => {

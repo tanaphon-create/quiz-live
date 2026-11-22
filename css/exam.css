@@ -178,3 +178,12 @@
 .btn.sm.ex-danger:disabled { opacity: .45; }
 #moreRooms { margin-top: 10px; }
 @media (max-width: 600px) { .ex-list li { grid-template-columns: auto 1fr; } .ex-list li .ex-badge { grid-row: auto; } .ex-list li b, .ex-list li small { grid-column: 1 / -1; } .ex-list li .ex-row-act { grid-column: 1 / -1; grid-row: auto; justify-content: flex-start; } .ex-list li .ex-pick { grid-row: auto; } }
+
+.rt-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 10px; }
+.rt-cols section { border: 1px solid var(--ex-line); border-radius: 14px; padding: 10px 12px; display: grid; gap: 8px; align-content: start; }
+.rt-cols h4 { margin: 0; font-size: 1rem; } .rt-cols h4 small { font-weight: 500; color: var(--ex-ink2); }
+.rt-all { font-weight: 600; font-size: .9rem; display: flex; gap: 6px; align-items: center; }
+.rt-list { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; display: grid; gap: 2px; font-size: .92rem; }
+.rt-list label { display: flex; gap: 6px; align-items: center; padding: 3px 4px; border-radius: 8px; } .rt-list label:hover { background: #F7F5FF; }
+.rt-list small { color: var(--ex-ink2); }
+@media (max-width: 640px) { .rt-cols { grid-template-columns: 1fr; } }

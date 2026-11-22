@@ -10,7 +10,7 @@ import { usable, renderBank, openEditor } from './exam-bank.js';
 let DB, me = null, quizzes = [], exams = {}, sets = {};
 let pin = '', meta = null, key = [], students = {}, ans = {}, results = {}, unsubs = [], family = null;
 const seenLeaves = {}, seenStatus = {}, feed = [];
-let autoAt = 0, autoHold = false, revealing = false;
+let autoAt = 0, autoHold = false, revealing = false, allowMap = {};
 const AUTO_MS = 15000;   // ส่งครบแล้ว → ประกาศคะแนนอัตโนมัติใน 15 วิ (ครูกด “รอก่อน” ได้)
 
 const ready = connect({ host: true }).then((d) => { DB = d; d.onUser(onUser); return d; })
@@ -78,7 +78,7 @@ async function renderOpenList() {
   const row = (p, sub) => { const m = metas[p]; return `<li class="${sub ? 'sub' : ''}">
       <input type="checkbox" class="ex-pick" data-pick="${p}" aria-label="เลือกห้อง ${p}">
       ${badge(m)}
-      <b>${sub ? '↳ ' : ''}${esc(m.title)}${m.round ? ` <small class="ex-round">สอบแก้ตัวรอบ ${m.round}</small>` : ''}</b>
+      <b>${sub ? '↳ ' : ''}${esc(m.title)}${m.round ? ` <small class="ex-round">สอบแก้ตัว/ซ่อม รอบ ${m.round}</small>` : ''}</b>
       <small>PIN ${p} · ${new Date(m.createdAt).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}</small>
       <span class="ex-row-act"><button class="btn light sm" data-pin="${p}">${m.state === 'open' ? 'เข้าจอคุมสอบ' : 'ดูผล'}</button>
       ${m.state === 'open' ? `<button class="btn light sm" data-close="${p}" title="ปิดรับคำตอบ">ปิดห้อง</button>` : ''}
@@ -168,15 +168,16 @@ function openProctor(p) {
   unsubs.push(DB.on(`quiz/exams/${p}/students`, (v) => { students = v || {}; detect(first); first = false; render(); grade(); }));
   unsubs.push(DB.on(`quiz/exams/${p}/ans`, (v) => { ans = v || {}; render(); grade(); }));
   unsubs.push(DB.on(`quiz/exams/${p}/results`, (v) => { results = v || {}; render(); if (family) loadFamily(); }));
+  unsubs.push(DB.on(`quiz/exams/${p}/allow`, (v) => { allowMap = v || {}; render(); }));
   tickH = setInterval(() => { render(); autoSubmit(); autoReveal(); }, 1000);
 }
 const rootOf = (p, m) => (m?.retakeOf || p);
 function renderHead() {
-  $('#pTitle').innerHTML = esc(meta.title) + (meta.round ? ` <small class="ex-round">สอบแก้ตัวรอบ ${meta.round}</small>` : '');
+  $('#pTitle').innerHTML = esc(meta.title) + (meta.round ? ` <small class="ex-round">${meta.round ? 'สอบแก้ตัว/ซ่อม รอบ ' + meta.round : ''}</small>` : '');
   const pass = passOf(meta, meta.n);
   $('#pState').textContent = meta.state === 'open' ? `🟢 เปิดสอบ · ${meta.duration} นาที` : meta.revealed ? '📢 เฉลยแล้ว' : '⚪ ปิดห้องสอบแล้ว';
   $('#pRule').innerHTML = `${meta.n} ข้อ · ${meta.duration} นาที · ผ่าน ${pass} คะแนน (${meta.passPct ?? 50}%)<br>ออกนอกจอได้ ${meta.maxLeave} ครั้ง · ${meta.shuffleQ ? 'สุ่มข้อ' : 'ไม่สุ่มข้อ'} · ${meta.shuffleC ? 'สุ่มตัวเลือก' : 'ไม่สุ่มตัวเลือก'}`
-    + (meta.round ? '<br><b>สอบแก้ตัว: เข้าได้เฉพาะคนที่ไม่ผ่าน · ทำได้เกินเกณฑ์ได้คะแนนเท่าเกณฑ์ผ่าน</b>' : '');
+    + (meta.round ? '<br><b>เข้าได้เฉพาะคนในรายชื่อ · แก้ตัว: ได้ไม่เกินเกณฑ์ผ่าน · ซ่อม: ได้คะแนนตามจริง</b>' : '');
   $('#closeBtn').hidden = $('#addTime').hidden = meta.state !== 'open';
 }
 
@@ -243,7 +244,7 @@ function render() {
   const fails = family ? familyFails().length : 0;
   $('#pActions').innerHTML = meta.revealed
     ? `<span class="ex-act-note">📢 เฉลยและแจ้งคะแนนแล้ว</span><span class="sp"></span>
-       ${fails ? `<button class="btn gold" id="retakeBtn">🔁 เปิดสอบแก้ตัว (${fails} คนที่ยังไม่ผ่าน)</button>` : family ? '<span class="ex-act-note ok">🎉 ทุกคนผ่านเกณฑ์แล้ว</span>' : ''}
+       ${family && !fails ? '<span class="ex-act-note ok">🎉 คนที่สอบผ่านเกณฑ์ทุกคน</span>' : ''}<button class="btn gold" id="retakeBtn">🔁 สอบแก้ตัว / สอบซ่อม${fails ? ` (ไม่ผ่าน ${fails} คน)` : ''}</button>
        <button class="btn green" id="bookBtn">📒 บันทึกลงสมุดคะแนน</button>`
     : `<span class="ex-act-note">${!list.length ? 'ยังไม่มีนักเรียน' : left ? `รอส่งอีก ${left} คน — ส่งครบหรือหมดเวลา ระบบจะประกาศคะแนนให้อัตโนมัติ`
          : autoAt && !autoHold ? `✅ ส่งครบแล้ว — ประกาศคะแนนอัตโนมัติใน <b>${Math.max(0, Math.ceil((autoAt - Date.now()) / 1000))}</b> วิ` : autoHold ? '⏸ หยุดประกาศอัตโนมัติไว้ — กดปุ่มเมื่อพร้อม' : '✅ ส่งครบทุกคนแล้ว'}</span><span class="sp"></span>
@@ -256,12 +257,12 @@ function render() {
     const r = results[u], fin = family?.final[s.sid];
     const res = r ? (r.score >= pass ? `<span class="chip done">ผ่าน</span>` : `<span class="chip locked">ไม่ผ่าน</span>`) : '-';
     return `<tr class="r-${sc}${s.away && s.status === 'doing' ? ' r-away' : ''}">
-      <td>${esc(s.sid)}</td><td><b>${esc(s.name)}</b>${s.online === false && s.status !== 'submitted' ? ' <small class="off">ออฟไลน์</small>' : ''}</td>
+      <td>${esc(s.sid)}</td><td><b>${esc(s.name)}</b>${meta.round ? (allowMap[s.sid] === 'makeup' ? ' <span class="chip doing">ซ่อม</span>' : ' <span class="chip warn">แก้ตัว</span>') : ''}${s.online === false && s.status !== 'submitted' ? ' <small class="off">ออฟไลน์</small>' : ''}</td>
       <td><span class="chip ${sc}">${st}</span>${s.away && s.status === 'doing' ? ' <span class="chip warn">👀 ออกนอกจออยู่</span>' : ''}</td>
       <td><div class="ex-bar"><i style="width:${(done / n) * 100}%"></i></div><small>${done}/${n}</small></td>
       <td class="lv ${L > lim ? 'over' : L ? 'some' : ''}">${L}/${lim}</td>
       <td>${s.status === 'submitted' ? '-' : dl ? fmt(dl - now) : '-'}</td>
-      <td>${r ? `<b>${r.score}</b>/${r.total}` : '-'}${meta.round && r && r.score >= pass ? ` <small>→ ได้ ${pass}</small>` : ''}</td>
+      <td>${r ? `<b>${r.score}</b>/${r.total}` : '-'}${meta.round && r && r.score > pass && allowMap[s.sid] !== 'makeup' ? ` <small>→ ได้ ${pass}</small>` : ''}</td>
       <td>${res}${fin != null && family.rounds > 0 ? ` <small>สุดท้าย ${fin}</small>` : ''}</td>
       <td class="act">${s.status === 'locked' ? `<button class="btn green sm" data-unlock="${u}">ปลดล็อก</button>` : ''}${s.status === 'doing' || s.status === 'locked' ? `<button class="btn light sm" data-submit="${u}">บังคับส่ง</button>` : ''}</td>
     </tr>`;
@@ -339,31 +340,60 @@ function openDlg(kind) {
     $('#rvGo').onclick = async () => { $('#rvGo').disabled = true; await doReveal($('#rvKey').checked); close(); };
     return;
   }
-  if (kind === 'retake') {
-    const fails = familyFails();
-    body.innerHTML = `<h3>🔁 เปิดสอบแก้ตัว</h3>
-      <p>เข้าได้เฉพาะ <b>${fails.length} คน</b>ที่ยังไม่ผ่านเกณฑ์ (${family.pass} คะแนน) · ข้อเดิม สุ่มลำดับใหม่ · ทำได้เกินเกณฑ์ <b>ได้คะแนนเท่าเกณฑ์ผ่าน (${family.pass})</b></p>
-      <ul class="ex-mini">${fails.map((f) => `<li>${esc(f.sid)} ${esc(f.name)} <small>ตอนนี้ ${f.final}</small></li>`).join('')}</ul>
-      <label class="field"><span>เวลาทำ (นาที)</span><input class="input" type="number" id="rtDur" min="1" max="300" value="${meta.duration}"></label>
-      <div class="row end"><button class="btn light" data-x>ยกเลิก</button><button class="btn gold" id="rtGo">เปิดห้องสอบแก้ตัว</button></div>`;
+  if (kind === 'retake') { retakeDialog(body, close); return; }
+  if (kind === 'book') bookDialog(body, close);
+}
+
+/* ───────── สอบแก้ตัว (ไม่ผ่าน → ได้ไม่เกินเกณฑ์) + สอบซ่อม (ขาดสอบ → ได้คะแนนจริง) ───────── */
+async function retakeDialog(body, close) {
+  if (!family) await loadFamily();
+  const fails = familyFails();
+  body.innerHTML = '<p class="muted">กำลังโหลดรายชื่อห้องจากสมุดคะแนน (เพื่อหาคนที่ขาดสอบ)…</p>';
+  let classes = [];
+  try { classes = (await bookApi({ action: 'classes' })).classes || []; } catch (e) { classes = []; }
+  const took = new Set(Object.keys(family.names));
+  const hits = (c) => c.students.filter((s) => took.has(s.code)).length;
+  const opts = classes.map((c) => ({ c, n: hits(c) })).filter((x) => x.n).sort((a, b) => b.n - a.n);
+  let cls = opts[0]?.c || null;
+  const draw = () => {
+    const absent = cls ? cls.students.filter((s) => s.code && !took.has(s.code)) : [];
+    body.innerHTML = `<h3>🔁 เปิดสอบแก้ตัว / สอบซ่อม</h3>
+      <p class="muted">ข้อเดิม สุ่มลำดับใหม่ · PIN ใหม่ · เข้าได้เฉพาะคนที่ติ๊กไว้ · บันทึกลงสมุดคะแนนช่องเดิม</p>
+      <div class="rt-cols">
+        <section><h4>🔁 สอบแก้ตัว <small>(ไม่ผ่าน · ได้ไม่เกิน ${family.pass} คะแนน)</small></h4>
+          ${fails.length ? `<label class="rt-all"><input type="checkbox" data-all="retake" checked> เลือกทั้งหมด (${fails.length})</label><ul class="rt-list">${fails.map((f) => `<li><label><input type="checkbox" data-k="retake" value="${esc(f.sid)}" checked> ${esc(f.sid)} ${esc(f.name)} <small>ตอนนี้ ${f.final}</small></label></li>`).join('')}</ul>` : '<p class="hint">ไม่มีคนที่ไม่ผ่าน 🎉</p>'}</section>
+        <section><h4>📝 สอบซ่อม <small>(ขาดสอบ · ได้คะแนนตามจริง)</small></h4>
+          ${opts.length ? `<select class="input" id="rtCls">${opts.map(({ c, n }) => `<option value="${esc(c.id)}" ${c === cls ? 'selected' : ''}>${esc(c.name)}${c.subject ? ' · ' + esc(c.subject) : ''} (สอบแล้ว ${n} คน)</option>`).join('')}</select>` : '<p class="hint">โหลดรายชื่อห้องจากสมุดคะแนนไม่ได้ — ใส่เลขประจำตัวเองด้านล่าง</p>'}
+          ${absent.length ? `<label class="rt-all"><input type="checkbox" data-all="makeup" checked> เลือกทั้งหมด (${absent.length})</label><ul class="rt-list">${absent.map((s) => `<li><label><input type="checkbox" data-k="makeup" value="${esc(s.code)}" checked> ${esc(s.code)} ${esc(s.name)}</label></li>`).join('')}</ul>` : cls ? '<p class="hint">ทุกคนในห้องนี้สอบแล้ว</p>' : ''}
+          <label class="field"><span>เพิ่มเลขประจำตัว (สอบซ่อม) คั่นด้วยเว้นวรรคหรือจุลภาค</span><input class="input" id="rtExtra" inputmode="numeric" placeholder="เช่น 51234 51240"></label></section>
+      </div>
+      <label class="field"><span>เวลาทำ (นาที)</span><input class="input" type="number" id="rtDur" min="1" max="300" value="${family.rootMeta.duration || meta.duration}"></label>
+      <div class="row end"><button class="btn light" data-x>ยกเลิก</button><button class="btn gold" id="rtGo">เปิดห้องสอบ</button></div>`;
     body.querySelector('[data-x]').onclick = close;
+    $('#rtCls') && ($('#rtCls').onchange = (e) => { cls = classes.find((c) => c.id === e.target.value); draw(); });
+    body.onchange = (e) => { const a = e.target.dataset.all; if (a) body.querySelectorAll(`[data-k="${a}"]`).forEach((c) => (c.checked = e.target.checked)); };
     $('#rtGo').onclick = async () => {
+      const allow = {};
+      body.querySelectorAll('[data-k="makeup"]:checked').forEach((c) => (allow[c.value] = 'makeup'));
+      $('#rtExtra').value.split(/[\s,]+/).filter((x) => /^\d{1,10}$/.test(x) && !took.has(x)).forEach((x) => (allow[x] = 'makeup'));
+      body.querySelectorAll('[data-k="retake"]:checked').forEach((c) => (allow[c.value] = 'retake'));
+      const n = Object.keys(allow).length;
+      if (!n) return toast('ยังไม่ได้เลือกนักเรียน');
       $('#rtGo').disabled = true;
       try {
-        const root = rootOf(pin, meta), rootRec = exams[root] || exams[pin];
+        const root = family.root, rootRec = exams[root] || exams[pin];
         const paper = await DB.get(`quiz/exams/${root}/paper`);
         const p = await newPin(), round = family.rounds + 1;
         const m = { ...family.rootMeta, hostUid: me, state: 'open', revealed: false, retakeOf: root, round, duration: Math.max(1, +$('#rtDur').value || meta.duration), createdAt: Date.now() };
-        delete m.closedAt; delete m.revealedAt;
-        await DB.set(`quiz/exams/${p}`, { meta: m, paper, allow: Object.fromEntries(fails.map((f) => [f.sid, true])) });
-        const rec = { title: rootRec.title, quizId: rootRec.quizId || '', key: rootRec.key, retakeOf: root, round, createdAt: m.createdAt };
+        delete m.closedAt; delete m.revealedAt; delete m.autoRevealed;
+        await DB.set(`quiz/exams/${p}`, { meta: m, paper, allow });
+        const rec = { title: rootRec.title, setId: rootRec.setId || '', key: rootRec.key, retakeOf: root, round, createdAt: m.createdAt };
         await DB.set(`quiz/banks/${me}/exams/${p}`, rec); exams[p] = rec;
-        close(); toast(`เปิดสอบแก้ตัวรอบ ${round} แล้ว — PIN ใหม่ ${p}`, 5000); openProctor(p);
-      } catch (err) { console.error(err); toast('เปิดสอบแก้ตัวไม่สำเร็จ'); $('#rtGo').disabled = false; }
+        close(); toast(`เปิดห้องสอบรอบ ${round} แล้ว (${n} คน) — PIN ใหม่ ${p}`, 5000); openProctor(p);
+      } catch (err) { console.error(err); toast('เปิดห้องสอบไม่สำเร็จ'); $('#rtGo').disabled = false; }
     };
-    return;
-  }
-  if (kind === 'book') bookDialog(body, close);
+  };
+  draw();
 }
 
 async function doReveal(showKey, auto = false) {
@@ -390,18 +420,19 @@ async function loadFamily() {
   if (!meta) return;
   const root = rootOf(pin, meta);
   const pins = [root, ...Object.keys(exams).filter((p) => exams[p].retakeOf === root).sort((a, b) => (exams[a].round || 0) - (exams[b].round || 0))];
-  const data = await Promise.all(pins.map(async (p) => ({ p, meta: await DB.get(`quiz/exams/${p}/meta`), st: (await DB.get(`quiz/exams/${p}/students`)) || {}, res: (await DB.get(`quiz/exams/${p}/results`)) || {} })));
+  const data = await Promise.all(pins.map(async (p) => ({ p, meta: await DB.get(`quiz/exams/${p}/meta`), st: (await DB.get(`quiz/exams/${p}/students`)) || {}, res: (await DB.get(`quiz/exams/${p}/results`)) || {}, allow: (await DB.get(`quiz/exams/${p}/allow`)) || {} })));
   const rootMeta = data[0].meta || meta, total = rootMeta.n, pass = passOf(rootMeta, total);
-  const final = {}, names = {}, base = {};
-  data.forEach(({ meta: m, st, res }, i) => {
+  const final = {}, names = {}, base = {}, makeup = new Set();
+  data.forEach(({ meta: m, st, res, allow }, i) => {
     for (const [u, s] of Object.entries(st)) {
       const r = res[u]; names[s.sid] = s.name; if (!r) continue;
-      const got = i === 0 ? r.score : Math.min(r.score, pass);   // สอบแก้ตัว: ได้ไม่เกินเกณฑ์ผ่าน
+      const got = i === 0 || allow[s.sid] === 'makeup' ? r.score : Math.min(r.score, pass);   // สอบแก้ตัว: ได้ไม่เกินเกณฑ์ผ่าน · สอบซ่อม: ได้ตามจริง
+      if (allow[s.sid] === 'makeup') makeup.add(s.sid);
       if (i === 0) base[s.sid] = r.score;
       final[s.sid] = Math.max(final[s.sid] ?? 0, got);
     }
   });
-  family = { root, pins, rootMeta, total, pass, final, names, base, rounds: data.filter((d) => d.meta?.round).length };
+  family = { root, pins, rootMeta, total, pass, final, names, base, makeup, rounds: data.filter((d) => d.meta?.round).length };
   render();
 }
 const familyFails = () => (family ? Object.entries(family.final).filter(([, v]) => v < family.pass).map(([sid, v]) => ({ sid, name: family.names[sid], final: v })) : []);
