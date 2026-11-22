@@ -9,6 +9,8 @@ import { SCOREBOOK_API } from './config.js';
 let DB, me = null, quizzes = [], exams = {};
 let pin = '', meta = null, key = [], students = {}, ans = {}, results = {}, unsubs = [], family = null;
 const seenLeaves = {}, seenStatus = {}, feed = [];
+let autoAt = 0, autoHold = false, revealing = false;
+const AUTO_MS = 15000;   // ส่งครบแล้ว → ประกาศคะแนนอัตโนมัติใน 15 วิ (ครูกด “รอก่อน” ได้)
 
 const ready = connect({ host: true }).then((d) => { DB = d; d.onUser(onUser); return d; })
   .catch((e) => { console.error(e); document.documentElement.classList.remove('gc-wait'); $('#loginMsg').textContent = 'เชื่อมต่อไม่ได้ — ตรวจอินเทอร์เน็ตแล้วรีเฟรช'; });
@@ -92,7 +94,7 @@ let tickH = null;
 function stop() { unsubs.forEach((u) => typeof u === 'function' && u()); unsubs = []; clearInterval(tickH); }
 function openProctor(p) {
   stop();
-  pin = p; key = exams[p]?.key || []; students = {}; ans = {}; results = {}; feed.length = 0; family = null;
+  pin = p; key = exams[p]?.key || []; students = {}; ans = {}; results = {}; feed.length = 0; family = null; autoAt = 0; autoHold = false; revealing = false;
   Object.keys(seenLeaves).forEach((k) => delete seenLeaves[k]); Object.keys(seenStatus).forEach((k) => delete seenStatus[k]);
   sessionStorage.setItem('gc_exam_pin', p);
   const url = new URL('take.html', location.href); url.search = '?pin=' + p;
@@ -106,7 +108,7 @@ function openProctor(p) {
   unsubs.push(DB.on(`quiz/exams/${p}/students`, (v) => { students = v || {}; detect(first); first = false; render(); grade(); }));
   unsubs.push(DB.on(`quiz/exams/${p}/ans`, (v) => { ans = v || {}; render(); grade(); }));
   unsubs.push(DB.on(`quiz/exams/${p}/results`, (v) => { results = v || {}; render(); if (family) loadFamily(); }));
-  tickH = setInterval(() => { render(); autoSubmit(); }, 1000);
+  tickH = setInterval(() => { render(); autoSubmit(); autoReveal(); }, 1000);
 }
 const rootOf = (p, m) => (m?.retakeOf || p);
 function renderHead() {
@@ -183,7 +185,9 @@ function render() {
     ? `<span class="ex-act-note">📢 เฉลยและแจ้งคะแนนแล้ว</span><span class="sp"></span>
        ${fails ? `<button class="btn gold" id="retakeBtn">🔁 เปิดสอบแก้ตัว (${fails} คนที่ยังไม่ผ่าน)</button>` : family ? '<span class="ex-act-note ok">🎉 ทุกคนผ่านเกณฑ์แล้ว</span>' : ''}
        <button class="btn green" id="bookBtn">📒 บันทึกลงสมุดคะแนน</button>`
-    : `<span class="ex-act-note">${list.length ? (left ? `รอส่งอีก ${left} คน — ส่งครบแล้วกดเฉลยได้` : '✅ ส่งครบทุกคนแล้ว') : 'ยังไม่มีนักเรียน'}</span><span class="sp"></span>
+    : `<span class="ex-act-note">${!list.length ? 'ยังไม่มีนักเรียน' : left ? `รอส่งอีก ${left} คน — ส่งครบหรือหมดเวลา ระบบจะประกาศคะแนนให้อัตโนมัติ`
+         : autoAt && !autoHold ? `✅ ส่งครบแล้ว — ประกาศคะแนนอัตโนมัติใน <b>${Math.max(0, Math.ceil((autoAt - Date.now()) / 1000))}</b> วิ` : autoHold ? '⏸ หยุดประกาศอัตโนมัติไว้ — กดปุ่มเมื่อพร้อม' : '✅ ส่งครบทุกคนแล้ว'}</span><span class="sp"></span>
+       ${autoAt && !autoHold && !left ? '<button class="btn light" id="holdBtn">รอก่อน</button>' : ''}
        <button class="btn gold" id="revealBtn" ${allDone() || (meta.state !== 'open' && list.length) ? '' : 'disabled'}>📢 เฉลยและแจ้งคะแนน</button>`;
   if (!list.length) { $('#pRows').innerHTML = '<tr><td colspan="9" class="muted ex-empty">รอนักเรียนเข้าห้องสอบ…</td></tr>'; return; }
   $('#pRows').innerHTML = list.map(([u, s]) => {
@@ -258,6 +262,7 @@ $('#closeBtn').onclick = async () => {
 
 /* ───────── เฉลย / สอบแก้ตัว / บันทึก ───────── */
 $('#pActions').onclick = (e) => {
+  if (e.target.closest('#holdBtn')) { autoHold = true; render(); log('⏸ ครูหยุดการประกาศคะแนนอัตโนมัติไว้'); }
   if (e.target.closest('#revealBtn')) openDlg('reveal');
   if (e.target.closest('#retakeBtn')) openDlg('retake');
   if (e.target.closest('#bookBtn')) openDlg('book');
@@ -271,13 +276,7 @@ function openDlg(kind) {
       <label class="ex-chk"><input type="checkbox" id="rvKey"><span>แสดงคำตอบที่ถูกของทุกข้อด้วย<br><small>ถ้าจะเปิดสอบแก้ตัว แนะนำไม่ติ๊ก (คนที่สอบแก้ตัวจะได้ไม่เห็นเฉลยก่อน)</small></span></label>
       <div class="row end"><button class="btn light" data-x>ยกเลิก</button><button class="btn gold" id="rvGo">เฉลยเลย</button></div>`;
     body.querySelector('[data-x]').onclick = close;
-    $('#rvGo').onclick = async () => {
-      $('#rvGo').disabled = true;
-      grade(); await closeRoom();
-      if ($('#rvKey').checked) await DB.set(`quiz/exams/${pin}/reveal`, { key });
-      await DB.update(`quiz/exams/${pin}/meta`, { revealed: true, revealedAt: DB.now() });
-      close(); log('📢 เฉลยและแจ้งคะแนนแล้ว', 'ok'); sfx.correct(); loadFamily();
-    };
+    $('#rvGo').onclick = async () => { $('#rvGo').disabled = true; await doReveal($('#rvKey').checked); close(); };
     return;
   }
   if (kind === 'retake') {
@@ -305,6 +304,25 @@ function openDlg(kind) {
     return;
   }
   if (kind === 'book') bookDialog(body, close);
+}
+
+async function doReveal(showKey, auto = false) {
+  if (revealing || meta?.revealed) return; revealing = true;
+  try {
+    grade(); await closeRoom();
+    if (showKey) await DB.set(`quiz/exams/${pin}/reveal`, { key });
+    await DB.update(`quiz/exams/${pin}/meta`, { revealed: true, revealedAt: DB.now(), ...(auto ? { autoRevealed: true } : {}) });
+    log(auto ? '📢 ส่งครบแล้ว — ประกาศคะแนนให้นักเรียนอัตโนมัติ' : '📢 เฉลยและแจ้งคะแนนแล้ว', 'ok'); sfx.correct(); loadFamily();
+  } catch (err) { console.error(err); toast('ประกาศคะแนนไม่สำเร็จ ลองกดอีกครั้ง'); }
+  revealing = false;
+}
+// ส่งครบทุกคน (หรือหมดเวลา → ระบบส่งแทนครบ) และตรวจคะแนนครบแล้ว → นับถอยหลังแล้วประกาศคะแนนเอง
+function autoReveal() {
+  if (!meta || meta.revealed) { autoAt = 0; return; }
+  const graded = Object.entries(students).every(([u, s]) => s.status !== 'submitted' || results[u]);
+  if (!allDone() || !graded) { autoAt = 0; autoHold = false; return; }
+  if (!autoAt) { autoAt = Date.now() + AUTO_MS; return; }
+  if (!autoHold && Date.now() >= autoAt) doReveal(false, true);
 }
 
 // รวมผลทั้งชุด (สอบจริง + สอบแก้ตัวทุกรอบ) → คะแนนสุดท้ายต่อเลขประจำตัว

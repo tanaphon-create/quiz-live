@@ -156,7 +156,7 @@ let myRes = null, revealKey = null;
 const passScore = () => Math.max(1, Math.ceil(((meta?.n || 0) * (meta?.passPct ?? 50)) / 100));
 function renderScore() {
   const r = myRes, show = meta && (meta.revealed || meta.showScore);
-  if (!show || !r) { $('#dScore').innerHTML = `<p class="hint">${meta?.revealed ? 'กำลังโหลดคะแนน…' : '⏳ รอครูกด “เฉลยและแจ้งคะแนน” เมื่อทุกคนส่งครบ'}</p>`; return; }
+  if (!show || !r) { $('#dScore').innerHTML = `<p class="hint">${meta?.revealed ? 'กำลังโหลดคะแนน…' : '⏳ คะแนนจะแสดงที่นี่เมื่อทุกคนส่งครบ หรือหมดเวลาสอบ — เปิดหน้านี้ค้างไว้ได้เลย'}</p>`; return; }
   const pass = r.pass ?? passScore(), ok = r.score >= pass;
   let h = `<div class="ex-score"><small>คะแนนที่ทำได้</small><b>${r.score}</b><span>/ ${r.total}</span></div>
     <span class="ex-pass ${ok ? 'ok' : 'no'}">${ok ? '🎉 ผ่านเกณฑ์' : '❌ ยังไม่ผ่านเกณฑ์'} (เกณฑ์ ${pass} คะแนน)</span>`;
