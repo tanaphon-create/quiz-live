@@ -2,15 +2,16 @@ import { connect, TS } from './db.js';
 import { renderAvatar, randomAvatar, OPTS } from './avatar.js';
 import { sfx, unlock } from './sound.js';
 import { applyTheme, savedTheme } from './themes.js';
+import { landPlay, landOver, landStop } from './land-play.js?v=20261124a';
 applyTheme(savedTheme());
-import { $, $$, esc, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js';
+import { $, $$, esc, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js?v=20261124a';
 
 const ME_KEY = 'quizlive:me';
 const saved = (() => { try { return JSON.parse(localStorage.getItem(ME_KEY)) || {}; } catch { return {}; } })();
 let avatar = saved.avatar || randomAvatar();
 let DB, pin = '', R = '', meta = null, cur = null, me = null, joined = false, sid = saved.sid || '';
 let allPlayers = {}, tallyAns = null;
-let resUnsub = null, timerH = null, answeredQ = -1, lastState = '', prevScore = 0;
+let resUnsub = null, timerH = null, answeredQ = -1, lastState = '', prevScore = 0, plUnsub = null;
 const remember = () => localStorage.setItem(ME_KEY, JSON.stringify({ pin, sid, name: me?.name || saved.name || '', avatar }));
 
 const qs = new URLSearchParams(location.search);
@@ -147,7 +148,7 @@ function enterRoom() {
     const s = $('#pScore');
     if ((p.score || 0) !== prevScore) { countUp(s, prevScore, p.score || 0, 900); prevScore = p.score || 0; }
   });
-  DB.on(`${R}/players`, (v) => { allPlayers = v || {}; $('#lkCount').textContent = Object.keys(allPlayers).length; renderTally(); });
+  plUnsub = DB.on(`${R}/players`, (v) => { allPlayers = v || {}; $('#lkCount').textContent = Object.keys(allPlayers).length; renderTally(); });
   DB.on(`${R}/current`, (c) => { cur = c; route(); });
   DB.on(`${R}/meta`, (m) => { meta = m; if (m?.theme && document.documentElement.dataset.theme !== m.theme) applyTheme(m.theme); badges(); route(); });
 }
@@ -166,16 +167,18 @@ function badges() {
   const mode = meta.mode || 'classic';
   const M = MODES[mode];
   const myK = mode === 'vote' ? me?.vteam : me?.team;
-  const tm = (mode === 'team' || mode === 'vote') && myK != null ? teamInfo(mode, myK) : null;
+  const tm = (mode === 'team' || mode === 'vote' || mode === 'land') && myK != null ? teamInfo(mode, myK) : null;
   let lk = `${M.icon} โหมด${M.name}`;
   if (mode === 'team') lk += tm ? ` — คุณอยู่ <b style="background:${tm.c}">${tm.e} ${tm.name}</b>` : ' — รอครูแบ่งทีม…';
   if (mode === 'survival') lk += ` — มี ${hearts(maxH(), maxH())}`;
+  if (mode === 'land') lk += tm ? ` — คุณอยู่ฝั่ง <b style="background:${tm.c}">${tm.e} ${tm.name}</b>` : ' — รอครูสุ่มฝั่ง…';
   if (mode === 'vote') lk += tm ? ` — คุณอยู่ <b style="background:${tm.c}">${tm.name}</b> <button class="chg" id="chgTeam">เปลี่ยน</button>` : ' — ยังไม่ได้เลือกทีม';
   $('#lkMode').innerHTML = lk;
   const cb = $('#chgTeam'); if (cb) cb.onclick = () => showTeamPick();
   const pm = $('#pMode');
   pm.hidden = mode === 'classic';
-  if ((mode === 'team' || mode === 'vote') && tm) { pm.textContent = `${tm.e} ${tm.name}`; pm.style.background = tm.c; }
+  if ((mode === 'team' || mode === 'vote' || mode === 'land') && tm) { pm.textContent = `${tm.e} ${tm.name}`; pm.style.background = tm.c; }
+  document.body.classList.toggle('land-on', mode === 'land');
   if (mode === 'survival') { pm.textContent = myHearts() > 0 ? hearts(myHearts(), maxH()) : '👻 ตกรอบ'; pm.style.background = ''; }
 }
 
@@ -221,16 +224,21 @@ async function route() {
   const st = meta.state, qi = meta.qIndex;
   const shown = st === 'board' ? meta.rankShown === qi : st === 'end' ? !!meta.podiumDone : 0;
   const needTeam = meta.mode === 'vote' && me && me.vteam == null;
-  const key = `${st}|${qi}|${meta.qStartAt ? 1 : 0}|${cur ? cur.idx : '-'}|${shown}|${meta.mode}|${needTeam}|${meta.vteams}`;
+  const key = `${st}|${qi}|${meta.qStartAt ? 1 : 0}|${cur ? cur.idx : '-'}|${shown}|${meta.mode}|${needTeam}|${meta.vteams}` + (st === 'land' ? `|${me?.team}` : '');
   if (key === lastState) return;
   lastState = key;
   if (st !== 'reveal') document.body.classList.remove('flash-ok', 'flash-bad');
   clearInterval(timerH); timerH = null;
   resUnsub && resUnsub(); resUnsub = null;
+  if (st !== 'land') landStop();
 
   if (st === 'lobby') { if (needTeam) return showTeamPick(); show('locker'); renderCloset(); return; }
   show('play');
   $('#pQ').textContent = qi >= 0 ? `ข้อ ${qi + 1}/${meta.total}` : '';
+  const lctx = { DB, R, stage, meta: () => meta, me: () => me, again: () => { lastState = ''; route(); } };
+  if (st === 'land' || st === 'landover') { plUnsub && plUnsub(); plUnsub = null; } // ระหว่างแข่งไม่ต้องรับข้อมูลเพื่อนทุกคน (ประหยัดเน็ต)
+  if (st === 'land') return landPlay(lctx);
+  if (st === 'landover') return landOver(lctx);
 
   if (st === 'ready') {
     stage().innerHTML = `<div class="msg"><div class="big-num">${qi + 1}</div>
@@ -275,19 +283,19 @@ async function route() {
       ${teamEnd(p)}
       ${meta.mode === 'survival' ? `<div class="hp-line">${(p.hearts ?? 1) > 0 ? '🏅 รอดจนจบเกม! ' + hearts(p.hearts, maxH()) : '👻 ตกรอบที่ข้อ ' + ((p.outAt ?? 0) + 1)}</div>` : ''}
       ${meta.mode === 'vote' ? '' : `<div class="rank-big">อันดับ <b>${i + 1}</b><small> จาก ${list.length}</small></div>`}
-      <div class="final-score">${(p.score || 0).toLocaleString('th-TH')} <small>คะแนน</small></div>
-      <p class="soft">${meta.mode === 'vote' ? 'คุณโหวตถูก' : 'ตอบถูก'} ${p.correct || 0} จาก ${meta.played || meta.total} ข้อ</p>
+      <div class="final-score">${(p.score || 0).toLocaleString('th-TH')} <small>${meta.mode === 'land' ? 'ครั้งที่ยึดช่องได้' : 'คะแนน'}</small></div>
+      <p class="soft">${meta.mode === 'vote' ? 'คุณโหวตถูก' : 'ตอบถูก'} ${p.correct || 0} จาก ${meta.mode === 'land' ? p.answered || 0 : meta.played || meta.total} ข้อ</p>
       <a class="btn light" href="play.html">เล่นเกมใหม่</a></div>`;
     localStorage.setItem(ME_KEY, JSON.stringify({ avatar, sid, name: p.name }));
     const myT = meta.mode === 'vote' ? p.vteam : p.team;
-    const teamWin = (meta.mode === 'team' || meta.mode === 'vote') && meta.finalTeams && Object.values(meta.finalTeams).find((t) => t.k === myT)?.rank === 1;
+    const teamWin = (meta.mode === 'team' || meta.mode === 'vote' || meta.mode === 'land') && meta.finalTeams && Object.values(meta.finalTeams).find((t) => t.k === myT)?.rank === 1;
     if ((i >= 0 && i < 3) || teamWin) { confetti(); sfx.fanfare(); } else sfx.correct();
   }
 }
 
 function teamEnd(p) {
   const k = meta.mode === 'vote' ? p.vteam : p.team;
-  if ((meta.mode !== 'team' && meta.mode !== 'vote') || k == null || !meta.finalTeams) return '';
+  if ((meta.mode !== 'team' && meta.mode !== 'vote' && meta.mode !== 'land') || k == null || !meta.finalTeams) return '';
   const ft = Object.values(meta.finalTeams).find((t) => t.k === k);
   const t = teamInfo(meta.mode, k);
   return ft ? `<div class="team-chip big" style="background:${t.c}">${t.e} ${t.name} ได้อันดับ ${ft.rank}${ft.rank === 1 ? ' 🏆' : ''}</div>` : '';

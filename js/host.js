@@ -1,11 +1,12 @@
 import { connect, TS, isTeacher } from './db.js';
 import { renderAvatar } from './avatar.js';
 import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock, setMusicTheme } from './sound.js';
-import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js';
+import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js?v=20261124a';
 import { SAMPLE } from './sample.js';
 import { SCOREBOOK_API } from './config.js';
 import { applyTheme, savedTheme, openThemePicker } from './themes.js';
 import { openMusicPicker } from './music-picker.js';
+import { startLand, LAND_TIMES, LAND_SIZES, boardDims } from './land-host.js?v=20261124a';
 applyTheme(savedTheme());
 // เพลงตามธีม: ใช้ธีมเกมที่ครูเลือก · ถ้ายังเป็นค่าเริ่มต้น 👻 ใช้ธีมทั้งเว็บ (ลอยกระทง ฤดูร้อน กลางคืน ฝน สงคราม) แทน
 const syncMusic = () => {
@@ -267,7 +268,8 @@ $('#logoutBtn').onclick = async () => { if (confirm('ออกจากระบ
 
 /* ───────────── โฮสต์เกม ───────────── */
 let R = '', pin = '', quiz = null, order = [], qi = -1, phase = '', players = {};
-let opts = { showQ: true, streak: true, shuffle: false, mode: 'classic', teams: 2, hearts: 3, vteams: 4 };
+let opts = { showQ: true, streak: true, shuffle: false, mode: 'classic', teams: 2, hearts: 3, vteams: 4, ltime: 3, lsize: 'M' };
+let land = null, landTeams = null;
 let vstate = [], played = 0, gameStartAt = 0;
 let joinHref = '';
 let unsubs = [], tickH = null, qStart = 0, liveAnswers = {}, lastReveal = null, prevRanks = {};
@@ -318,7 +320,13 @@ addEventListener('keydown', (e) => e.key === 'Escape' && closeQr());
 /* ───── โหมดเกม ───── */
 function renderModes() {
   $('#modes').innerHTML = Object.entries(MODES).map(([k, m]) => `<button class="mode ${opts.mode === k ? 'on' : ''}" data-m="${k}"><span class="mi">${m.icon}</span><b>${m.name}</b><small>${m.desc}</small></button>`).join('');
-  $('#modeOpt').innerHTML = opts.mode === 'team'
+  $$('.lobby-bar .tog').forEach((t) => (t.style.display = opts.mode === 'land' ? 'none' : ''));
+  const landDim = () => { const d = boardDims(active().length, opts.ltime, opts.lsize); return `${d.cols}×${d.rows} = ${d.cols * d.rows} ช่อง`; };
+  $('#modeOpt').innerHTML = opts.mode === 'land'
+    ? `<span>จำนวนฝั่ง</span>${[2, 3, 4].map((n) => `<button class="chip ${opts.teams === n ? 'on' : ''}" data-t="${n}">${n} ฝั่ง</button>`).join('')}<button class="chip" data-shuffle="1">🎲 สุ่มฝั่งใหม่</button>
+       <span class="mo-br"></span><span>⏱ เวลา</span>${LAND_TIMES.map((n) => `<button class="chip ${opts.ltime === n ? 'on' : ''}" data-lt="${n}">${n} นาที</button>`).join('')}
+       <span class="mo-br"></span><span>🗺️ สนาม</span>${Object.entries(LAND_SIZES).map(([k, [l]]) => `<button class="chip ${opts.lsize === k ? 'on' : ''}" data-ls="${k}">${l}</button>`).join('')}<small class="mo-dim" id="landDim">${landDim()}</small>`
+    : opts.mode === 'team'
     ? `<span>จำนวนทีม</span>${[2, 3, 4].map((n) => `<button class="chip ${opts.teams === n ? 'on' : ''}" data-t="${n}">${n} ทีม</button>`).join('')}<button class="chip" data-shuffle="1">🔀 สุ่มทีมใหม่</button>`
     : opts.mode === 'vote'
       ? `<span>จำนวนทีม (นักเรียนใส่เลขทีมเอง)</span>${[2, 3, 4, 5, 6, 7, 8].map((n) => `<button class="chip ${opts.vteams === n ? 'on' : ''}" data-vt="${n}">${n}</button>`).join('')}`
@@ -333,6 +341,9 @@ $('#modes').onclick = (e) => {
 };
 $('#modeOpt').onclick = (e) => {
   const t = e.target.closest('[data-t]'), h = e.target.closest('[data-h]'), sh = e.target.closest('[data-shuffle]'), vt = e.target.closest('[data-vt]');
+  const lt = e.target.closest('[data-lt]'), ls = e.target.closest('[data-ls]');
+  if (lt) { opts.ltime = +lt.dataset.lt; renderModes(); pushMode(false); }
+  if (ls) { opts.lsize = ls.dataset.ls; renderModes(); pushMode(false); }
   if (vt) { opts.vteams = +vt.dataset.vt; renderModes(); pushMode(false); }
   if (t) { opts.teams = +t.dataset.t; renderModes(); pushMode(true); }
   if (h) { opts.hearts = +h.dataset.h; renderModes(); pushMode(false); }
@@ -340,11 +351,11 @@ $('#modeOpt').onclick = (e) => {
 };
 async function pushMode(reshuffle) {
   await DB.update(R, { 'meta/mode': opts.mode, 'meta/teams': opts.teams, 'meta/hearts': opts.hearts, 'meta/vteams': opts.vteams });
-  if (opts.mode === 'team') assignTeams(reshuffle);
+  if (opts.mode === 'team' || opts.mode === 'land') assignTeams(reshuffle);
   renderCrowd(active());
 }
 function assignTeams(reshuffle = false) {
-  if (opts.mode !== 'team') return;
+  if (opts.mode !== 'team' && opts.mode !== 'land') return;
   const list = active();
   const counts = Array(opts.teams).fill(0);
   if (!reshuffle) list.forEach(([, p]) => p.team != null && p.team < opts.teams && counts[p.team]++);
@@ -354,10 +365,10 @@ function assignTeams(reshuffle = false) {
   todo.forEach(([u]) => { const t = counts.indexOf(Math.min(...counts)); counts[t]++; upd[`players/${u}/team`] = t; });
   if (Object.keys(upd).length) DB.update(R, upd);
 }
-const teamKey = (p) => (opts.mode === 'team' ? p.team : opts.mode === 'vote' ? p.vteam : null);
+const teamKey = (p) => (opts.mode === 'team' || opts.mode === 'land' ? p.team : opts.mode === 'vote' ? p.vteam : null);
 function renderTeamSum() {
   const el = $('#teamSum'); if (!el) return;
-  if (opts.mode !== 'team' && opts.mode !== 'vote') { el.innerHTML = ''; return; }
+  if (opts.mode !== 'team' && opts.mode !== 'vote' && opts.mode !== 'land') { el.innerHTML = ''; return; }
   const N = opts.mode === 'vote' ? opts.vteams : opts.teams;
   const c = Array(N).fill(0); let none = 0;
   active().forEach(([, p]) => { const k = teamKey(p); k != null && k < N ? c[k]++ : none++; });
@@ -369,8 +380,9 @@ function onPlayers() {
   $('#pCount').textContent = list.length;
   $('#startBtn').disabled = !list.length;
   $('#hallEmpty').hidden = list.length > 0;
-  if (opts.mode === 'team' && phase) assignTeams(false);
-  if (phase === 'lobby') { renderCrowd(list); renderTeamSum(); }
+  if ((opts.mode === 'team' || opts.mode === 'land') && phase) assignTeams(false);
+  if (phase === 'lobby') { renderCrowd(list); renderTeamSum(); const d = $('#landDim'); if (d && opts.mode === 'land') { const x = boardDims(list.length, opts.ltime, opts.lsize); d.textContent = `${x.cols}×${x.rows} = ${x.cols * x.rows} ช่อง`; } }
+  if (phase === 'land') land?.onPlayers();
   if (phase === 'question') updateAnswerCount();
 }
 function renderCrowd(list) {
@@ -411,10 +423,11 @@ $('#themeBtn').onclick = pickTheme; $('#themeBtnHome').onclick = () => openTheme
 $('#musicBtn').onclick = () => { const on = !musicOn(); music(on ? 'lobby' : null); $('#musicBtn').classList.toggle('on', on); };
 $('#lobbyCancel').onclick = async () => { if (confirm('ยกเลิกห้องนี้?')) { await DB.update(R, { 'meta/state': 'end', 'meta/cancelled': true }); leave(); } };
 $('#muteBtn').onclick = () => { setMuted(!isMuted()); $('#muteBtn').textContent = isMuted() ? '🔇' : '🔊'; };
-$('#endGameBtn').onclick = () => { if (confirm('จบเกมตอนนี้และแสดงผลสรุป?')) finish(); };
+$('#endGameBtn').onclick = () => { if (phase === 'land' && land) { if (landTeams || confirm('จบเกมยึดพื้นที่ตอนนี้?')) land.end(); return; } if (confirm('จบเกมตอนนี้และแสดงผลสรุป?')) finish(); };
 
 function leave() {
   unsubs.forEach((u) => u && u()); unsubs = []; clearInterval(tickH); music(null);
+  land?.destroy(); land = null; landTeams = null;
   phase = ''; renderHome(); show('home');
 }
 
@@ -426,6 +439,17 @@ $('#startBtn').onclick = async () => {
   if (opts.mode === 'survival') active().forEach(([u]) => { up[`players/${u}/hearts`] = opts.hearts; up[`players/${u}/outAt`] = null; });
   await DB.update(R, up);
   if (opts.mode === 'team') assignTeams(false);
+  if (opts.mode === 'land') {
+    await DB.update(R, { 'meta/ltime': opts.ltime, 'meta/lsize': opts.lsize });
+    assignTeams(false);
+    closeQr(); music(null);
+    played = 0; gameStartAt = Date.now(); landTeams = null;
+    phase = 'land';
+    $('#qCounter').textContent = `🗺️ ยึดพื้นที่ · ${opts.teams} ฝั่ง · ${opts.ltime} นาที`;
+    show('game');
+    land = startLand({ DB, R, quiz, opts, stage, players: () => players, active, finish: () => finish(), onOver: (t, n) => { landTeams = t; played = n; } });
+    return;
+  }
   if (opts.mode === 'vote') {
     const none = active().filter(([, p]) => p.vteam == null).map(([, p]) => p.name);
     if (none.length && !confirm(`ยังไม่เลือกทีม ${none.length} คน: ${none.join(', ')}\nเริ่มเลยไหม? (คนที่ไม่มีทีมจะไม่ได้คะแนน)`)) return;
@@ -716,7 +740,10 @@ async function showBoard() {
 
 async function finish() {
   phase = 'end'; clearInterval(tickH); music(null);
+  land?.destroy();
   const total = Math.max(1, played); // นับเฉพาะข้อที่เฉลยแล้ว (กรณีจบเกมก่อน)
+  const isLand = opts.mode === 'land';
+  const totOf = (p) => (isLand ? Math.max(1, p.answered || 0) : total);
   await DB.update(R, { 'meta/state': 'end', 'meta/podiumDone': false, 'meta/played': total });
   const list = sortPlayers(rankScores(players), opts.mode);
   let teams = opts.mode === 'team' ? teamTable(list, (p) => p.score).sort((a, b) => a.rank - b.rank) : null;
@@ -725,6 +752,7 @@ async function finish() {
       .sort((a, b) => b.score - a.score);
     teams.forEach((t, i) => (t.rank = i + 1));
   }
+  if (isLand) teams = landTeams || [];
   if (teams) await DB.update(R, { 'meta/finalTeams': teams });
   const ent = teams
     ? teams.map((t) => { const I = teamInfo(opts.mode, t.k); return { name: I.name, score: t.score, icon: `<div class="team-icon" style="--tc:${I.c}">${I.e}</div>` }; })
@@ -739,19 +767,19 @@ async function finish() {
         return p ? `<div class="pod p${place}" style="--delay:${[T2, T1, T3][k]}s">
           <div class="pod-av">${place === 1 ? '<span class="crown">👑</span>' : ''}${p.icon}</div>
           <div class="pod-name">${esc(p.name)}</div>
-          <div class="pod-col"><span>${place}</span><small>${p.score.toLocaleString('th-TH')}</small></div>
+          <div class="pod-col"><span>${place}</span><small>${p.score.toLocaleString('th-TH')}${isLand ? ' ช่อง' : ''}</small></div>
         </div>` : '<div class="pod empty-pod"></div>';
       }).join('')}</div>
       <details class="all-rank card"><summary>ดูคะแนนทุกคน (${list.length} คน)</summary>
-        <table><thead><tr><th>อันดับ</th><th>เลขประจำตัว</th><th>ชื่อ</th>${opts.mode !== 'classic' ? '<th>หมายเหตุ</th>' : ''}<th>ตอบถูก</th><th>คะแนน</th></tr></thead><tbody>
-        ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.sid || '-')}</td><td>${esc(p.name)}</td>${opts.mode !== 'classic' ? `<td>${note(p)}</td>` : ''}<td>${p.correct || 0}/${total}</td><td>${p.score.toLocaleString('th-TH')}</td></tr>`).join('')}
+        <table><thead><tr><th>อันดับ</th><th>เลขประจำตัว</th><th>ชื่อ</th>${opts.mode !== 'classic' ? '<th>หมายเหตุ</th>' : ''}<th>ตอบถูก</th><th>${isLand ? 'ยึดได้ (ช่อง)' : 'คะแนน'}</th></tr></thead><tbody>
+        ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.sid || '-')}</td><td>${esc(p.name)}</td>${opts.mode !== 'classic' ? `<td>${note(p)}</td>` : ''}<td>${p.correct || 0}/${isLand ? p.answered || 0 : total}</td><td>${p.score.toLocaleString('th-TH')}</td></tr>`).join('')}
         </tbody></table></details>
       <div class="rev-foot">
         <label class="pill conv">แปลงเป็นคะแนนเก็บ เต็ม <input type="number" id="fullPts" value="10" min="1" max="100"> คะแนน</label>
         <button class="btn green" id="bonusBtn">🏅 บันทึกคะแนนพิเศษ (อันดับ 1–3)</button><button class="btn light" id="csvBtn">⤓ ดาวน์โหลดคะแนน (CSV)</button><span class="sp"></span><button class="btn gold" id="homeBtn">กลับหน้าหลัก</button></div>
     </div>`;
   function note(p) {
-    if (opts.mode === 'team') return p.team != null ? TEAMS[p.team].e + ' ' + TEAMS[p.team].name : '-';
+    if (opts.mode === 'team' || opts.mode === 'land') return p.team != null ? TEAMS[p.team].e + ' ' + TEAMS[p.team].name : '-';
     if (opts.mode === 'vote') return p.vteam != null ? teamInfo('vote', p.vteam).name : 'ไม่มีทีม';
     return (p.hearts ?? 1) > 0 ? 'รอด ' + hearts(p.hearts ?? opts.hearts, opts.hearts) : `ตกรอบข้อ ${(p.outAt ?? 0) + 1}`;
   }
@@ -769,8 +797,8 @@ async function finish() {
     const bySid = list.map((p, i) => ({ ...p, rank: i + 1 }))
       .sort((a, b) => String(a.sid || '').localeCompare(String(b.sid || ''), 'th', { numeric: true }));
     const extra = opts.mode !== 'classic';
-    const rows = [['เลขประจำตัว', 'ชื่อ', 'อันดับ', ...(extra ? ['หมายเหตุ'] : []), 'ตอบถูก', 'จำนวนข้อ', 'คะแนนเกม', `คะแนนเก็บ (เต็ม ${full})`],
-      ...bySid.map((p) => [p.sid || '', p.name, p.rank, ...(extra ? [note(p).replace(/[❤️🤍]/gu, '').trim()] : []), p.correct || 0, total, p.score, Math.round(((p.correct || 0) / total) * full * 100) / 100])];
+    const rows = [['เลขประจำตัว', 'ชื่อ', 'อันดับ', ...(extra ? ['หมายเหตุ'] : []), 'ตอบถูก', 'จำนวนข้อ', isLand ? 'ยึดได้ (ช่อง)' : 'คะแนนเกม', `คะแนนเก็บ (เต็ม ${full})`],
+      ...bySid.map((p) => [p.sid || '', p.name, p.rank, ...(extra ? [note(p).replace(/[❤️🤍]/gu, '').trim()] : []), p.correct || 0, isLand ? p.answered || 0 : total, p.score, Math.round(((p.correct || 0) / totOf(p)) * full * 100) / 100])];
     const csv = '﻿' + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));

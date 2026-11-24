@@ -128,3 +128,15 @@ export const MASCOTS = [
   { shape: 'dino', body: '#9EE6DF', eyes: 'sparkle', mouth: 'smile', hat: 'frog', acc: 'none' },
 ];
 export const mascotOf = (g) => g?.avatar || MASCOTS[((g?.no || 1) - 1) % MASCOTS.length];
+
+// โหมดยึดพื้นที่: สุ่มฝั่ง แต่ละคนตอบคำถามบนมือถือตัวเอง ถูก 1 ข้อ = ยึด 1 ช่อง
+MODES.land = { icon: '🗺️', name: 'ยึดพื้นที่', desc: 'สุ่มฝั่ง ตอบบนมือถือตัวเอง ถูก 1 ข้อ ยึด 1 ช่อง พื้นที่มากกว่าชนะ' };
+export const LAND_LOCK = 3000; // ตอบผิด รอ 3 วินาที
+export const LAND_STEAL = 3;   // ถูกติดกันครบ 3 ข้อ แย่งช่องจากฝั่งตรงข้ามได้อีก 1 ช่อง
+const hash32 = (s) => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+const rng = (seed) => { let a = seed | 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+const shuf = (n, r) => { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+// ข้อที่ n ของนักเรียนคนนี้ (สุ่มลำดับใหม่ทุกรอบที่วนครบชุด) — ครูกับนักเรียนคำนวณได้ตรงกัน
+export const landQ = (uid, n, N) => shuf(N, rng(hash32(uid + ':' + Math.floor(n / N))))[n % N];
+// สลับตำแหน่งตัวเลือกทุกครั้ง (จำตำแหน่งไม่ได้ ต้องจำเนื้อหา)
+export const landPerm = (uid, n, k) => shuf(k, rng(hash32(uid + '#' + n)));
