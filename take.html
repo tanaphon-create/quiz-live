@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="css/bright.css">
 <link rel="stylesheet" href="css/ghost.css">
 <link rel="stylesheet" href="css/readable.css">
-<link rel="stylesheet" href="css/exam.css">
+<link rel="stylesheet" href="css/exam.css?v=20261124b">
 </head>
 <body class="sky ex-student">
 
@@ -104,11 +104,19 @@
 </div>
 <!-- ยืนยันส่ง -->
 <dialog class="ex-dlg" id="confirmDlg">
-  <h3>ส่งข้อสอบ?</h3>
-  <p id="confirmTxt"></p>
-  <div class="row end"><button class="btn light" value="no" id="cNo">กลับไปตรวจ</button><button class="btn green" id="cYes">ส่งเลย</button></div>
+  <div id="cStep1">
+    <h3>📝 ส่งข้อสอบ?</h3>
+    <p id="confirmTxt"></p>
+    <div class="ex-miss" id="cMiss"></div>
+    <div class="row end"><button class="btn light" type="button" id="cNo">กลับไปตรวจ</button><button class="btn green" type="button" id="cNext">ส่งข้อสอบ ›</button></div>
+  </div>
+  <div id="cStep2" hidden>
+    <h3>⚠️ ยืนยันอีกครั้ง</h3>
+    <p>เมื่อกด <b>ยืนยันส่ง</b> แล้ว <b>จะกลับมาแก้คำตอบไม่ได้อีก</b><br>แน่ใจแล้วใช่ไหม?</p>
+    <div class="row end"><button class="btn light" type="button" id="cBack">‹ ยังไม่ส่ง</button><button class="btn green" type="button" id="cYes" disabled>ยืนยันส่ง ✓</button></div>
+  </div>
 </dialog>
 
-<script type="module" src="js/exam-take.js"></script>
+<script type="module" src="js/exam-take.js?v=20261124b"></script>
 </body>
 </html>

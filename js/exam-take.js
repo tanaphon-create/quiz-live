@@ -139,12 +139,22 @@ function tick() {
 
 /* ───────── ส่งข้อสอบ ───────── */
 $('#submitBtn').onclick = () => {
-  const miss = paper.length - Object.values(ans).filter((v) => v != null).length;
-  $('#confirmTxt').innerHTML = miss ? `ยังไม่ได้ตอบ <b>${miss} ข้อ</b> — ส่งแล้วแก้ไม่ได้` : 'ตอบครบทุกข้อแล้ว — ส่งแล้วแก้ไม่ได้';
+  const miss = [];
+  paper.forEach((_, k) => { if (ans['q' + qIndex(k)] == null) miss.push(k); });
+  $('#confirmTxt').innerHTML = miss.length ? `ยังไม่ได้ตอบ <b>${miss.length} ข้อ</b> จาก ${paper.length} ข้อ` : `✅ ตอบครบทั้ง ${paper.length} ข้อแล้ว`;
+  $('#cMiss').innerHTML = miss.length ? `<small>แตะเลขข้อเพื่อกลับไปตอบ</small><div class="ex-nums">${miss.map((k) => `<button type="button" data-miss="${k}">${k + 1}</button>`).join('')}</div>` : '';
+  $('#cStep1').hidden = false; $('#cStep2').hidden = true;
   $('#confirmDlg').showModal();
 };
+let yesH = null;
 $('#cNo').onclick = () => $('#confirmDlg').close();
-$('#cYes').onclick = () => { $('#confirmDlg').close(); submit(false); };
+$('#cMiss').onclick = (e) => { const b = e.target.closest('[data-miss]'); if (!b) return; $('#confirmDlg').close(); cur = +b.dataset.miss; renderQ(); renderGrid(); };
+$('#cNext').onclick = () => {
+  $('#cStep1').hidden = true; $('#cStep2').hidden = false;
+  const y = $('#cYes'); y.disabled = true; clearTimeout(yesH); yesH = setTimeout(() => { y.disabled = false; }, 1200);  // กันกดสองทีติดกันทะลุไปส่งเลย
+};
+$('#cBack').onclick = () => { $('#cStep2').hidden = true; $('#cStep1').hidden = false; };
+$('#cYes').onclick = () => { if ($('#cYes').disabled) return; $('#confirmDlg').close(); submit(false); };
 let sending = false;
 async function submit(auto) {
   if (sending || !me || me.status === 'submitted') return; sending = true;

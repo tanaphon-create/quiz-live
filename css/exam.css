@@ -191,3 +191,14 @@
 .rt-list label { display: flex; gap: 6px; align-items: center; padding: 3px 4px; border-radius: 8px; } .rt-list label:hover { background: #F7F5FF; }
 .rt-list small { color: var(--ex-ink2); }
 @media (max-width: 640px) { .rt-cols { grid-template-columns: 1fr; } }
+/* ยืนยันส่งข้อสอบ 2 ชั้น */
+.ex-miss { margin: -4px 0 14px; } .ex-miss small { color: var(--ex-ink2); }
+.ex-miss .ex-nums button { background: #FFF6F8; border-color: #F7B8C3; color: var(--ex-bad); }
+#cStep2 h3 { color: #C2410C; }
+#cYes:disabled { opacity: .55; }
+/* มือถือ: ชื่อชุดข้อสอบเต็มบรรทัด (ไม่เหลือแค่ "0-...") แล้วเวลา/จำนวนครั้งออกนอกจอไว้บรรทัดถัดไป */
+@media (max-width: 560px) {
+  .ex-top { row-gap: 6px; }
+  .ex-top-l { flex: 1 1 100%; }
+  .ex-top-l b { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: .95rem; }
+}
