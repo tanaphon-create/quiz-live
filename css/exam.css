@@ -96,7 +96,7 @@
 .ex-prog { height: 8px; border-radius: 99px; background: rgba(255,255,255,.7); overflow: hidden; } .ex-prog i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #8B7DFF, #22C58B); transition: width .3s; }
 .ex-q { padding: 20px; }
 .ex-qn { font-weight: 700; color: var(--ex-info); font-size: .95rem; margin-bottom: 6px; }
-.ex-qt { margin: 0 0 14px; font-size: 1.3rem; line-height: 1.55; font-weight: 600; }
+.ex-qt { margin: 0 0 14px; font-size: 1.3rem; line-height: 1.55; font-weight: 600; white-space: pre-line; }
 .ex-img { display: block; max-height: 260px; margin: 0 auto 14px; border-radius: 12px; pointer-events: none; }
 .ex-ch { display: grid; gap: 10px; }
 .ex-opt { display: flex; gap: 12px; align-items: center; text-align: left; padding: 12px 14px; border-radius: 16px; border: 2px solid var(--ex-line); background: #fff; color: var(--ex-ink); font-size: 1.08rem; line-height: 1.5; transition: border-color .15s, background .15s; }
@@ -141,7 +141,7 @@
 .ex-review h3 { margin: 6px 0 0; font-size: 1.05rem; }
 .ex-rv { border: 1px solid var(--ex-line); border-radius: 14px; padding: 10px 12px; display: grid; gap: 4px; background: #fff; }
 .ex-rv.ok { border-color: #9BE3C4; background: #F3FCF8; } .ex-rv.no { border-color: #F7B8C3; background: #FFF6F8; }
-.ex-rv b { font-weight: 600; line-height: 1.5; } .ex-rv small { color: var(--ex-ink2); line-height: 1.5; }
+.ex-rv b { font-weight: 600; line-height: 1.5; white-space: pre-line; } .ex-rv small { color: var(--ex-ink2); line-height: 1.5; }
 .ex-rv .mk { font-weight: 700; } .ex-rv.ok .mk { color: var(--ex-ok); } .ex-rv.no .mk { color: var(--ex-bad); }
 .ex-done { width: min(560px, calc(100vw - 32px)); }
 .ex-form .ex-grid2 { grid-template-columns: repeat(3, 1fr); }
