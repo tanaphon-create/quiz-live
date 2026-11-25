@@ -5,6 +5,7 @@ import { sfx, setMuted, isMuted, unlock, music, currentSong } from './sound.js';
 import { openMusicPicker } from './music-picker.js';
 import { $, $$, esc, wait, show, toast, confetti, VCOLORS, MASCOTS, mascotOf } from './ui.js';
 import { renderAvatar } from './avatar.js';
+import { makeWheel } from './wheel.js?v=20261125a';
 const av = (g) => renderAvatar(mascotOf(g), { bg: false });
 
 const qs = new URLSearchParams(location.search);
@@ -12,6 +13,9 @@ let DB = null, authed = '';
 let pin = '', R = '', meta = {}, groups = {}, players = {}, buzz = {}, presses = {}, notes = {}, pick = null;
 let tab = 'scores', unsubs = [], pressUnsub = null, books = null, src = 'book';
 let wrong = new Set(), award = 1, randKind = 'student', randDone = new Set(), randAll = false, notesNames = true;
+const lsG = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch { return d; } };
+const lsS = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+let rdWheel = lsG('quizlive:rdWheel', '1') !== '0', rdTease = lsG('scorebook.wheelTease', '1') !== '0', spinning = false, wheelRot = 0;
 
 /* ───────── เชื่อมต่อ + ล็อกอิน (ใช้ร่วมกับสมุดคะแนน) ───────── */
 const ready = connect({ host: true }).then((d) => { DB = d; d.onUser(onUser); return d; })
@@ -135,6 +139,7 @@ const gList = () => Object.entries(groups).sort((a, b) => a[1].no - b[1].no);
 const joinedIn = (gid) => Object.values(players).filter((p) => p.gid === gid && p.online !== false);
 function renderTab() {
   if (!R) return;
+  if (spinning && tab === 'random') return;
   ({ scores: renderScores, buzz: renderBuzz, random: renderRandom, reflect: renderReflect })[tab]();
   bgmFor();
 }
@@ -241,23 +246,50 @@ function randPool() {
 function renderRandom() {
   const all = randPool(), left = all.filter((x) => !randDone.has(x.id));
   const doneList = all.filter((x) => randDone.has(x.id));
+  const useWheel = randKind === 'group' && rdWheel && all.length > 1;
   main().innerHTML = `<div class="rd-wrap">
     <div class="seg rd-kind"><button data-kind="student" class="${randKind === 'student' ? 'on' : ''}">👤 สุ่มรายบุคคล</button><button data-kind="group" class="${randKind === 'group' ? 'on' : ''}">👥 สุ่มกลุ่ม</button></div>
     ${randKind === 'student' && meta.mode === 'book' ? `<label class="tog rd-all"><input type="checkbox" id="rdAll" ${randAll ? 'checked' : ''}><span></span>รวมคนที่ยังไม่ได้เข้าระบบ</label>` : ''}
+    ${randKind === 'group' ? `<div class="rd-opts"><label class="tog"><input type="checkbox" id="rdWheelT" ${rdWheel ? 'checked' : ''}><span></span>🎡 วงล้อ</label>${useWheel ? `<label class="tog"><input type="checkbox" id="rdTeaseT" ${rdTease ? 'checked' : ''}><span></span>😜 โหมดกวน</label>` : ''}</div>` : ''}
+    <div class="${useWheel ? 'rd-stage' : 'rd-plain'}">
+    ${useWheel ? `<div class="rd-wheel"><canvas id="rdCv" width="800" height="800" aria-label="วงล้อสุ่มกลุ่ม"></canvas><div class="rdw-ptr" aria-hidden="true"></div><div class="rdw-hub" aria-hidden="true">👥</div><div class="rdw-say" id="rdSay" aria-live="polite"></div></div>` : ''}
     <div class="rd-box" id="rdBox"><div class="rd-mascot" id="rdMascot">${pick && pick.kind === randKind && groups[pick.gid] ? av(groups[pick.gid]) : '<span class="rd-q">?</span>'}</div><div class="rd-name" id="rdName">${pick && pick.kind === randKind ? esc(pick.name) : 'พร้อมไหม?'}</div><div class="rd-sub" id="rdSub">เหลือ ${left.length} จาก ${all.length} ${randKind === 'group' ? 'กลุ่ม' : 'คน'} · ไม่สุ่มซ้ำ</div></div>
+    </div>
     <div class="rd-ctrl"><button class="btn ghost" id="rdReset" ${randDone.size ? '' : 'disabled'}>↺ เริ่มใหม่</button>
       ${pick && pick.gid ? `<button class="btn green" id="rdPlus">+1 ให้${esc(groups[pick.gid]?.name || 'กลุ่ม')}</button>` : ''}
-      <button class="btn gold big" id="rdGo" ${left.length ? '' : 'disabled'}>${left.length ? '🎲 สุ่มเลย' : 'ครบแล้ว'}</button></div>
+      <button class="btn gold big" id="rdGo" ${left.length ? '' : 'disabled'}>${!left.length ? 'ครบแล้ว' : useWheel ? '🎡 หมุนเลย' : '🎲 สุ่มเลย'}</button></div>
     ${doneList.length ? `<div class="rd-done"><span class="muted">สุ่มแล้ว (แตะเพื่อคืนเข้าวง):</span> ${doneList.map((x) => `<button class="mchip2" data-back="${esc(x.id)}">${esc(x.name)} ↩</button>`).join('')}</div>` : ''}
     ${!all.length ? '<p class="muted">ยังไม่มีนักเรียนเข้าระบบ — ให้นักเรียนสแกน QR ก่อน</p>' : ''}
   </div>`;
+  if (useWheel && !left.length && !pick) { $('#rdName').textContent = 'สุ่มครบทุกกลุ่มแล้ว 🎉'; $('#rdSub').textContent = 'กด “↺ เริ่มใหม่” เพื่อนำทุกกลุ่มกลับเข้าวง'; }
+  const wh = useWheel ? makeWheel($('#rdCv'), $('#rdSay'), {
+    items: () => randPool().filter((x) => !randDone.has(x.id)), all: randPool, rot0: wheelRot, maxFs: 60, ink: '#fff', tease: () => rdTease,
+    label: (x) => (all.length > 6 && /\d+/.test(x.name) ? x.name.match(/\d+/)[0] : x.name), color: (x) => groups[x.gid]?.color,
+  }) : null;
+  if (wh) { wh.layout(); wh.draw(); }
+  $('#rdWheelT') && ($('#rdWheelT').onchange = (e) => { rdWheel = e.target.checked; lsS('quizlive:rdWheel', rdWheel ? '1' : '0'); renderRandom(); });
+  $('#rdTeaseT') && ($('#rdTeaseT').onchange = (e) => { rdTease = e.target.checked; lsS('scorebook.wheelTease', rdTease ? '1' : '0'); });
   $$('[data-kind]').forEach((b) => (b.onclick = () => { randKind = b.dataset.kind; randDone = new Set(); pick = null; renderRandom(); }));
   $('#rdAll') && ($('#rdAll').onchange = (e) => { randAll = e.target.checked; renderRandom(); });
   $('#rdReset').onclick = () => { randDone = new Set(); pick = null; renderRandom(); };
   $$('[data-back]').forEach((b) => (b.onclick = () => { randDone.delete(b.dataset.back); renderRandom(); }));
   $('#rdPlus') && ($('#rdPlus').onclick = () => addScore(pick.gid, 1).then(renderRandom));
-  $('#rdGo').onclick = () => {
-    const items = randPool().filter((x) => !randDone.has(x.id)); if (!items.length) return;
+  const win = (it) => {
+    randDone.add(it.id);
+    pick = { kind: randKind, id: it.id, name: it.name, gid: it.gid || '', uid: it.uid || '' };
+    DB.update(R, { pick: { ...pick, at: TS } });
+    sfx.first(); confetti(80, 2500);
+    renderRandom(); $('#rdBox').classList.add('win');
+  };
+  $('#rdGo').onclick = async () => {
+    const items = randPool().filter((x) => !randDone.has(x.id)); if (!items.length || spinning) return;
+    if (wh) {
+      spinning = true; $$('.rd-wrap button, .rd-wrap input').forEach((b) => (b.disabled = true));
+      $('#rdBox').classList.remove('win'); $('#rdMascot').innerHTML = '<span class="rd-q">🎡</span>'; $('#rdName').textContent = 'กำลังหมุน…'; $('#rdSub').textContent = 'ลุ้น ๆ กลุ่มไหนจะโดน';
+      let it = null; try { it = await wh.spin(); } finally { wheelRot = wh.rot(); spinning = false; }
+      if (it) { if (groups[it.gid]) $('#rdMascot').innerHTML = av(groups[it.gid]); await wait(500); win(it); } else renderRandom();
+      return;
+    }
     $('#rdGo').disabled = true; $('#rdBox').classList.remove('win'); $('#rdBox').classList.add('spin');
     let n = 0, last = null; const total = matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : 18 + Math.floor(Math.random() * 8);
     const tick = () => {
@@ -265,13 +297,7 @@ function renderRandom() {
       last = it; $('#rdName').textContent = it.name; $('#rdSub').textContent = it.sub; n++; sfx.tick();
       if (groups[it.gid]) $('#rdMascot').innerHTML = av(groups[it.gid]);
       if (n < total) setTimeout(tick, 40 + n * n * 0.8);
-      else {
-        randDone.add(it.id);
-        pick = { kind: randKind, id: it.id, name: it.name, gid: it.gid || '', uid: it.uid || '' };
-        DB.update(R, { pick: { ...pick, at: TS } });
-        sfx.first(); confetti(80, 2500);
-        renderRandom(); $('#rdBox').classList.add('win');
-      }
+      else win(it);
     };
     tick();
   };
