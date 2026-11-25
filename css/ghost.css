@@ -206,3 +206,9 @@ dialog:not([open]) { display: none !important; }
 .tiles:has(> .gtile:nth-child(4):last-child) > .gtile.wide { grid-column: auto; }
 .tiles.tiles-2 { grid-template-columns: repeat(2, 1fr); }
 @media (max-width: 640px) { .tiles.tiles-2 { grid-template-columns: 1fr; } }
+/* มือถือ + 4 ปุ่ม (2×2): การ์ดสมุดคะแนนจัดแบบเดียวกับการ์ดอื่น ไม่ให้ตัวหนังสือถูกบีบ */
+@media (max-width: 600px) {
+  .tiles:has(> .gtile:nth-child(4):last-child) > .gtile.wide { flex-direction: column; align-items: flex-start; }
+  .tiles:has(> .gtile:nth-child(4):last-child) > .gtile.wide .gt-ghost { width: 72px; height: 72px; }
+  .tiles:has(> .gtile:nth-child(4):last-child) > .gtile.wide .gt-go { position: absolute; top: 12px; right: 12px; }
+}
