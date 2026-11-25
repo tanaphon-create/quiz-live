@@ -243,6 +243,16 @@ function randPool() {
   }
   return list;
 }
+// รายชื่อสมาชิกของกลุ่มที่สุ่มได้ (เด้งขึ้นทีละคน)
+let memAnim = false;
+function memHTML() {
+  if (!pick || pick.kind !== 'group' || randKind !== 'group' || !groups[pick.gid]) return '';
+  const g = groups[pick.gid], joined = joinedIn(pick.gid).map((p) => p.name);
+  const mem = meta.mode === 'book' ? (g.members || []) : joined;
+  if (!mem.length) return '<div class="rd-mem"><em>ยังไม่มีสมาชิกเข้าระบบ</em></div>';
+  const anim = memAnim; memAnim = false; // เด้งเฉพาะตอนเพิ่งสุ่มได้ ไม่เด้งซ้ำเมื่อหน้าวาดใหม่
+  return `<div class="rd-mem${anim ? ' pop' : ''}">${mem.map((n, i) => `<span class="${meta.mode === 'book' && !joined.includes(n) ? 'off' : ''}" style="--d:${0.35 + i * 0.09}s">${esc(n)}</span>`).join('')}</div>`;
+}
 function renderRandom() {
   const all = randPool(), left = all.filter((x) => !randDone.has(x.id));
   const doneList = all.filter((x) => randDone.has(x.id));
@@ -253,7 +263,7 @@ function renderRandom() {
     ${randKind === 'group' ? `<div class="rd-opts"><label class="tog"><input type="checkbox" id="rdWheelT" ${rdWheel ? 'checked' : ''}><span></span>🎡 วงล้อ</label>${useWheel ? `<label class="tog"><input type="checkbox" id="rdTeaseT" ${rdTease ? 'checked' : ''}><span></span>😜 โหมดกวน</label>` : ''}</div>` : ''}
     <div class="${useWheel ? 'rd-stage' : 'rd-plain'}">
     ${useWheel ? `<div class="rd-wheel"><canvas id="rdCv" width="800" height="800" aria-label="วงล้อสุ่มกลุ่ม"></canvas><div class="rdw-ptr" aria-hidden="true"></div><div class="rdw-hub" aria-hidden="true">👥</div><div class="rdw-say" id="rdSay" aria-live="polite"></div></div>` : ''}
-    <div class="rd-box" id="rdBox"><div class="rd-mascot" id="rdMascot">${pick && pick.kind === randKind && groups[pick.gid] ? av(groups[pick.gid]) : '<span class="rd-q">?</span>'}</div><div class="rd-name" id="rdName">${pick && pick.kind === randKind ? esc(pick.name) : 'พร้อมไหม?'}</div><div class="rd-sub" id="rdSub">เหลือ ${left.length} จาก ${all.length} ${randKind === 'group' ? 'กลุ่ม' : 'คน'} · ไม่สุ่มซ้ำ</div></div>
+    <div class="rd-box" id="rdBox"><div class="rd-mascot" id="rdMascot">${pick && pick.kind === randKind && groups[pick.gid] ? av(groups[pick.gid]) : '<span class="rd-q">?</span>'}</div><div class="rd-name" id="rdName">${pick && pick.kind === randKind ? esc(pick.name) : 'พร้อมไหม?'}</div><div class="rd-sub" id="rdSub">เหลือ ${left.length} จาก ${all.length} ${randKind === 'group' ? 'กลุ่ม' : 'คน'} · ไม่สุ่มซ้ำ</div>${memHTML()}</div>
     </div>
     <div class="rd-ctrl"><button class="btn ghost" id="rdReset" ${randDone.size ? '' : 'disabled'}>↺ เริ่มใหม่</button>
       ${pick && pick.gid ? `<button class="btn green" id="rdPlus">+1 ให้${esc(groups[pick.gid]?.name || 'กลุ่ม')}</button>` : ''}
@@ -276,7 +286,7 @@ function renderRandom() {
   $('#rdPlus') && ($('#rdPlus').onclick = () => addScore(pick.gid, 1).then(renderRandom));
   const win = (it) => {
     randDone.add(it.id);
-    pick = { kind: randKind, id: it.id, name: it.name, gid: it.gid || '', uid: it.uid || '' };
+    pick = { kind: randKind, id: it.id, name: it.name, gid: it.gid || '', uid: it.uid || '' }; memAnim = true;
     DB.update(R, { pick: { ...pick, at: TS } });
     sfx.first(); confetti(80, 2500);
     renderRandom(); $('#rdBox').classList.add('win');
