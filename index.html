@@ -98,7 +98,7 @@
 </main>
 
 <script type="module">
-import { ghost } from './js/ghost.js';
+import { ghost } from './js/ghost.js?v=20261125a';
 import { connect, isTeacher } from './js/db.js';
 const $ = (s) => document.querySelector(s);
 
@@ -172,6 +172,6 @@ connect({ host: true }).then((DB) => DB.onUser((u) => {
   }
 })).catch(() => { txt.textContent = 'ออฟไลน์'; });
 </script>
-<script src="js/festival.js?v=20261122c" defer></script>
+<script src="js/festival.js?v=20261125a" defer></script>
 </body>
 </html>

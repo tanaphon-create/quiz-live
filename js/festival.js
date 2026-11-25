@@ -7,7 +7,7 @@
   const DB_URL = 'https://quizlive-wcw-default-rtdb.asia-southeast1.firebasedatabase.app';
   const PATH = '/quiz/site/festival.json';
   const KEY = 'gc_fest';
-  const VER = '20261122c';
+  const VER = '20261125a';
   const SRC = document.currentScript && document.currentScript.src;
   const ART = Promise.all([import(new URL('ghost.js?v=' + VER, SRC || location.href).href), import(new URL('krathong-art.js?v=' + VER, SRC || location.href).href).catch(() => null)])
     .then(([g, k]) => ({ ...g, kt: k })).catch(() => null);
@@ -113,13 +113,21 @@
   @keyframes gf-snowfall{0%{transform:translate(0,0)}50%{transform:translate(var(--x),55vh)}100%{transform:translate(0,112vh)}}
   .gf-lights{position:absolute;top:0;left:0;right:0;height:44px}
   .gf-lights svg{position:absolute;inset:0;width:100%;height:40px}
-  .gf-bulb{position:absolute;top:15px;width:10px;height:15px;margin-left:-5px;border-radius:50% 50% 50% 50%/40% 40% 60% 60%;background:var(--c);box-shadow:0 0 10px 3px var(--c);animation:gf-blink 1.6s ease-in-out var(--w) infinite alternate}
-  .gf-bulb::before{content:'';position:absolute;top:-4px;left:2px;width:6px;height:5px;border-radius:2px;background:#3E4A3A}
+  .gf-bulb{position:absolute;top:13px;width:13px;height:17px;margin-left:-6.5px;border-radius:50%/46% 46% 54% 54%;background:radial-gradient(circle at 35% 30%,#fff 0 18%,var(--c) 30%);box-shadow:0 0 12px 3px var(--c);animation:gf-blink 1.6s ease-in-out var(--w) infinite alternate}
+  .gf-bulb::before{content:'';position:absolute;top:-4px;left:3px;width:7px;height:5px;border-radius:2px;background:#8E7BC4}
   @keyframes gf-blink{from{opacity:.45;box-shadow:0 0 3px 1px var(--c)}to{opacity:1}}
   .gf-tree{position:absolute;bottom:0;width:clamp(90px,11vw,170px)}
+  .gf-snowman,.gf-gifts{position:absolute;bottom:0}.gf-snowman svg,.gf-gifts svg{display:block;width:100%}
+  .gf-sway{transform-origin:50% 100%;animation:gf-sway var(--sw,4s) ease-in-out infinite alternate}
+  @keyframes gf-sway{from{transform:rotate(-2.2deg)}to{transform:rotate(2.2deg)}}
+  .gf-twinkle{animation:gf-twk 1.8s ease-in-out infinite alternate}@keyframes gf-twk{from{transform:scale(.9) rotate(-6deg)}to{transform:scale(1.08) rotate(6deg)}}
+  .gf-wave-arm{transform-origin:28px 104px;animation:gf-arm 1.1s ease-in-out infinite alternate}@keyframes gf-arm{from{transform:rotate(-14deg)}to{transform:rotate(10deg)}}
+  .gf-hop{animation:gf-hop 1.6s ease-in-out var(--w,0s) infinite}@keyframes gf-hop{0%,70%,100%{transform:translateY(0)}80%{transform:translateY(-6px)}}
+  .gf-flk{position:absolute;top:-24px;width:var(--s);height:var(--s);opacity:.9;filter:drop-shadow(0 0 3px rgba(150,170,255,.8));animation:gf-snowfall var(--d) linear var(--w) infinite}
+  .gf-flk svg{display:block;width:100%;height:100%;animation:gf-spin 6s linear infinite}@keyframes gf-spin{to{transform:rotate(360deg)}}
   .gf-tree svg{display:block;width:100%}
   .gf-orn{animation:gf-blink 1.3s ease-in-out var(--w,0s) infinite alternate}
-  .gf-snowbank{position:absolute;left:0;right:0;bottom:0;height:clamp(40px,7vh,70px);background:radial-gradient(ellipse 60% 100% at 20% 100%,#fff 60%,transparent 61%),radial-gradient(ellipse 55% 90% at 75% 100%,#F4F9FF 60%,transparent 61%),linear-gradient(180deg,transparent 45%,#fff 46%);filter:drop-shadow(0 -2px 6px rgba(120,160,220,.25))}
+  .gf-snowbank{position:absolute;left:0;right:0;bottom:0;height:clamp(40px,7vh,70px);background:radial-gradient(ellipse 30% 90% at 12% 100%,#fff 60%,transparent 61%),radial-gradient(ellipse 34% 100% at 48% 100%,#FAFCFF 60%,transparent 61%),radial-gradient(ellipse 30% 85% at 86% 100%,#fff 60%,transparent 61%),linear-gradient(180deg,transparent 50%,#fff 51%);filter:drop-shadow(0 -3px 8px rgba(170,150,240,.3))}
   html[data-fest="plain"] body:not(.qz){background:#F6F6F4!important}
   html[data-fest="plain"] body:not(.qz).sky::before,html[data-fest="plain"] body:not(.qz).sky::after,html[data-fest="plain"] :is(.fog,.mini-ghosts,.sparkles,.bubbles,.clouds,.dawn){display:none!important}
   html[data-fest="plain"] svg.ghost .gh-body{animation:none!important}
@@ -217,12 +225,47 @@
   const snow = (n, sm = 1) => [...Array(n)].map((_, i) => `<i class="gf-snow" style="left:${(3 + i * 37) % 99}%;--s:${((3 + (i % 4) * 2) * sm + 2).toFixed(1)}px;--d:${9 + (i % 5) * 3}s;--w:${-(i * 1.9).toFixed(1)}s;--x:${(i % 2 ? 1 : -1) * (14 + (i % 4) * 8)}px"></i>`).join('');
   const lights = (n) => { const cs = ['#FF4D5E', '#FFD23D', '#3BD17A', '#4FB3FF', '#FF8FD0'];
     const segs = [...Array(n)].map((_, i) => { const x0 = (i / n) * 1000, x1 = ((i + 1) / n) * 1000; return `M${x0.toFixed(1)} 3 Q${((x0 + x1) / 2).toFixed(1)} 34 ${x1.toFixed(1)} 3`; }).join(' ');
-    return `<div class="gf-lights"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path d="${segs}" stroke="#3E4A3A" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"/></svg>${[...Array(n)].map((_, i) => `<i class="gf-bulb" style="left:${((i + .5) / n * 100).toFixed(2)}%;--c:${cs[i % 5]};--w:${-(i * .37).toFixed(2)}s"></i>`).join('')}</div>`; };
-  const tree = `<svg viewBox="0 0 120 170" aria-hidden="true"><rect x="51" y="140" width="18" height="26" rx="3" fill="#8B5A2B"/>
-    <path d="M60 22 L100 78 L80 76 L110 118 L86 116 L116 150 L4 150 L34 116 L10 118 L40 76 L20 78 Z" fill="#2E9E5B" stroke="#1E6B3C" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M30 100 Q60 112 92 94 M22 134 Q60 146 100 128" stroke="#FFD23D" stroke-width="3" fill="none" stroke-linecap="round"/>
-    ${[[48, 70, '#FF4D5E'], [72, 88, '#4FB3FF'], [40, 112, '#FFD23D'], [80, 118, '#FF8FD0'], [58, 132, '#FF4D5E'], [96, 140, '#4FB3FF'], [26, 142, '#3BD17A']].map(([x, y, c], i) => `<circle class="gf-orn" style="--w:${-i * .4}s" cx="${x}" cy="${y}" r="5.5" fill="${c}" stroke="#1E6B3C" stroke-width="1.5"/>`).join('')}
-    <polygon points="60,4 65,16 78,17 68,25 71,38 60,31 49,38 52,25 42,17 55,16" fill="#FFD23D" stroke="#C99A00" stroke-width="2" stroke-linejoin="round"/></svg>`;
+    return `<div class="gf-lights"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path d="${segs}" stroke="#7FBF94" stroke-width="2.5" fill="none" vector-effect="non-scaling-stroke"/></svg>${[...Array(n)].map((_, i) => `<i class="gf-bulb" style="left:${((i + .5) / n * 100).toFixed(2)}%;--c:${cs[i % 5]};--w:${-(i * .37).toFixed(2)}s"></i>`).join('')}</div>`; };
+  // คริสต์มาสสไตล์น่ารัก: ต้นคริสต์มาสหน้ายิ้ม ตุ๊กตาหิมะ กล่องของขวัญ ไม้เท้าลูกกวาด
+  const kface = (x, y, k = 1, ink = '#3A2E5C') => `<g transform="translate(${x} ${y}) scale(${k})"><ellipse cx="-9" cy="0" rx="3.4" ry="4.2" fill="${ink}"/><ellipse cx="9" cy="0" rx="3.4" ry="4.2" fill="${ink}"/><circle cx="-8" cy="-1.6" r="1.3" fill="#fff"/><circle cx="10" cy="-1.6" r="1.3" fill="#fff"/><ellipse cx="-15" cy="6" rx="4.6" ry="2.8" fill="#FF8FB1" opacity=".75"/><ellipse cx="15" cy="6" rx="4.6" ry="2.8" fill="#FF8FB1" opacity=".75"/><path d="M-4 5 Q-2 8.5 0 5.5 Q2 8.5 4 5" stroke="${ink}" stroke-width="1.8" fill="none" stroke-linecap="round"/></g>`;
+  const tree = `<svg viewBox="0 0 140 190" aria-hidden="true" class="gf-sway">
+    <path d="M44 156 h52 l-6 28 q-1 4 -5 4 h-30 q-4 0 -5 -4 Z" fill="#FF6F8E" stroke="#D9486A" stroke-width="3" stroke-linejoin="round"/><rect x="42" y="152" width="56" height="10" rx="5" fill="#FFB3C6" stroke="#D9486A" stroke-width="3"/>
+    <path d="M70 92 C92 112 118 128 126 146 Q128 156 116 156 H24 Q12 156 14 146 C22 128 48 112 70 92 Z" fill="#5FCB96" stroke="#2F9A6A" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M70 56 C88 72 106 86 112 102 Q114 112 103 112 H37 Q26 112 28 102 C34 86 52 72 70 56 Z" fill="#6FD6A3" stroke="#2F9A6A" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M70 24 C82 36 94 48 98 62 Q100 70 91 70 H49 Q40 70 42 62 C46 48 58 36 70 24 Z" fill="#7FE0B0" stroke="#2F9A6A" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M30 104 Q38 98 46 104 Q54 98 62 104 Q70 98 78 104 Q86 98 94 104 Q102 98 110 104" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".95"/>
+    <path d="M44 63 Q51 58 58 63 Q64 58 70 63 Q76 58 82 63 Q89 58 96 63" stroke="#fff" stroke-width="4.5" fill="none" stroke-linecap="round" opacity=".95"/>
+    ${kface(70, 128, 1.15)}
+    <path d="M30 140 Q70 152 112 138" stroke="#FFD86B" stroke-width="3" fill="none" stroke-dasharray="1 7" stroke-linecap="round"/>
+    ${[[50, 86, '#FF8FB1'], [90, 90, '#8FD3FF'], [70, 44, '#FFD86B'], [36, 146, '#C9B2FF'], [104, 146, '#FF8FB1'], [60, 98, '#FFD86B']].map(([x, y, c], i) => `<g class="gf-orn" style="--w:${-i * .45}s"><circle cx="${x}" cy="${y}" r="5.6" fill="${c}" stroke="#fff" stroke-width="1.6"/><circle cx="${x - 1.8}" cy="${y - 1.8}" r="1.6" fill="#fff" opacity=".9"/></g>`).join('')}
+    <g class="gf-twinkle" style="transform-origin:70px 16px"><path d="M70 1 L75 11 L86 12 L78 19 L80 30 L70 25 L60 30 L62 19 L54 12 L65 11 Z" fill="#FFD86B" stroke="#E8A93A" stroke-width="2.4" stroke-linejoin="round"/><circle cx="66.5" cy="16" r="1.4" fill="#5A3E1B"/><circle cx="73.5" cy="16" r="1.4" fill="#5A3E1B"/><path d="M68 19.5 Q70 21 72 19.5" stroke="#5A3E1B" stroke-width="1.2" fill="none" stroke-linecap="round"/></g></svg>`;
+  const snowman = `<svg viewBox="0 0 130 170" aria-hidden="true" class="gf-sway" style="--sw:3s">
+    <path class="gf-wave-arm" d="M28 104 L6 86 M14 93 L8 98" stroke="#9A6B47" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <path d="M102 104 L122 92 M115 96 L120 104" stroke="#9A6B47" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <ellipse cx="65" cy="163" rx="46" ry="6" fill="#B9D6F2" opacity=".6"/>
+    <circle cx="65" cy="122" r="40" fill="#fff" stroke="#A9C8EC" stroke-width="3.5"/>
+    <circle cx="65" cy="112" r="3.6" fill="#FF6F8E"/><circle cx="65" cy="128" r="3.6" fill="#FF6F8E"/><circle cx="65" cy="144" r="3.6" fill="#FF6F8E"/>
+    <circle cx="65" cy="62" r="30" fill="#fff" stroke="#A9C8EC" stroke-width="3.5"/>
+    ${kface(65, 62, 1.05)}
+    <path d="M65 69 l11 2.5 -11 2.5 Z" fill="#FF9A3D" stroke="#E07B1E" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M38 88 Q65 100 92 88 L92 96 Q65 108 38 96 Z" fill="#FF6F8E" stroke="#D9486A" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M78 96 l4 24 -10 0 -2 -22 Z" fill="#FF6F8E" stroke="#D9486A" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M44 92 l0 6 M52 95 l0 6 M60 97 l0 6 M70 97 l0 6 M80 95 l0 6" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <path d="M36 40 Q38 18 62 16 Q86 14 96 30 L104 24" fill="none" stroke="#FF6F8E" stroke-width="0"/>
+    <path d="M38 42 Q44 14 70 18 Q90 22 98 40 Z" fill="#FF6F8E" stroke="#D9486A" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M70 18 Q96 4 110 24" fill="none" stroke="#FF6F8E" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="111" cy="27" r="7" fill="#fff" stroke="#DCE8F5" stroke-width="2"/>
+    <rect x="34" y="38" width="68" height="11" rx="5.5" fill="#fff" stroke="#DCE8F5" stroke-width="2"/></svg>`;
+  const gifts = `<svg viewBox="0 0 120 80" aria-hidden="true">
+    <g class="gf-hop" style="--w:-.3s"><rect x="6" y="34" width="50" height="42" rx="7" fill="#FF8FB1" stroke="#D9486A" stroke-width="3"/><rect x="26" y="34" width="10" height="42" fill="#FFF3B0"/><rect x="6" y="48" width="50" height="9" fill="#FFF3B0"/><path d="M31 34 C20 20 12 30 26 34 Z M31 34 C42 20 50 30 36 34 Z" fill="#FFF3B0" stroke="#E8A93A" stroke-width="2"/>${kface(31, 66, .55)}</g>
+    <g class="gf-hop" style="--w:-1.1s"><rect x="62" y="44" width="50" height="32" rx="7" fill="#7FE0B0" stroke="#2F9A6A" stroke-width="3"/><rect x="82" y="44" width="10" height="32" fill="#FFD86B"/><path d="M87 44 C76 32 70 40 82 44 Z M87 44 C98 32 104 40 92 44 Z" fill="#FFD86B" stroke="#E8A93A" stroke-width="2"/></g>
+    <g transform="translate(50 6) rotate(-12)"><path d="M10 74 V20 Q10 4 24 4 Q38 4 38 18" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/><path d="M10 74 V20 Q10 4 24 4 Q38 4 38 18" fill="none" stroke="#FF6F8E" stroke-width="9" stroke-linecap="round" stroke-dasharray="6 7"/></g></svg>`;
+  const flakeSvg = `<svg viewBox="-12 -12 24 24"><g stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M0 -10 V10 M-8.7 -5 L8.7 5 M-8.7 5 L8.7 -5"/><path d="M-3 -7.5 L0 -5 L3 -7.5 M-3 7.5 L0 5 L3 7.5" fill="none"/></g></svg>`;
+  const flakes = (n) => [...Array(n)].map((_, i) => `<i class="gf-flk" style="left:${(11 + i * 43) % 97}%;--s:${12 + (i % 3) * 6}px;--d:${12 + (i % 4) * 3}s;--w:${-(i * 2.3).toFixed(1)}s;--x:${(i % 2 ? 1 : -1) * (20 + (i % 3) * 10)}px">${flakeSvg}</i>`).join('');
+  const xmasScene = (phone, big = false) => `${lights(N(phone, 8, 16))}${snow(N(phone, 18, big ? 50 : 30))}${flakes(N(phone, 5, big ? 14 : 9))}<div class="gf-snowbank"${big ? ` style="height:${phone ? 8 : 13}vh"` : ''}></div>
+    <div class="gf-tree" style="left:${phone ? '1vw' : '1.5vw'};width:${phone ? '72px' : big ? 'clamp(130px,22vmin,230px)' : 'clamp(100px,11vw,170px)'}">${tree}</div>
+    ${phone ? '' : `<div class="gf-gifts" style="left:calc(1.5vw + ${big ? 'clamp(120px,20vmin,210px)' : 'clamp(92px,10vw,155px)'});width:${big ? 'clamp(90px,13vmin,150px)' : 'clamp(70px,7vw,110px)'}">${gifts}</div>`}
+    <div class="gf-snowman" style="right:${phone ? '1vw' : '2vw'};width:${phone ? '62px' : big ? 'clamp(110px,18vmin,190px)' : 'clamp(80px,9vw,140px)'}">${snowman}</div>`;
 
   const KDES = [{ top: 'lotus-pink', side: 'marigold,jasmine' }, { base: 'bread', leaf: 'young', shape: 'round', top: 'rose', side: 'jasmine' }, { leaf: 'pandan', shape: 'tall', top: 'lotus-white', side: 'globe,jasmine' }, { base: 'coconut', top: 'orchid', side: 'orchid,marigold', coin: true }, { leaf: 'deep', top: 'marigold', side: 'marigold', ghost: true }];
   const kSvg = (art, i) => (art.kt ? art.kt.krathongSVG({ ...KDES[i % KDES.length], candle: true, incense: i % 2 === 0 }) : art.krathongSVG({ lotus: ['#FF9CC0', '#FFD08A', '#C9B8FF', '#FFB4C8'][i % 4] }));
@@ -264,8 +307,8 @@
         front: '', ft: ['#6B7F3A', '#B45309'] };
     },
     christmas(phone) {
-      return { back: `<div class="gf-tint" style="background:linear-gradient(180deg,rgba(170,210,255,.22),rgba(230,244,255,.10) 50%,rgba(200,230,255,.18))"></div>${lights(N(phone, 9, 18))}${snow(N(phone, 18, 34))}<div class="gf-snowbank"></div><div class="gf-tree" style="left:1.5vw">${tree}</div>${phone ? '' : `<div class="gf-tree" style="right:1.5vw;width:clamp(70px,8vw,120px)">${tree}</div>`}`,
-        front: snow(N(phone, 3, 6), .4), ft: ['#E53950', '#2FA866'] };
+      return { back: `<div class="gf-tint" style="background:linear-gradient(180deg,rgba(255,200,225,.20),rgba(235,240,255,.10) 50%,rgba(200,240,220,.20))"></div>${xmasScene(phone)}`,
+        front: snow(N(phone, 3, 6), .4), ft: ['#FF6F8E', '#3FBF84'] };
     },
     plain() { return { back: '', front: '', ft: ['#64748B', '#475569'] }; },
     mono(phone) {
@@ -343,11 +386,11 @@
   #intro.fx-rain .in-skip{background:rgba(255,255,255,.5);color:#1F3358}
   #intro.fx-rain .gf-drop{background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.8))}
   /* สงคราม: ฟ้ายามเย็นสีกากี ไฟฉายส่อง เครื่องบิน รถถัง */
-  #intro.fx-christmas{background:linear-gradient(180deg,#0E1F4A 0%,#1D3B7A 45%,#3D68A8 80%,#7FA6D6 100%)!important}
-  #intro.fx-christmas .in-title span{color:#fff;text-shadow:0 0 16px rgba(255,255,255,.5),0 4px 0 #8E1B2C}#intro.fx-christmas .in-title span:nth-child(n+7){color:#FF9AA8}
+  #intro.fx-christmas{background:linear-gradient(180deg,#3A3486 0%,#6A5FC8 38%,#B49BE6 68%,#F7C4DC 92%,#FFE1EC 100%)!important}
+  #intro.fx-christmas .in-title span{color:#fff;text-shadow:0 0 16px rgba(255,255,255,.55),0 4px 0 #D9486A}#intro.fx-christmas .in-title span:nth-child(n+7){color:#FFC2D4}
   #intro.fx-christmas :is(.in-sub,.intro-tag,.intro-hint){color:#EAF3FF}#intro.fx-christmas .fx-hello{color:#FFE7A3;text-shadow:0 0 12px rgba(255,214,120,.6)}
-  #intro.fx-christmas .intro-title span{text-shadow:0 0 16px rgba(255,255,255,.35),0 5px 0 #8E1B2C}
-  #intro.fx-christmas :is(.in-go,.intro-go){background:linear-gradient(135deg,#E53950,#2FA866);box-shadow:0 8px 0 #8E1B2C,0 14px 34px rgba(229,57,80,.45)}
+  #intro.fx-christmas .intro-title span{text-shadow:0 0 16px rgba(255,255,255,.4),0 5px 0 #D9486A}
+  #intro.fx-christmas :is(.in-go,.intro-go){background:linear-gradient(135deg,#FF6F8E,#3FBF84);box-shadow:0 8px 0 #C2405F,0 14px 34px rgba(255,111,142,.45)}
   #intro.fx-christmas .in-skip{background:rgba(255,255,255,.16);color:#fff}
   #intro.fx-christmas .hill{background:radial-gradient(ellipse at 50% 30%,rgba(255,255,255,.55),rgba(255,255,255,.12) 60%,transparent 72%)}
   #intro.fx .gf-snow{position:absolute}
@@ -381,7 +424,7 @@
     if (f === 'rain') return `${clouds(N(phone, 4, 7), '#EEF2F9', .95)}${[...Array(N(phone, 40, 80))].map((_, i) => `<i class="gf-drop" style="left:${((i * 41) % 104)}%;--d:${(.7 + (i % 5) * .12).toFixed(2)}s;--w:${-(i * .19).toFixed(2)}s"></i>`).join('')}<div class="gf-puddle"></div>${[...Array(N(phone, 5, 9))].map((_, i) => `<i class="gf-rip" style="left:${(6 + i * 29) % 92}%;--b:${8 + (i % 3) * 14}px;--w:${-(i * .6).toFixed(1)}s"></i>`).join('')}`;
     if (f === 'war') return `<i class="gf-beam" style="left:8%;--w:-1s"></i><i class="gf-beam" style="left:70%;--w:-5s;animation-direction:alternate-reverse"></i>${clouds(N(phone, 2, 4), '#EFEADB', .9)}${[...Array(N(phone, 2, 3))].map((_, i) => `<div class="gf-plane" style="top:${10 + i * 12}%;--d:${14 + i * 5}s;--w:${-(i * 4)}s">${plane}</div>`).join('')}<div class="gf-hills">${hills}</div><div class="gf-flag" style="left:5%">${flag('#C2410C')}</div><div class="gf-flag" style="right:6%">${flag('#6B7F3A')}</div><div class="gf-tank" style="--d:30s;--w:-8s;--l:20vw">${tank}</div>`;
     if (f === 'mono') return `<div class="gf-grain"></div>${scratches(N(phone, 3, 5))}`;
-    if (f === 'christmas') return `${stars(N(phone, 14, 26), 'gf-star', 50)}${lights(N(phone, 8, 16))}${snow(N(phone, 34, 64))}<div class="gf-snowbank" style="height:${phone ? 7 : 14}vh"></div><div class="gf-tree" style="left:2vw;width:${phone ? '64px' : 'clamp(110px,22vmin,220px)'}">${tree}</div><div class="gf-tree" style="right:3vw;width:${phone ? '52px' : 'clamp(90px,16vmin,170px)'}">${tree}</div>`;
+    if (f === 'christmas') return `${stars(N(phone, 16, 30), 'gf-star', 50)}${xmasScene(phone, true)}`;
     return '';
   }
 

@@ -91,8 +91,8 @@ function acc(kind) {
       <path d="M62 38 C80 26 120 26 138 38" stroke="#9AAB66" stroke-width="6" fill="none" stroke-linecap="round" opacity=".8"/>
       <rect x="34" y="64" width="132" height="13" rx="6.5" fill="#5E6E36" stroke="${INK}" stroke-width="4"/>
       <circle cx="100" cy="45" r="11" fill="#F6F1DE" stroke="${INK}" stroke-width="2.5"/><polygon points="${starPts(100, 46, 7.5)}" fill="#C2410C"/></g>`;
-    case 'santa': return `<g><path d="M54 60 C58 22 96 6 128 18 C150 26 166 48 170 76 C160 62 150 52 138 48 L146 60 Z" fill="#E53950" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
-      <path d="M78 30 C96 18 120 16 136 26" stroke="#FF7D8F" stroke-width="5" fill="none" stroke-linecap="round" opacity=".8"/>
+    case 'santa': return `<g><path d="M54 60 C58 22 96 6 128 18 C150 26 166 48 170 76 C160 62 150 52 138 48 L146 60 Z" fill="#FF6F8E" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M78 30 C96 18 120 16 136 26" stroke="#FFB3C6" stroke-width="5" fill="none" stroke-linecap="round" opacity=".8"/>
       <rect x="46" y="52" width="108" height="18" rx="9" fill="#fff" stroke="${INK}" stroke-width="4"/>
       <circle cx="171" cy="80" r="11" fill="#fff" stroke="${INK}" stroke-width="4"/></g>`;
     default: return '';
@@ -116,8 +116,8 @@ function prop(kind) {
       <path d="M0 -26 Q-14 -4 -23 14 M0 -26 Q14 -4 23 14" stroke="#2C7FD0" stroke-width="3" fill="none"/><path d="M-46 14 Q-30 -20 0 -26 Q30 -20 46 14" stroke="#9FD8FF" stroke-width="3" fill="none" opacity=".7"/><circle cx="0" cy="-27" r="4" fill="${INK}"/></g></g>`;
     case 'warflag': return `<g><path d="M38 120 L38 10" stroke="#8C6B3E" stroke-width="5" stroke-linecap="round"/><circle cx="38" cy="9" r="4.5" fill="#D9B44A" stroke="${INK}" stroke-width="2"/>
       <path d="M36 14 Q22 8 8 15 L8 44 Q22 37 36 43 Z" fill="#6B7F3A" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/><polygon points="${starPts(22, 28, 8)}" fill="#F6F1DE"/></g>`;
-    case 'gift': return `<g transform="translate(150 152)"><rect x="-24" y="-20" width="48" height="38" rx="6" fill="#2FA866" stroke="${INK}" stroke-width="4"/><rect x="-5" y="-20" width="10" height="38" fill="#FFD23D"/><rect x="-24" y="-5" width="48" height="9" fill="#FFD23D"/>
-      <path d="M0 -21 C-14 -36 -26 -24 -12 -20 Z M0 -21 C14 -36 26 -24 12 -20 Z" fill="#E53950" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/></g>`;
+    case 'gift': return `<g transform="translate(150 152)"><rect x="-24" y="-20" width="48" height="38" rx="8" fill="#7FE0B0" stroke="${INK}" stroke-width="4"/><rect x="-5" y="-20" width="10" height="38" fill="#FFF3B0"/><rect x="-24" y="-5" width="48" height="9" fill="#FFF3B0"/><circle cx="-14" cy="-12" r="2.4" fill="#fff" opacity=".8"/>
+      <path d="M0 -21 C-14 -36 -26 -24 -12 -20 Z M0 -21 C14 -36 26 -24 12 -20 Z" fill="#FF8FB1" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/></g>`;
     case 'starstick': return `<g><path d="M42 82 L32 30" stroke="#B07A4A" stroke-width="4" stroke-linecap="round"/><circle cx="30" cy="24" r="17" fill="#FFE27A" opacity=".35"/><polygon points="${starPts(30, 24, 13)}" fill="#FFD23D" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/></g>`;
     default: return '';
   }
