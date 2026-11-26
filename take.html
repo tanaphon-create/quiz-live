@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="css/bright.css">
 <link rel="stylesheet" href="css/ghost.css?v=20261125b">
 <link rel="stylesheet" href="css/readable.css">
-<link rel="stylesheet" href="css/exam.css?v=20261126c">
+<link rel="stylesheet" href="css/exam.css?v=20261126d">
 </head>
 <body class="sky ex-student">
 
@@ -37,6 +37,21 @@
       <label class="field"><span>ชื่อ-สกุล</span><input class="input" id="nameIn" autocomplete="name" maxlength="40" required></label>
       <button class="btn gold big">เข้าห้องสอบ ›</button>
     </form>
+  </div>
+</section>
+
+<!-- เบราว์เซอร์ไม่อนุญาต -->
+<section class="screen" id="scr-browser">
+  <div class="ex-center">
+    <div class="card ex-card ex-bblock">
+      <div class="ex-big">🚫</div>
+      <h2>เปิดข้อสอบในแอปนี้ไม่ได้</h2>
+      <p id="bWhy"></p>
+      <p class="ex-need" id="bNeed"></p>
+      <a class="btn gold big" id="bOpen" href="#">เปิด</a>
+      <p class="hint" id="bHow"></p>
+      <div class="ex-link"><code id="bLink"></code><button class="btn light sm" type="button" id="bCopy">📋 คัดลอกลิงก์</button></div>
+    </div>
   </div>
 </section>
 
@@ -126,6 +141,6 @@
   </div>
 </dialog>
 
-<script type="module" src="js/exam-take.js?v=20261126f"></script>
+<script type="module" src="js/exam-take.js?v=20261126g"></script>
 </body>
 </html>

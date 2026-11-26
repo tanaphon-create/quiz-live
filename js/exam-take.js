@@ -9,6 +9,28 @@ const qs = new URLSearchParams(location.search);
 
 const ready = connect().then((d) => { DB = d; uid = d.uid; return d; }).catch((e) => { console.error(e); toast('เชื่อมต่อไม่ได้ — ตรวจอินเทอร์เน็ตแล้วรีเฟรช', 6000); });
 
+/* ───────── เบราว์เซอร์ที่มี AI ในตัว (แอป Google ปุ่ม "ถาม", Edge Copilot) หรือเบราว์เซอร์ในแอป (LINE/Facebook/IG) ─────────
+   ห้ามสอบ — iPhone ต้องใช้ Safari · Android ใช้ Chrome (มีโหมดเต็มจอที่ซ่อนแถบเครื่องมือ) */
+const UA = navigator.userAgent;
+const isIOSdev = () => /iP(hone|ad|od)/.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function badBrowser() {
+  if (/GSA\/|FBAN|FBAV|FB_IAB|Instagram|\bLine\/|MicroMessenger|TikTok|musical_ly|Bytedance|EdgA\/|EdgiOS|; wv\)/i.test(UA)) return true;
+  if (isIOSdev()) return /CriOS|FxiOS|OPiOS|OPT\//.test(UA) || !/Safari\//.test(UA);
+  return false;
+}
+function showBrowserBlock() {
+  const url = new URL('take.html', location.href); url.search = '?pin=' + pin;
+  const ios = isIOSdev(), gapp = /GSA\//.test(UA);
+  $('#bWhy').textContent = gapp ? 'แอป Google มีปุ่ม “✦ ถาม” (AI) อยู่แถบล่าง จึงใช้ทำข้อสอบนี้ไม่ได้' : 'เบราว์เซอร์นี้มี AI ในตัว หรือเป็นหน้าเว็บในแอปอื่น จึงใช้ทำข้อสอบนี้ไม่ได้';
+  $('#bNeed').textContent = ios ? 'iPhone / iPad: เปิดใน Safari' : 'Android: เปิดใน Google Chrome';
+  $('#bOpen').href = ios ? 'x-safari-' + url.href : `intent://${url.host}${url.pathname}${url.search}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(url.href)};end`;
+  $('#bOpen').textContent = ios ? '🧭 เปิดใน Safari' : '🌐 เปิดใน Chrome';
+  $('#bHow').innerHTML = ios ? 'ถ้ากดแล้วไม่เปิด: แตะ <b>•••</b> หรือ <b>แชร์</b> แล้วเลือก <b>“เปิดใน Safari”</b> — หรือกดคัดลอกลิงก์ แล้ววางในช่องที่อยู่ของ Safari' : 'ถ้ากดแล้วไม่เปิด: แตะ <b>⋮</b> แล้วเลือก <b>“เปิดใน Chrome”</b> — หรือกดคัดลอกลิงก์ แล้ววางในช่องที่อยู่ของ Chrome';
+  $('#bLink').textContent = url.href;
+  $('#bCopy').onclick = async () => { try { await navigator.clipboard.writeText(url.href); toast('คัดลอกลิงก์แล้ว'); } catch { toast('คัดลอกไม่ได้ — กดค้างที่ลิงก์เพื่อคัดลอกเอง'); } };
+  show('browser');
+}
+
 /* ───────── เข้าห้อง ───────── */
 const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 $('#pinForm').onsubmit = async (e) => {
@@ -18,6 +40,7 @@ $('#pinForm').onsubmit = async (e) => {
   const m = await DB.get(`quiz/exams/${p}/meta`);
   if (!m) return toast('ไม่พบห้องสอบนี้ ตรวจ PIN อีกครั้ง');
   pin = p; R = `quiz/exams/${p}`; meta = m;
+  if (m.voidOnLeave && badBrowser()) return showBrowserBlock();
   const mine = await DB.get(`${R}/students/${uid}`);
   if (mine) return enter(true);
   if (m.state !== 'open') return toast('ห้องสอบนี้ปิดแล้ว');
@@ -85,7 +108,7 @@ function route() {
         `ระหว่างสอบ <b>ห้ามสลับแอป เปิดแท็บอื่น ออกจากเต็มจอ หรือรีเฟรช</b>`,
         ...(document.fullscreenEnabled && !IOS ? ['ข้อสอบ<b>แสดงเฉพาะในโหมดเต็มจอ</b> — ออกจากเต็มจอ (เช่น จะเปิดเมนู/ปุ่ม Gemini หรือ Google Lens ของเบราว์เซอร์) ข้อสอบจะถูกซ่อนและนับว่าออกนอกจอ'] : []),
         `ออกนอกหน้าจอได้ไม่เกิน <b>${meta.maxLeave} ครั้ง</b> — ครั้งถัดไป<b>ข้อสอบจะถูกล็อก</b>และแจ้งครูคุมสอบทันที`,
-        ...(meta.voidOnLeave ? ['<b>ใช้ AI / Google Lens / วงกลมเพื่อค้นหา / แคปจอ / สลับแอป</b> ระหว่างเปิดข้อไหน <b>ข้อนั้นถูกตัดสิทธิ์ทันที (ได้ 0 คะแนน แก้คำตอบไม่ได้)</b>'] : []),
+        ...(meta.voidOnLeave ? ['ต้องทำในเบราว์เซอร์ <b>Safari (iPhone) หรือ Chrome (Android)</b> เท่านั้น — ห้ามใช้แอป Google, LINE, Facebook', '<b>ใช้ AI / Google Lens / วงกลมเพื่อค้นหา / แคปจอ / สลับแอป</b> ระหว่างเปิดข้อไหน <b>ข้อนั้นถูกตัดสิทธิ์ทันที (ได้ 0 คะแนน แก้คำตอบไม่ได้)</b>'] : []),
         'คำตอบบันทึกอัตโนมัติทุกครั้งที่เลือก <b>หมดเวลาระบบส่งให้อัตโนมัติ</b>',
         `เกณฑ์ผ่าน <b>${passScore()} คะแนน</b> จาก ${meta.n}${!meta.round ? ' · ไม่ผ่านสอบแก้ตัวได้' : myKind === 'makeup' ? ' · <b>สอบซ่อม: ได้คะแนนตามที่ทำได้จริง</b>' : ' · <b>สอบแก้ตัว: ทำได้เกินเกณฑ์จะได้คะแนนเท่าเกณฑ์ผ่าน</b>'}`,
       ].map((t) => `<li>${t}</li>`).join('');
