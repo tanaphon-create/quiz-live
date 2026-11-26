@@ -213,3 +213,8 @@ body.ex-shield .ex-shield-msg { display: grid; place-items: center; position: ab
 .ex-void { margin: -4px 0 10px; padding: 8px 12px; border-radius: 12px; background: var(--ex-bad-s); color: var(--ex-bad); font-weight: 700; font-size: .95rem; }
 .ex-q.void .ex-opt { opacity: .5; cursor: not-allowed; }
 .ex-nums button.void { background: var(--ex-bad-s); border-color: #F3A3B1; color: var(--ex-bad); text-decoration: line-through; }
+
+/* ไม่อยู่ในเต็มจอ = ซ่อนข้อสอบทั้งหน้า · กดค้างแล้วไม่มีเมนูเลือกข้อความ/ค้นหา */
+body.ex-nofs #scr-exam { visibility: hidden; }
+.ex-overlay.fs { background: #2B2350; }
+body.ex-student #scr-exam { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }

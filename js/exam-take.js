@@ -70,6 +70,7 @@ function route() {
         `ข้อสอบ <b>${meta.n} ข้อ</b> เวลา <b>${meta.duration} นาที</b> (เริ่มนับเมื่อกดเริ่ม)`,
         `${meta.shuffleQ || meta.shuffleC ? 'ข้อสอบของแต่ละคน<b>สลับลำดับไม่เหมือนกัน</b>' : 'ตอบทุกข้อให้ครบ'}`,
         `ระหว่างสอบ <b>ห้ามสลับแอป เปิดแท็บอื่น ออกจากเต็มจอ หรือรีเฟรช</b>`,
+        ...(document.fullscreenEnabled ? ['ข้อสอบ<b>แสดงเฉพาะในโหมดเต็มจอ</b> — ออกจากเต็มจอ (เช่น จะเปิดเมนู/ปุ่ม Gemini หรือ Google Lens ของเบราว์เซอร์) ข้อสอบจะถูกซ่อนและนับว่าออกนอกจอ'] : []),
         `ออกนอกหน้าจอได้ไม่เกิน <b>${meta.maxLeave} ครั้ง</b> — ครั้งถัดไป<b>ข้อสอบจะถูกล็อก</b>และแจ้งครูคุมสอบทันที`,
         ...(meta.voidOnLeave ? ['<b>ใช้ AI / Google Lens / วงกลมเพื่อค้นหา / แคปจอ / สลับแอป</b> ระหว่างเปิดข้อไหน <b>ข้อนั้นถูกตัดสิทธิ์ทันที (ได้ 0 คะแนน แก้คำตอบไม่ได้)</b>'] : []),
         'คำตอบบันทึกอัตโนมัติทุกครั้งที่เลือก <b>หมดเวลาระบบส่งให้อัตโนมัติ</b>',
@@ -193,15 +194,23 @@ function renderScore() {
 }
 
 /* ───────── ล็อกหน้าจอ ───────── */
-function fullscreen() { const el = document.documentElement; if (document.fullscreenEnabled && !document.fullscreenElement) el.requestFullscreen({ navigationUI: 'hide' }).then(() => (wasFs = true)).catch(() => {}); }
+function fullscreen() { const el = document.documentElement; if (document.fullscreenEnabled && !document.fullscreenElement) el.requestFullscreen({ navigationUI: 'hide' }).then(() => { wasFs = true; fsGate(); }).catch(() => { fsFail = true; fsGate(); }); }
+// บังคับเต็มจอ: แถบเครื่องมือ Chrome (ปุ่ม Gemini / Google Lens / เมนู ⋮) ซ่อนอยู่ในโหมดเต็มจอ
+// ถ้าไม่ได้อยู่ในเต็มจอ ข้อสอบจะถูกซ่อนทั้งหน้า จนกว่าจะกลับเข้าเต็มจอ (เบราว์เซอร์ที่เปิดเต็มจอไม่ได้ เช่น iPhone ข้ามขั้นนี้)
+let fsFail = false;
+function fsGate() {
+  const need = armed && me?.status === 'doing' && document.fullscreenEnabled && !fsFail && !document.fullscreenElement;
+  $('#fsOv').hidden = !need; document.body.classList.toggle('ex-nofs', need);
+}
 function arm() { armed = true; history.pushState({ ex: 1 }, ''); }
-function disarm() { armed = false; shield(false); }
+function disarm() { armed = false; shield(false); fsGate(); }
 const isVoid = (qi) => !!me?.voids?.['q' + qi];
 // ซ่อนโจทย์ทันทีที่หน้าจอไม่ได้อยู่ในมือ (เช่น เปิด Gemini/ผู้ช่วย AI ทับหน้าจอแล้วกด "ถามเกี่ยวกับหน้าจอ")
 function shield(on) { document.body.classList.toggle('ex-shield', !!on && armed); }
 // บางแอปเปิดทับหน้าเว็บโดยไม่ส่งสัญญาณ blur — ตรวจโฟกัสซ้ำทุก 0.4 วิ (ไม่มีโฟกัสติดกัน 2 รอบ = ออกนอกจอ)
 let noFocus = 0;
 setInterval(() => {
+  fsGate();
   if (!armed || me?.status !== 'doing') { noFocus = 0; return; }
   if (document.hidden || !document.hasFocus()) { shield(true); if (++noFocus === 2) violation('focus'); }
   else { if (noFocus) back(); noFocus = 0; }
@@ -225,6 +234,7 @@ function violation(kind) {
 }
 function back() { if (!document.hidden && document.hasFocus()) shield(false); if (armed && me?.status === 'doing' && !document.hidden && document.hasFocus()) DB.update(`${R}/students/${uid}`, { away: false }).catch(() => {}); }
 $('#backBtn').onclick = () => { $('#warnOv').hidden = true; fullscreen(); back(); };
+$('#fsBtn').onclick = () => fullscreen();
 $('#startBtn').onclick = async () => {
   if (meta.state !== 'open') return toast('ห้องสอบปิดแล้ว');
   fullscreen();
@@ -235,7 +245,7 @@ document.addEventListener('visibilitychange', () => (document.hidden ? (shield(t
 window.addEventListener('blur', () => { shield(true); violation('blur'); });
 window.addEventListener('pagehide', () => shield(true));
 window.addEventListener('focus', back);
-document.addEventListener('fullscreenchange', () => { if (document.fullscreenElement) wasFs = true; else if (wasFs) violation('fullscreen'); });
+document.addEventListener('fullscreenchange', () => { if (document.fullscreenElement) wasFs = true; else if (wasFs) violation('fullscreen'); fsGate(); });
 window.addEventListener('popstate', () => { if (armed) { history.pushState({ ex: 1 }, ''); toast('ห้ามย้อนกลับระหว่างสอบ'); } });
 window.addEventListener('beforeunload', (e) => { if (armed && me?.status === 'doing') { e.preventDefault(); e.returnValue = ''; } });
 // กันคัดลอก/คลิกขวา/พิมพ์ระหว่างสอบ
