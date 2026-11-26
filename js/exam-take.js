@@ -107,10 +107,9 @@ function renderQ() {
   if (!me || !paper.length) return;
   const n = paper.length, qi = qIndex(cur), q = paper[qi]; if (!q) return;
   const pick = ans['q' + qi], vd = isVoid(qi);
-  const wm = esc(`${me.name} · ${me.sid}`);
   $('#eQ').classList.toggle('void', vd);
-  $('#eQ').innerHTML = `<div class="ex-wm" aria-hidden="true">${Array(24).fill(`<span>${wm}</span>`).join('')}</div>
-    <div class="ex-shield-msg" aria-hidden="true">🙈 ซ่อนข้อสอบไว้ — กลับมาที่หน้านี้เพื่อทำต่อ</div>
+  $('#eQ').style.setProperty('--wm', wmURL());
+  $('#eQ').innerHTML = `<div class="ex-shield-msg" aria-hidden="true">🙈 ซ่อนข้อสอบไว้ — กลับมาที่หน้านี้เพื่อทำต่อ</div>
     ${vd ? '<div class="ex-void">🚫 ข้อนี้ถูกตัดสิทธิ์ — ออกนอกหน้าจอระหว่างเปิดข้อนี้ (ได้ 0 คะแนน)</div>' : ''}
     <div class="ex-qn">ข้อ ${cur + 1} / ${n}</div>
     <h2 class="ex-qt">${esc(q.text)}</h2>${q.image ? `<img class="ex-img" src="${esc(q.image)}" alt="" draggable="false">` : ''}
@@ -205,15 +204,24 @@ function fsGate() {
 function arm() { armed = true; history.pushState({ ex: 1 }, ''); }
 function disarm() { armed = false; shield(false); fsGate(); }
 const isVoid = (qi) => !!me?.voids?.['q' + qi];
+let wmKey = '', wmVal = '';
+function wmURL() {
+  const t = `${me?.name || ''} · ${me?.sid || ''}`; if (t === wmKey) return wmVal;
+  const x = t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="170"><text x="150" y="95" text-anchor="middle" transform="rotate(-24 150 85)" font-family="sans-serif" font-size="15" font-weight="700" fill="rgba(108,77,255,0.09)">${x}</text></svg>`;
+  wmKey = t; wmVal = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`; return wmVal;
+}
 // ซ่อนโจทย์ทันทีที่หน้าจอไม่ได้อยู่ในมือ (เช่น เปิด Gemini/ผู้ช่วย AI ทับหน้าจอแล้วกด "ถามเกี่ยวกับหน้าจอ")
 function shield(on) { document.body.classList.toggle('ex-shield', !!on && armed); }
 // บางแอปเปิดทับหน้าเว็บโดยไม่ส่งสัญญาณ blur — ตรวจโฟกัสซ้ำทุก 0.4 วิ (ไม่มีโฟกัสติดกัน 2 รอบ = ออกนอกจอ)
+// iPhone/iPad: document.hasFocus() คืนค่า false สลับไปมาเองบ่อย ทำให้จอกระพริบ — ใช้แค่ visibilitychange/blur
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 let noFocus = 0;
 setInterval(() => {
   fsGate();
-  if (!armed || me?.status !== 'doing') { noFocus = 0; return; }
-  if (document.hidden || !document.hasFocus()) { shield(true); if (++noFocus === 2) violation('focus'); }
-  else { if (noFocus) back(); noFocus = 0; }
+  if (IOS || !armed || me?.status !== 'doing') { noFocus = 0; return; }
+  if (document.hidden || !document.hasFocus()) { if (++noFocus === 2) { shield(true); violation('focus'); } }
+  else { if (noFocus >= 2) back(); noFocus = 0; }
 }, 400);
 function violation(kind) {
   if (!armed || !me || me.status !== 'doing') return;

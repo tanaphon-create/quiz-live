@@ -204,11 +204,10 @@
 }
 
 /* กัน AI: ลายน้ำชื่อ-เลขประจำตัว · ซ่อนโจทย์เมื่อออกนอกจอ · ข้อที่ถูกตัดสิทธิ์ */
-.ex-q { position: relative; overflow: hidden; isolation: isolate; }
-.ex-wm { position: absolute; inset: -40%; z-index: -1; display: flex; flex-wrap: wrap; gap: 34px 46px; align-content: center; justify-content: center; transform: rotate(-24deg); pointer-events: none; user-select: none; }
-.ex-wm span { font-weight: 700; font-size: .95rem; color: rgba(108,77,255,.09); white-space: nowrap; }
+.ex-student .card.ex-q { position: relative; background-image: var(--wm, none); background-repeat: repeat; }
+.ex-q .ex-opt:not(.on) { background-color: rgba(255,255,255,.82); }
 .ex-shield-msg { display: none; }
-body.ex-shield .ex-q > :not(.ex-shield-msg):not(.ex-wm) { visibility: hidden; }
+body.ex-shield .ex-q > :not(.ex-shield-msg) { visibility: hidden; }
 body.ex-shield .ex-shield-msg { display: grid; place-items: center; position: absolute; inset: 0; font-weight: 700; color: var(--ex-ink2); padding: 20px; text-align: center; }
 .ex-void { margin: -4px 0 10px; padding: 8px 12px; border-radius: 12px; background: var(--ex-bad-s); color: var(--ex-bad); font-weight: 700; font-size: .95rem; }
 .ex-q.void .ex-opt { opacity: .5; cursor: not-allowed; }
