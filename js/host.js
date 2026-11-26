@@ -363,7 +363,7 @@ function renderModes() {
     : opts.mode === 'boss'
       ? `<span>บอส</span>${Object.entries(BOSSES).map(([k, b]) => `<button class="chip ${opts.boss === k ? 'on' : ''}" data-bk="${k}">${b.e} ${b.name}</button>`).join('')}
          <span class="mo-br"></span><span>ความยาก</span>${Object.entries(BOSS_LV).map(([k, l]) => `<button class="chip ${opts.bossLv === k ? 'on' : ''}" data-bl="${k}">${l.label}</button>`).join('')}
-         <small class="mo-dim">เลือดบอส ≈ ${bossHP(active().length, quiz?.questions?.length || 1, opts.bossLv).toLocaleString('th-TH')} · ตอบผิด บอสฟื้น +${BOSS_HEAL} · โจทย์ขึ้นบนมือถือ</small>`
+         <small class="mo-dim">เลือดบอส ≈ ${bossHP(active().length, quiz?.questions?.length || 1, opts.bossLv).toLocaleString('th-TH')} · ตอบผิด บอสฟื้น +${BOSS_HEAL} · โจทย์ขึ้นบนมือถือ · เดินเกมอัตโนมัติ ครูไม่ต้องกด</small>`
     : opts.mode === 'wager'
       ? `<small class="mo-dim">🎰 เดิมพันได้ ${WAGER_BETS.map((b) => b.toLocaleString('th-TH')).join(' / ')} · ข้อคะแนน x2 ได้-เสียคูณ 2 · ไม่มีโบนัสตอบติดกัน</small>`
     : opts.mode === 'rocket'
@@ -796,7 +796,7 @@ function renderReveal() {
   }, 1300);
 }
 /* ═════════ สนามบอส: จอใหญ่โชว์แค่บอส (นักเรียนอ่านโจทย์บนมือถือ) ═════════ */
-let bossLive = { seen: new Set(), hp: 0, q: [], busy: false };
+let bossLive = { seen: new Set(), hp: 0, q: [], busy: false }, autoH = null;
 const bossMood = (hp) => (hp <= 0 ? 'dizzy' : hp / bossSt.max <= 0.25 ? 'hurt' : 'normal');
 const hpTxt = (hp) => `${Math.max(0, Math.round(hp)).toLocaleString('th-TH')} / ${bossSt.max.toLocaleString('th-TH')}`;
 function arenaHtml(ph, o = {}) {
@@ -894,9 +894,16 @@ function renderBossReveal() {
       <div class="ar-side ar-sum"><div class="ar-net ${net > 0 ? 'down' : 'up'}">${ko ? '💥 K.O.!' : net > 0 ? `เลือดลด<br><b>−${net.toLocaleString('th-TH')}</b>` : net < 0 ? `บอสแข็งแรงขึ้น<br><b>+${(-net).toLocaleString('th-TH')}</b>` : 'เสมอตัว'}</div></div>
     </div>
     <div class="ar-answer"><span class="ans a${q.correct}"><span class="shape">${SHAPES[q.correct]}</span></span><span><small>เฉลย</small><b>${esc(q.choices[q.correct] ?? '')}</b></span></div>
-    <div class="rev-foot"><span class="pill">🎯 ตอบถูก ${b.hits}/${b.hits + b.wrong + b.none} คน</span><span class="sp"></span><button class="btn gold big" id="toBoard">${isLast() ? (ko ? '🎉 ฉลองชัยชนะ ›' : '🎉 ประกาศผล ›') : 'ดูอันดับนักรบ ›'}</button></div>
+    <div class="rev-foot"><span class="pill">🎯 ตอบถูก ${b.hits}/${b.hits + b.wrong + b.none} คน</span><span class="pill auto-next" id="autoNext"></span><button class="btn ghost sm" id="pauseBtn">⏸ หยุดชั่วคราว</button><span class="sp"></span><button class="btn gold big" id="toBoard">${isLast() ? (ko ? '🎉 ฉลองชัยชนะ ›' : '🎉 ประกาศผล ›') : 'ข้อต่อไปเลย ›'}</button></div>
   </div>`;
-  $('#toBoard').onclick = () => (isLast() ? finish() : showBoard());
+  // เดินเกมเอง: เฉลยค้างไว้สักครู่ แล้วไปข้อต่อไป/ประกาศผลอัตโนมัติ (ครูกดหยุดไว้อธิบายได้)
+  const myQ = qi, last = isLast(), go = () => { clearInterval(autoH); if (phase === 'reveal' && qi === myQ) (last ? finish() : goQuestion(qi + 1)); };
+  let left = ko ? 7 : 9, paused = false;
+  const show = () => { const el = $('#autoNext'); if (el) el.innerHTML = paused ? '⏸ หยุดไว้อยู่' : `⏭ ${last ? 'ประกาศผล' : 'ข้อต่อไป'}ใน <b>${left}</b> วิ`; };
+  clearInterval(autoH); show();
+  autoH = setInterval(() => { if (phase !== 'reveal' || qi !== myQ) return clearInterval(autoH); if (paused) return; left--; show(); if (left <= 0) go(); }, 1000);
+  $('#pauseBtn').onclick = () => { paused = !paused; $('#pauseBtn').textContent = paused ? '▶️ เล่นต่อ' : '⏸ หยุดชั่วคราว'; sfx.tap(); show(); };
+  $('#toBoard').onclick = go;
   setTimeout(() => {
     if (phase !== 'reveal') return;
     setArHp(b.after); bossLive.hp = b.after;

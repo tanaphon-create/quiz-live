@@ -595,3 +595,5 @@
 .ar-boss.hit svg { filter: drop-shadow(0 18px 18px rgba(0,0,0,.35)); }
 .ar-boss.weak.hit svg { filter: drop-shadow(0 0 18px rgba(255,80,80,.7)) drop-shadow(0 18px 18px rgba(0,0,0,.35)); }
 @keyframes bossFlash { 25% { filter: brightness(1.9) saturate(.6); } }
+.auto-next b { font-size: 1.15em; color: #6C4DFF; }
+.arena .rev-foot .btn.ghost { background: rgba(255,255,255,.9); color: #2B2350; }
