@@ -604,3 +604,11 @@
 .ar-top3 li:not(.h) { display: grid; grid-template-columns: 22px 30px 1fr auto; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 12px; background: rgba(255,255,255,.1); font-size: .88rem; }
 .ar-top3 i { width: 30px; height: 30px; } .ar-top3 i svg { width: 100%; height: 100%; display: block; }
 .ar-top3 b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .ar-top3 em { font-style: normal; font-weight: 700; color: #FFE066; }
+
+/* แข่งจรวด: แถวกะทัดรัด ให้ 5 อันดับ + อันดับถัดไปพอดีจอ */
+.rocket-race { padding: 10px; gap: 6px; }
+.board .rk.rl { padding: 4px 12px 4px 8px; font-size: 1.05rem; grid-template-columns: 44px 120px 1fr auto 100px; }
+.rk.rl .rk-n { width: 38px; height: 38px; font-size: 1rem; }
+.rocket-race .rk.rl.r1 .rk-n, .rocket-race .rk.rl:first-child .rk-n { font-size: 1.5rem; background: transparent; }
+.rl-track { height: 46px; } .rl-av { width: 40px; height: 40px; }
+.rk.rl .rk-s { font-size: 1.35rem; min-width: 0; }

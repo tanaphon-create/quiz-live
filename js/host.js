@@ -1,7 +1,7 @@
 import { connect, TS, isTeacher } from './db.js';
 import { renderAvatar } from './avatar.js?v=20261126a';
 import { ghost } from './ghost.js?v=20261126a';
-import { BOSSES, BOSS_LV, BOSS_HEAL, bossHP, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, rocketGoal, pctOf, MODE_COLOR, AWARDS } from './fun-modes.js?v=20261126d';
+import { BOSSES, BOSS_LV, BOSS_HEAL, bossHP, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, rocketGoal, pctOf, MODE_COLOR, AWARDS } from './fun-modes.js?v=20261126e';
 import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock, setMusicTheme } from './sound.js';
 import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js?v=20261124a';
 import { SAMPLE } from './sample.js';
@@ -367,7 +367,7 @@ function renderModes() {
     : opts.mode === 'wager'
       ? `<small class="mo-dim">🎰 เดิมพันได้ ${WAGER_BETS.map((b) => b.toLocaleString('th-TH')).join(' / ')} · ข้อคะแนน x2 ได้-เสียคูณ 2 · ไม่มีโบนัสตอบติดกัน</small>`
     : opts.mode === 'rocket'
-      ? `<small class="mo-dim">🌙 ระยะถึงดวงจันทร์ ${rocketGoal(quiz?.questions?.length || 1).toLocaleString('th-TH')} คะแนน · แข่งครบทุกข้อ ใครไกลสุดชนะ</small>`
+      ? `<small class="mo-dim">🌙 ระยะถึงดวงจันทร์ ${rocketGoal((quiz?.questions || []).reduce((s, q) => s + (+q.points || 0), 0), disp.randPts).toLocaleString('th-TH')} คะแนน · แข่งครบทุกข้อ ใครไกลสุดชนะ</small>`
       : '';
   renderTeamSum();
 }
@@ -490,7 +490,7 @@ $('#startBtn').onclick = async () => {
   if (opts.mode === 'survival') active().forEach(([u]) => { up[`players/${u}/hearts`] = opts.hearts; up[`players/${u}/outAt`] = null; });
   bossSt = null; rocketG = 0; gstats = {}; qstats = [];
   if (opts.mode === 'boss') { const hp = bossHP(active().length, order.length, opts.bossLv); bossSt = { kind: opts.boss, name: BOSSES[opts.boss].name, hp, max: hp }; }
-  if (opts.mode === 'rocket') rocketG = rocketGoal(order.length);
+  if (opts.mode === 'rocket') rocketG = rocketGoal(order.reduce((s, i) => s + (+quiz.questions[i].points || 0), 0), !!disp.randPts);
   opts.randPts = !!disp.randPts && opts.mode !== 'land';
   if (opts.mode === 'boss') { opts.showQ = true; up['meta/showQ'] = true; }
   if (opts.mode === 'wager') active().forEach(([u]) => { up[`players/${u}/score`] = WAGER_START; });
@@ -940,7 +940,7 @@ async function showBoard() {
   const myQ = qi;
   await DB.update(R, { 'meta/state': 'board', 'meta/rankShown': -1 });
   const { res } = lastReveal;
-  const top = Object.entries(res).sort((a, b) => a[1].rank - b[1].rank).slice(0, opts.mode === 'rocket' ? 8 : 5);
+  const top = Object.entries(res).sort((a, b) => a[1].rank - b[1].rank).slice(0, 5);
   const aliveN = Object.values(res).filter((r) => r.hearts > 0).length;
   const last = isLast();
   const outNow = Object.entries(res).filter(([, r]) => r.outNow).map(([u]) => esc(players[u]?.name));
@@ -1033,7 +1033,7 @@ function rocketHtml(top) {
   return `<ol class="rank-list rocket-race">${top.map(([uid, r]) => {
     const p = players[uid] || {}, g = r.gained + r.bonus;
     return `<li class="rk rl" style="--p0:${pctOf(r.score - g, rocketG)};--p1:${pctOf(r.score, rocketG)}">
-      <span class="rk-n">${r.rank}</span><span class="rl-name">${esc(p.name)}</span>
+      <span class="rk-n">${r.rank <= 3 ? ['🥇', '🥈', '🥉'][r.rank - 1] : r.rank}</span><span class="rl-name">${esc(p.name)}</span>
       <span class="rl-track"><span class="rl-moon">🌙</span><span class="rl-rocket"><span class="rl-av">${renderAvatar(p.avatar, { bg: false })}</span><span class="rl-fire">🚀</span></span></span>
       ${g > 0 ? `<span class="gain">+${g.toLocaleString('th-TH')}</span>` : ''}
       <b class="rk-s" data-from="${r.score - g}" data-to="${r.score}">${(r.score - g).toLocaleString('th-TH')}</b></li>`;

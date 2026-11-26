@@ -85,5 +85,6 @@ export const wagerOf = (bet) => (WAGER_BETS.includes(+bet) ? +bet : 300);
 
 /* ───────── 🚀 แข่งจรวด ───────── */
 // ดวงจันทร์ = คะแนนเต็มทั้งเกม (ไม่จบก่อน แข่งครบทุกข้อ ใครไกลสุดชนะ)
-export const rocketGoal = (nQ) => Math.max(1000, Math.round(Math.max(1, nQ) * 1000));
+// คิดจากคะแนนรวมจริงของชุดคำถาม (ข้อ x2 นับ 2 เท่า) + เผื่อโบนัสตอบติดกัน · เปิดสุ่มคะแนน เฉลี่ยราว x2
+export const rocketGoal = (sumPts, rand = false) => Math.max(1000, Math.round((sumPts || 1000) * (rand ? 1.9 : 1) * 1.15 / 100) * 100);
 export const pctOf = (score, goal) => Math.max(0, Math.min(100, Math.round(((score || 0) / Math.max(1, goal)) * 100)));

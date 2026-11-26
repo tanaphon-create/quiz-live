@@ -1,6 +1,6 @@
 import { connect, TS } from './db.js';
 import { renderAvatar, randomAvatar, OPTS, bgCSS } from './avatar.js?v=20261126a';
-import { BOSSES, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, pctOf, MODE_COLOR, AWARDS } from './fun-modes.js?v=20261126d';
+import { BOSSES, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, pctOf, MODE_COLOR, AWARDS } from './fun-modes.js?v=20261126e';
 let myLastRank = null;
 import { sfx, unlock } from './sound.js';
 import { applyTheme, savedTheme } from './themes.js';
