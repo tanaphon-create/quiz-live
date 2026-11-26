@@ -19,7 +19,12 @@ $('#pinIn').value = qs.get('pin') || '';
 $('#nameAv').innerHTML = renderAvatar(avatar);
 $('#nameIn').value = saved.name || '';
 $('#sidIn').value = sid;
-const goSid = (title) => { $('#roomTitle').textContent = title; $('#roomTitle2').textContent = title; show('sid'); $('#sidIn').focus(); };
+// โหมดไม่ระบุตัวตน (ครูเปิดสวิตช์ 🙈): ข้ามหน้าใส่เลขประจำตัว ใช้ชื่อเล่นอย่างเดียว
+const goSid = (m) => {
+  $('#roomTitle').textContent = m.title; $('#roomTitle2').textContent = m.title;
+  if (m.anon) { sid = ''; $('#sidChip').textContent = '🙈 ไม่ระบุตัวตน'; show('name'); $('#nameIn').focus(); return; }
+  show('sid'); $('#sidIn').focus();
+};
 
 // INTRO: แสดงก่อนเข้าหน้ากรอกข้อมูลทุกครั้ง — ฟ้ายามเช้าพาสเทล เล่นกับตัวละครได้
 const introDone = new Promise((res) => {
@@ -90,7 +95,7 @@ Promise.all([ready, introDone]).then(async () => {
   if (!p || !DB) return show('pin');
   const [m, pl] = await Promise.all([DB.get(`quiz/rooms/${p}/meta`), DB.get(`quiz/rooms/${p}/players/${DB.uid}`)]);
   if (m && m.state !== 'end' && pl) { pin = p; R = `quiz/rooms/${pin}`; me = pl; avatar = pl.avatar || avatar; enterRoom(); }
-  else if (qs.get('pin') && m && m.state !== 'end') { pin = p; R = `quiz/rooms/${pin}`; goSid(m.title); }
+  else if (qs.get('pin') && m && m.state !== 'end') { pin = p; R = `quiz/rooms/${pin}`; goSid(m); }
   else { if (qs.get('pin')) toast(m ? 'เกมนี้จบไปแล้ว' : 'ไม่พบห้องนี้ — ใส่ PIN ใหม่'); show('pin'); }
 });
 
@@ -103,7 +108,7 @@ $('#pinForm').onsubmit = async (e) => {
   if (!m) return toast('ไม่พบห้องนี้ — ตรวจรหัสอีกครั้ง');
   if (m.state === 'end') return toast('เกมนี้จบไปแล้ว');
   pin = p; R = `quiz/rooms/${pin}`;
-  goSid(m.title);
+  goSid(m);
 };
 
 $('#sidForm').onsubmit = async (e) => {
@@ -125,8 +130,8 @@ $('#nameForm').onsubmit = async (e) => {
   if (Object.entries(others).some(([u, p]) => u !== DB.uid && p.name?.toLowerCase() === name.toLowerCase())) return toast('ชื่อนี้มีคนใช้แล้ว ลองชื่ออื่น');
   const meta0 = await DB.get(`${R}/meta`);
   if (!meta0 || meta0.state === 'end') { show('pin'); return toast('ห้องนี้ปิดแล้ว'); }
-  if (!sid) { show('sid'); return toast('ใส่เลขประจำตัวก่อนนะ'); }
-  me = { sid, name, avatar, score: 0, streak: 0, correct: 0, online: true, joinedAt: TS };
+  if (!sid && !meta0.anon) { show('sid'); return toast('ใส่เลขประจำตัวก่อนนะ'); }
+  me = { sid: meta0.anon ? '' : sid, name, avatar, score: 0, streak: 0, correct: 0, online: true, joinedAt: TS };
   await DB.set(`${R}/players/${DB.uid}`, me);
   sfx.pop();
   enterRoom();

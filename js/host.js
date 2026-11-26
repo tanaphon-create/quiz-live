@@ -282,7 +282,7 @@ async function hostGame(q) {
   quiz = structuredClone(q);
   do { pin = String(100000 + Math.floor(Math.random() * 900000)); } while (await DB.get(`quiz/rooms/${pin}/meta`));
   R = `quiz/rooms/${pin}`;
-  await DB.set(R, { meta: { hostUid: DB.uid, state: 'lobby', title: quiz.title, total: quiz.questions.length, qIndex: -1, createdAt: TS, showQ: true, theme: savedTheme() } });
+  await DB.set(R, { meta: { hostUid: DB.uid, state: 'lobby', title: quiz.title, total: quiz.questions.length, qIndex: -1, createdAt: TS, showQ: true, anon: $('#optAnon').checked, theme: savedTheme() } });
   qi = -1; phase = 'lobby'; players = {}; prevRanks = {};
   const url = new URL('play.html', location.href);
   url.searchParams.set('pin', pin);
@@ -320,7 +320,7 @@ addEventListener('keydown', (e) => e.key === 'Escape' && closeQr());
 /* ───── โหมดเกม ───── */
 function renderModes() {
   $('#modes').innerHTML = Object.entries(MODES).map(([k, m]) => `<button class="mode ${opts.mode === k ? 'on' : ''}" data-m="${k}"><span class="mi">${m.icon}</span><b>${m.name}</b><small>${m.desc}</small></button>`).join('');
-  $$('.lobby-bar .tog').forEach((t) => (t.style.display = opts.mode === 'land' ? 'none' : ''));
+  $$('.lobby-bar .tog:not(.anon-tog)').forEach((t) => (t.style.display = opts.mode === 'land' ? 'none' : ''));
   const landDim = () => { const d = boardDims(active().length, opts.ltime, opts.lsize); return `${d.cols}×${d.rows} = ${d.cols * d.rows} ช่อง`; };
   $('#modeOpt').innerHTML = opts.mode === 'land'
     ? `<span>จำนวนฝั่ง</span>${[2, 3, 4].map((n) => `<button class="chip ${opts.teams === n ? 'on' : ''}" data-t="${n}">${n} ฝั่ง</button>`).join('')}<button class="chip" data-shuffle="1">🎲 สุ่มฝั่งใหม่</button>
@@ -431,6 +431,8 @@ function leave() {
   phase = ''; renderHome(); show('home');
 }
 
+// โหมดไม่ระบุตัวตน: เขียนลงห้องทันที นักเรียนที่กำลังจะเข้าจะข้ามหน้าใส่เลขประจำตัว
+$('#optAnon').onchange = (e) => { if (R) DB.update(R, { 'meta/anon': e.target.checked }).catch(() => {}); };
 $('#startBtn').onclick = async () => {
   opts = { ...opts, showQ: $('#optShowQ').checked, streak: $('#optStreak').checked, shuffle: $('#optShuffle').checked };
   order = quiz.questions.map((_, i) => i);
@@ -776,7 +778,7 @@ async function finish() {
         </tbody></table></details>
       <div class="rev-foot">
         <label class="pill conv">แปลงเป็นคะแนนเก็บ เต็ม <input type="number" id="fullPts" value="10" min="1" max="100"> คะแนน</label>
-        <button class="btn green" id="bonusBtn">🏅 บันทึกคะแนนพิเศษ (อันดับ 1–3)</button><button class="btn light" id="csvBtn">⤓ ดาวน์โหลดคะแนน (CSV)</button><span class="sp"></span><button class="btn gold" id="homeBtn">กลับหน้าหลัก</button></div>
+        ${$('#optAnon').checked ? '<span class="muted">🙈 โหมดไม่ระบุตัวตน — ไม่มีเลขประจำตัว จึงบันทึกลงสมุดคะแนนไม่ได้</span>' : '<button class="btn green" id="bonusBtn">🏅 บันทึกคะแนนพิเศษ (อันดับ 1–3)</button>'}<button class="btn light" id="csvBtn">⤓ ดาวน์โหลดคะแนน (CSV)</button><span class="sp"></span><button class="btn gold" id="homeBtn">กลับหน้าหลัก</button></div>
     </div>`;
   function note(p) {
     if (opts.mode === 'team' || opts.mode === 'land') return p.team != null ? TEAMS[p.team].e + ' ' + TEAMS[p.team].name : '-';
@@ -791,7 +793,7 @@ async function finish() {
   at(T1 + 1.2, () => DB.update(R, { 'meta/podiumDone': true }));
   $('#homeBtn').onclick = leave;
   const recips = bonusRecipients(list, teams);
-  $('#bonusBtn').onclick = () => openBonus(recips);
+  if ($('#bonusBtn')) $('#bonusBtn').onclick = () => openBonus(recips);
   $('#csvBtn').onclick = () => {
     const full = Math.max(1, +$('#fullPts').value || 10);
     const bySid = list.map((p, i) => ({ ...p, rank: i + 1 }))

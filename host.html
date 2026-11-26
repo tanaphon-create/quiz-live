@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/host.css">
+<link rel="stylesheet" href="css/host.css?v=20261126a">
 <link rel="stylesheet" href="css/bright.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="stylesheet" href="css/ghost.css?v=20261125b">
@@ -117,9 +117,10 @@ try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.ad
   </div>
   <footer class="lobby-bar">
     <div class="count"><b id="pCount">0</b> คน</div>
-    <label class="tog"><input type="checkbox" id="optShowQ" checked><span></span>แสดงคำถามบนมือถือ</label>
-    <label class="tog"><input type="checkbox" id="optStreak" checked><span></span>โบนัสตอบถูกติดกัน</label>
-    <label class="tog"><input type="checkbox" id="optShuffle"><span></span>สลับลำดับข้อ</label>
+    <label class="tog" title="แสดงโจทย์บนมือถือนักเรียนด้วย"><input type="checkbox" id="optShowQ" checked><span></span>โจทย์บนมือถือ</label>
+    <label class="tog" title="ตอบถูกติดกันได้คะแนนโบนัสเพิ่ม"><input type="checkbox" id="optStreak" checked><span></span>โบนัสติดกัน</label>
+    <label class="tog" title="สลับลำดับข้อคำถาม"><input type="checkbox" id="optShuffle"><span></span>สลับข้อ</label>
+    <label class="tog anon-tog" title="นักเรียนเข้าเล่นด้วยชื่อเล่นอย่างเดียว ไม่ต้องใส่เลขประจำตัว (บันทึกคะแนนพิเศษลงสมุดคะแนนไม่ได้)"><input type="checkbox" id="optAnon"><span></span>🙈 ไม่ระบุตัวตน</label>
     <span class="sp"></span>
     <button class="btn ghost" id="themeBtn" title="เลือกธีมพื้นหลัง">🎨 ธีม</button>
     <button class="icon-btn" id="musicBtn" title="เปิด/ปิดเพลง">🎵</button>
@@ -181,7 +182,7 @@ try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.ad
   </div>
 </dialog>
 
-<script type="module" src="js/host.js?v=20261124a"></script>
+<script type="module" src="js/host.js?v=20261126a"></script>
 <script src="js/festival.js?v=20261125a" defer></script>
 </body>
 </html>

@@ -330,3 +330,6 @@
 .bn-done .row { justify-self: stretch; }
 @media (max-width: 640px) { .bn-tbl th:nth-child(5), .bn-tbl td:nth-child(5) { display: none; } }
 .bn-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* แถบล่างห้องรอ: ให้สวิตช์ทั้ง 4 + ปุ่มอยู่แถวเดียวบนจอ 1366 */
+@media (min-width: 1100px) { .lobby-bar { gap: 14px; } }
