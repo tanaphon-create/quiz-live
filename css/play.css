@@ -284,3 +284,13 @@ body.flash-bad { background: linear-gradient(160deg, #C83A50, #7A1C2E); }
 .my-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: min(330px, 100%); margin: 6px auto; }
 .my-stats span { display: grid; justify-items: center; padding: 8px 4px; border-radius: 16px; background: rgba(255,255,255,.9); box-shadow: 0 4px 12px rgba(80,50,160,.08); }
 .my-stats b { font: 700 1.35rem/1.1 'Fredoka', sans-serif; color: #2B2350; } .my-stats small { font-size: .72rem; color: #6B6291; }
+
+/* ───── สุ่มคะแนนแต่ละข้อ ───── */
+.roll-box { display: inline-flex; align-items: center; gap: 10px; margin: 6px auto; padding: 8px 16px; border-radius: 22px; background: linear-gradient(180deg, #FFF6D6, #FFE3A3); color: #6A4200; box-shadow: 0 6px 18px rgba(245,165,36,.3); }
+.rb-dice { font-size: 1.8rem; display: inline-block; animation: diceRoll 2.2s cubic-bezier(.2,.7,.3,1) both; }
+.rb-res { font: 700 1.35rem 'Fredoka', 'IBM Plex Sans Thai Looped', sans-serif; animation: popIn .45s 2.2s both; }
+.rb-res.m3, .rb-res.m5 { color: #E0531F; } .rb-res.m05 { color: #8A84A8; }
+@keyframes diceRoll { 0% { transform: rotate(0) scale(.8); } 80% { transform: rotate(1080deg) scale(1.1); } 100% { transform: rotate(1080deg) scale(1); } }
+.mult-tag { display: inline-block; margin: 0 auto 6px; padding: 4px 14px; border-radius: 99px; font-weight: 800; background: #FFF1C9; color: #6A4200; }
+.mult-tag.m3, .mult-tag.m5 { background: linear-gradient(90deg, #FFB067, #FF6B3D); color: #fff; } .mult-tag.m05 { background: #EEEAF8; color: #6B6291; }
+@media (prefers-reduced-motion: reduce) { .rb-dice { animation: none; } .rb-res { animation: none; } }

@@ -1,5 +1,6 @@
 import { connect, TS, isTeacher } from './db.js';
 import { renderAvatar } from './avatar.js?v=20261126a';
+import { ghost } from './ghost.js?v=20261126a';
 import { BOSSES, BOSS_LV, bossHP, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, rocketGoal, pctOf, MODE_COLOR, AWARDS } from './fun-modes.js?v=20261126b';
 import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock, setMusicTheme } from './sound.js';
 import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js?v=20261124a';
@@ -272,6 +273,28 @@ let R = '', pin = '', quiz = null, order = [], qi = -1, phase = '', players = {}
 let opts = { showQ: true, streak: true, shuffle: false, mode: 'classic', teams: 2, hearts: 3, vteams: 4, ltime: 3, lsize: 'M', boss: 'dragon', bossLv: 'normal' };
 let bossSt = null, rocketG = 0; // สถานะบอส / ระยะถึงดวงจันทร์ของเกมนี้
 let gstats = {}, qstats = []; // สถิติสะสมรายคน / รายข้อ (ทำรางวัลพิเศษ + สรุปห้อง)
+/* ───── ปรับแต่งเกม / หน้าจอแสดงผล (จำไว้ในเครื่องครู) ───── */
+let disp = { randPts: false, qsize: 'm', strip: true, cheer: true, fx: true };
+try { disp = { ...disp, ...JSON.parse(localStorage.getItem('gc_disp') || '{}') }; } catch {}
+const saveDisp = () => { try { localStorage.setItem('gc_disp', JSON.stringify(disp)); } catch {} applyDisp(); };
+function applyDisp() {
+  document.body.classList.remove('qs-m', 'qs-l', 'qs-xl'); document.body.classList.add('qs-' + disp.qsize);
+  const b = document.getElementById('dispBtn'); if (b) b.textContent = disp.randPts ? '⚙️ ปรับแต่ง · 🎲' : '⚙️ ปรับแต่ง';
+}
+const fxConfetti = (...a) => disp.fx && confetti(...a);
+// สุ่มตัวคูณคะแนน (น้ำหนัก: ×1 กับ ×2 บ่อยสุด ×5 นาน ๆ ที)
+const ROLL = [[0.5, 10], [1, 32], [2, 32], [3, 18], [5, 8]];
+const rollMult = () => { let x = Math.random() * ROLL.reduce((s, [, w]) => s + w, 0); for (const [m, w] of ROLL) if ((x -= w) < 0) return m; return 1; };
+const MULT_TXT = { 0.5: '🐢 ครึ่งเดียว', 1: '🙂 คะแนนปกติ', 2: '✨ คูณ 2!', 3: '🔥 คูณ 3!', 5: '💎 แจ็กพอต คูณ 5!' };
+let ptsNow = 1000, multNow = null;
+// ผีน้อยเชียร์ (แถวล่างหน้าคำถาม)
+let cheerSaid = '';
+function cheer(msg, pose = 'cheer') {
+  if (!disp.cheer || cheerSaid === msg) return; cheerSaid = msg;
+  const c = $('#cheer'); if (!c) return;
+  c.innerHTML = `<span class="ch-gh">${ghost(pose)}</span><span class="ch-bub">${msg}</span>`;
+  c.classList.remove('say'); void c.offsetWidth; c.classList.add('say');
+}
 let land = null, landTeams = null;
 let vstate = [], played = 0, gameStartAt = 0;
 let joinHref = '';
@@ -448,6 +471,16 @@ function leave() {
 }
 
 // โหมดไม่ระบุตัวตน: เขียนลงห้องทันที นักเรียนที่กำลังจะเข้าจะข้ามหน้าใส่เลขประจำตัว
+$('#dispBtn').onclick = () => {
+  const d = $('#dispDlg');
+  $$('#dispDlg [data-d]').forEach((i) => (i.checked = !!disp[i.dataset.d]));
+  $$('#dpSize [data-qs]').forEach((b) => b.classList.toggle('on', b.dataset.qs === disp.qsize));
+  d.showModal();
+};
+$('#dispDlg').onchange = (e) => { const i = e.target.closest('[data-d]'); if (!i) return; disp[i.dataset.d] = i.checked; sfx.tap(); saveDisp(); };
+$('#dpSize').onclick = (e) => { const b = e.target.closest('[data-qs]'); if (!b) return; disp.qsize = b.dataset.qs; sfx.tap(); $$('#dpSize [data-qs]').forEach((x) => x.classList.toggle('on', x === b)); saveDisp(); };
+$('#dispClose').onclick = () => $('#dispDlg').close();
+applyDisp();
 $('#optAnon').onchange = (e) => { if (R) DB.update(R, { 'meta/anon': e.target.checked }).catch(() => {}); };
 $('#startBtn').onclick = async () => {
   opts = { ...opts, showQ: $('#optShowQ').checked, streak: $('#optStreak').checked, shuffle: $('#optShuffle').checked };
@@ -458,6 +491,7 @@ $('#startBtn').onclick = async () => {
   bossSt = null; rocketG = 0; gstats = {}; qstats = [];
   if (opts.mode === 'boss') { const hp = bossHP(active().length, order.length, opts.bossLv); bossSt = { kind: opts.boss, name: BOSSES[opts.boss].name, hp, max: hp }; }
   if (opts.mode === 'rocket') rocketG = rocketGoal(order.length);
+  opts.randPts = !!disp.randPts && opts.mode !== 'land';
   if (opts.mode === 'wager') active().forEach(([u]) => { up[`players/${u}/score`] = WAGER_START; });
   up['meta/boss'] = bossSt; up['meta/goal'] = rocketG || null;
   await DB.update(R, up);
@@ -491,21 +525,30 @@ const stage = () => $('#stage');
 async function goQuestion(i) {
   qi = i; phase = 'ready';
   const q = Q();
+  const spin = !!opts.randPts && q.points > 0;
+  multNow = spin ? rollMult() : null; ptsNow = Math.round(q.points * (multNow ?? 1));
   $('#qCounter').textContent = `ข้อ ${i + 1} / ${order.length}`;
   await DB.update(R, {
-    current: { idx: i, text: q.text, image: q.image || '', type: q.type, choices: q.choices.slice(0, nCh(q)), time: q.time, points: q.points },
+    current: { idx: i, text: q.text, image: q.image || '', type: q.type, choices: q.choices.slice(0, nCh(q)), time: q.time, points: ptsNow, mult: multNow },
     'meta/state': 'ready', 'meta/qIndex': i, 'meta/qStartAt': null,
   });
+  const MS = [0.5, 1, 2, 3, 5], reel = [...Array(3)].flatMap(() => MS).concat(MS.slice(0, MS.indexOf(multNow ?? 1) + 1));
+  const dur = spin ? 6000 : 4000;
   stage().innerHTML = `
-    <div class="ready">
+    <div class="ready ${spin ? 'spin' : ''}">
       <div class="ready-num">ข้อ ${i + 1}</div>
-      ${q.points >= 2000 ? `<div class="bonus-badge">⭐ คะแนน x${q.points / 1000} ⭐</div>` : q.points === 0 ? '<div class="bonus-badge muted-badge">ข้อนี้ไม่คิดคะแนน</div>' : ''}
+      ${spin ? `<div class="slot"><span class="sl-l">🎲 สุ่มคะแนน</span><div class="sl-win"><div class="reel" style="--k:${reel.length - 1}">${reel.map((m) => `<b class="m${String(m).replace('.', '')}">×${m}</b>`).join('')}</div></div><span class="sl-res" id="slRes">${MULT_TXT[multNow]}</span></div>`
+        : q.points >= 2000 ? `<div class="bonus-badge">⭐ คะแนน x${q.points / 1000}</div>` : q.points === 0 ? '<div class="bonus-badge muted-badge">ข้อนี้ไม่คิดคะแนน</div>' : ''}
       <h1 class="ready-q">${esc(q.text)}</h1>
-      <div class="ready-bar"><i></i></div>
+      <div class="ready-bar"><i style="animation-duration:${dur / 1000}s"></i></div>
     </div>`;
   sfx.whoosh();
-  [3, 2, 1].forEach((n, k) => setTimeout(() => phase === 'ready' && qi === i && sfx.count(n), 1000 * (k + 1)));
-  await wait(4000);
+  if (spin) {
+    [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach((k) => setTimeout(() => phase === 'ready' && qi === i && sfx.tap(), 150 + k * k * 22));
+    setTimeout(() => { if (phase !== 'ready' || qi !== i) return; $('.slot')?.classList.add('landed'); multNow >= 3 ? (sfx.fanfare(), fxConfetti(multNow >= 5 ? 160 : 70, 2500)) : multNow >= 2 ? sfx.first() : sfx.pop(); }, 2300);
+  }
+  [3, 2, 1].forEach((n, k) => setTimeout(() => phase === 'ready' && qi === i && sfx.count(n), dur - 3000 + 1000 * k));
+  await wait(dur);
   if (phase !== 'ready' || qi !== i) return;
   beginAnswering();
 }
@@ -523,13 +566,14 @@ async function beginAnswering() {
       <h1 class="q-title">${esc(q.text)}</h1>
       <div class="q-mid">
         <div class="timer"><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="44"/><circle class="arc" id="arc" cx="50" cy="50" r="44" pathLength="100"/></svg><span id="tNum">${q.time}</span></div>
-        <div class="q-media">${q.image ? `<img src="${esc(q.image)}" alt="">` : `<div class="q-ph">${q.points >= 2000 ? '⭐ x' + q.points / 1000 : '🤔'}</div>`}</div>
+        <div class="q-media">${q.image ? `<img src="${esc(q.image)}" alt="">` : `<div class="q-ph">${ptsNow >= 2000 ? '⭐ x' + ptsNow / 1000 : '🤔'}</div>`}</div>
         <div class="ans-count"><b id="aNum">0</b><span>ตอบแล้ว</span><small id="aOf"></small></div>
       </div>
       <div class="ans-grid n${nCh(q)}">${q.choices.slice(0, nCh(q)).map((c, k) => `<div class="ans a${k}"><span class="shape">${SHAPES[k]}</span><span>${esc(c)}</span></div>`).join('')}</div>
-      <div class="q-tools"><div class="team-prog" id="teamProg"></div><button class="btn ghost sm" id="skipBtn">ข้ามเวลา ⏭</button></div>
+      <div class="q-tools">${disp.cheer ? '<div class="cheer" id="cheer"></div>' : ''}${disp.strip ? '<div class="ans-strip" id="ansStrip"></div>' : '<span class="sp"></span>'}<div class="team-prog" id="teamProg"></div>${multNow != null ? `<span class="mult-chip m${String(multNow).replace('.', '')}">🎲 ×${multNow}</span>` : ''}<button class="btn ghost sm" id="skipBtn">ข้ามเวลา ⏭</button></div>
     </div>`;
   $('#skipBtn').onclick = endQuestion;
+  cheerSaid = ''; cheer(['สู้ ๆ นะทุกคน! 💪', 'ค่อย ๆ อ่านโจทย์นะ 📖', 'ลุยเลย! 🚀', 'ตั้งใจนะ เป็นกำลังใจให้ 💖'][Math.floor(Math.random() * 4)], 'cheer');
   updateAnswerCount();
   const ua = DB.on(`${R}/answers/${qi}`, (v) => { liveAnswers = v || {}; updateAnswerCount(); });
   unsubs.push(ua);
@@ -543,6 +587,8 @@ async function beginAnswering() {
       lastSec = sec;
       const t = $('#tNum'); if (t) { t.textContent = sec; t.parentElement.classList.toggle('hurry', sec <= 5); }
       if (sec <= 5 && sec > 0) { sfx.urgent(); hurry(true); }
+      if (sec === 5) cheer('อีก 5 วิ! รีบหน่อย 🔥', 'bell');
+      else if (sec === Math.ceil(q.time / 2) && q.time >= 10) cheer('ครึ่งเวลาแล้วนะ ⏳', 'search');
     }
     if (left <= 0) endQuestion();
   }, 100);
@@ -555,6 +601,15 @@ function updateAnswerCount() {
   const total = active().filter(([, p]) => p.online !== false && isAlive(p)).length;
   const a = $('#aNum'); if (a) a.textContent = n;
   const o = $('#aOf'); if (o) o.textContent = `จาก ${total} คน`;
+  const st = $('#ansStrip');
+  if (st) for (const u of Object.keys(liveAnswers)) {
+    if (!players[u] || st.querySelector(`[data-u="${u}"]`)) continue;
+    const el = document.createElement('span'); el.dataset.u = u; el.title = players[u].name;
+    el.innerHTML = renderAvatar(players[u].avatar, { bg: false }); st.append(el);
+    if (st.childElementCount > 36) st.firstElementChild.remove();
+  }
+  if (total > 1 && n >= total) cheer('ตอบครบทุกคนแล้ว เก่งมาก! 🎉', 'love');
+  else if (total >= 4 && n >= Math.ceil(total / 2)) cheer(`ตอบไปแล้ว ${n} คน ใครยังไม่ตอบรีบเลย! ⚡`, 'game');
   const tp = $('#teamProg');
   if (tp && opts.mode === 'vote') tp.innerHTML = Array.from({ length: opts.vteams }, (_, k) => {
     const mem = active().filter(([, p]) => p.vteam === k);
@@ -569,7 +624,7 @@ async function endQuestion() {
   phase = 'scoring';
   clearInterval(tickH);
   music(null); sfx.timeUp();
-  const q = Q();
+  const q = { ...Q(), points: ptsNow };
   q._ua && q._ua();
   await wait(500); // รอคำตอบที่กำลังส่งมา
   const answers = (await DB.get(`${R}/answers/${qi}`)) || {};
@@ -726,7 +781,7 @@ function renderReveal() {
     const pc = Math.max(0, Math.min(100, (b.after / b.max) * 100));
     st.querySelector('.hpbar i').style.width = pc + '%'; st.querySelector('.hpbar span').textContent = `❤️ ${Math.round(pc)}%`;
     st.querySelector('.hpbar').classList.toggle('low', pc <= 25);
-    st.classList.add('go'); if (b.dmg) sfx.wrong(); if (b.after <= 0) { sfx.fanfare(); confetti(160, 4000); }
+    st.classList.add('go'); if (b.dmg) sfx.wrong(); if (b.after <= 0) { sfx.fanfare(); fxConfetti(160, 4000); }
   }, 1300);
 }
 // แถบบอสตอนเฉลย: เลือดลดจากเดิม → ใหม่ พร้อมตัวเลขความเสียหาย
@@ -804,7 +859,7 @@ async function showBoard() {
     k === 0 ? sfx.first() : sfx.rankStep(rows.length - 1 - k);
     const b = rows[k].querySelector('.rk-s');
     countUp(b, +b.dataset.from, +b.dataset.to, 900);
-    if (k === 0) confetti(80, 2500);
+    if (k === 0) fxConfetti(80, 2500);
     await wait(k === 0 ? 1000 : 950);
   }
   if (!alive()) return;
@@ -952,7 +1007,7 @@ async function finish() {
   if (ent[2]) { at(T3 - 1.4, () => sfx.drumroll(1.4)); at(T3, () => sfx.rankStep(0)); }
   if (ent[1]) { at(T2 - 1.8, () => sfx.drumroll(1.8)); at(T2, () => sfx.rankStep(2)); }
   at(T1 - 2.8, () => sfx.drumroll(2.8));
-  at(T1, () => { sfx.fanfare(); confetti(220, 6000); });
+  at(T1, () => { sfx.fanfare(); fxConfetti(220, 6000); });
   at(T1 + 1.2, () => DB.update(R, { 'meta/podiumDone': true }));
   $('#homeBtn').onclick = leave;
   $('.end-tabs').onclick = (e) => {

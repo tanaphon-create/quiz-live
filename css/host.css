@@ -486,3 +486,44 @@
 .q-call .hard { border-left: 6px solid #FF5D73; } .q-call .easy { border-left: 6px solid #22C58B; }
 @media (prefers-reduced-motion: reduce) { .award, .aw-av, .qc i, .end-panel.on { animation: none; } }
 .q-chart { justify-content: center; }
+
+/* ═════ ปรับแต่งเกม / หน้าจอ ═════ */
+.disp-dlg { width: min(620px, calc(100% - 32px)); }
+.dp-sec { display: grid; gap: 8px; margin: 12px 0; } .dp-sec > b { font-size: .95rem; color: #6B6291; }
+.dp-row { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 16px; background: #F8F6FF; cursor: pointer; }
+.dp-row small { display: block; color: #6B6291; font-size: .8rem; line-height: 1.35; }
+.dp-ico { width: 40px; height: 40px; border-radius: 12px; background: #fff; display: grid; place-items: center; font-size: 1.3rem; box-shadow: 0 3px 8px rgba(80,50,160,.1); }
+.dp-row .tog { margin: 0; }
+.dp-seg { display: flex; gap: 4px; } .dp-seg button { padding: 6px 12px; border-radius: 99px; border: 2px solid #E4DDFB; background: #fff; font-weight: 700; color: #4A4170; }
+.dp-seg button.on { background: #6C4DFF; border-color: #6C4DFF; color: #fff; }
+/* ขนาดโจทย์ */
+.qs-l .q-title { font-size: clamp(1.7rem, 3.6vw, 3rem); } .qs-l .ans-grid .ans { font-size: clamp(1.3rem, 2.6vw, 2.05rem); } .qs-l .ready-q { font-size: clamp(2.4rem, 5.4vw, 4.3rem); }
+.qs-xl .q-title { font-size: clamp(2rem, 4.3vw, 3.6rem); } .qs-xl .ans-grid .ans { font-size: clamp(1.5rem, 3.1vw, 2.5rem); } .qs-xl .ready-q { font-size: clamp(2.8rem, 6.2vw, 5rem); }
+/* สล็อตสุ่มคะแนน */
+.slot { display: flex; align-items: center; gap: 14px; padding: 10px 18px; border-radius: 26px; background: linear-gradient(180deg, #FFF6D6, #FFE3A3); box-shadow: 0 10px 30px rgba(245,165,36,.35), inset 0 -4px 0 rgba(0,0,0,.08); color: #6A4200; animation: popIn .5s both; }
+.sl-l { font-weight: 800; font-size: 1.2rem; }
+.sl-win { width: 150px; height: 84px; overflow: hidden; border-radius: 18px; background: #fff; box-shadow: inset 0 6px 10px rgba(0,0,0,.12), inset 0 -6px 10px rgba(0,0,0,.08); position: relative; }
+.reel { display: grid; animation: reelSpin 2.2s cubic-bezier(.15,.75,.25,1) forwards; }
+.reel b { height: 84px; display: grid; place-items: center; font: 700 2.8rem 'Fredoka', sans-serif; color: #2B2350; }
+.reel .m05 { color: #8A84A8; } .reel .m2 { color: #6C4DFF; } .reel .m3 { color: #FF6B3D; } .reel .m5 { color: #E0A800; }
+@keyframes reelSpin { from { transform: translateY(0); } to { transform: translateY(calc(var(--k) * -84px)); } }
+.sl-res { font-weight: 800; font-size: 1.35rem; opacity: 0; transform: scale(.6); transition: .35s cubic-bezier(.3,1.6,.5,1); min-width: 10ch; }
+.slot.landed .sl-res { opacity: 1; transform: none; }
+.slot.landed .sl-win { animation: slotFlash .6s 2; }
+@keyframes slotFlash { 50% { box-shadow: inset 0 0 0 4px #FFD34D, 0 0 24px #FFD34D; } }
+.mult-chip { padding: 6px 14px; border-radius: 99px; font-weight: 800; background: #FFF1C9; color: #6A4200; box-shadow: 0 3px 0 #E8C35A; }
+.mult-chip.m05 { background: #EEEAF8; color: #6B6291; box-shadow: 0 3px 0 #CFC8E8; } .mult-chip.m3, .mult-chip.m5 { background: linear-gradient(90deg, #FFB067, #FF6B3D); color: #fff; box-shadow: 0 3px 0 #C9501F; }
+/* แถวล่างหน้าคำถาม: ผีน้อยเชียร์ + ตัวละครคนที่ตอบแล้ว */
+.q-tools { min-height: 58px; }
+.cheer { display: flex; align-items: center; gap: 6px; flex: none; max-width: 340px; }
+.ch-gh { width: 58px; height: 58px; flex: none; } .ch-gh svg { width: 100%; height: 100%; }
+.ch-bub { position: relative; padding: 8px 14px; border-radius: 18px; background: #fff; color: #2B2350; font-weight: 700; font-size: .95rem; box-shadow: 0 4px 12px rgba(80,50,160,.15); }
+.ch-bub::before { content: ''; position: absolute; left: -7px; top: 50%; transform: translateY(-50%); border: 7px solid transparent; border-right-color: #fff; border-left: 0; }
+.cheer.say .ch-gh { animation: chHop .6s cubic-bezier(.3,1.6,.5,1); } .cheer.say .ch-bub { animation: popIn .4s both; }
+@keyframes chHop { 40% { transform: translateY(-10px) rotate(-6deg); } }
+.ans-strip { flex: 1; min-width: 0; display: flex; align-items: center; padding-left: 12px; overflow: hidden; }
+.ans-strip span { width: 46px; height: 46px; margin-left: -12px; flex: none; animation: stripIn .45s cubic-bezier(.3,1.6,.5,1) both; filter: drop-shadow(0 3px 4px rgba(0,0,0,.18)); }
+.ans-strip span svg { width: 100%; height: 100%; display: block; }
+@keyframes stripIn { from { transform: translateY(30px) scale(.3); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .reel { animation-duration: .01s; } .ans-strip span, .cheer.say .ch-gh { animation: none; } }
+.cheer { max-width: 470px; }

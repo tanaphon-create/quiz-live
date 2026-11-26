@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/host.css?v=20261126d">
+<link rel="stylesheet" href="css/host.css?v=20261126e">
 <link rel="stylesheet" href="css/bright.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="stylesheet" href="css/ghost.css?v=20261125b">
@@ -125,7 +125,8 @@ try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.ad
     <span class="sp"></span>
     <button class="btn ghost" id="themeBtn" title="เลือกธีมพื้นหลัง">🎨 ธีม</button>
     <button class="icon-btn" id="musicBtn" title="เปิด/ปิดเพลง">🎵</button>
-    <button class="btn ghost" id="musicPick" title="เลือกเพลงประกอบ">🎼 เลือกเพลง</button>
+    <button class="btn ghost" id="musicPick" title="เลือกเพลงประกอบ">🎼 เพลง</button>
+    <button class="btn ghost" id="dispBtn" title="สุ่มคะแนนแต่ละข้อ · ปรับหน้าจอแสดงผล">⚙️ ปรับแต่ง</button>
     <button class="btn ghost" id="lobbyCancel">ยกเลิก</button>
     <button class="btn gold big" id="startBtn" disabled>เริ่มเกม ▶</button>
   </footer>
@@ -164,6 +165,22 @@ try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.ad
   <div id="bonusBody"></div>
 </dialog>
 
+<!-- ═══ ปรับแต่งเกม / หน้าจอแสดงผล ═══ -->
+<dialog id="dispDlg" class="dlg card disp-dlg">
+  <h3>⚙️ ปรับแต่งเกมและหน้าจอ</h3>
+  <p class="muted">ตั้งครั้งเดียว ระบบจำไว้ใช้ทุกเกม</p>
+  <div class="dp-sec"><b>🎲 เกม</b>
+    <label class="dp-row"><span class="dp-ico">🎰</span><span><b>สุ่มคะแนนแต่ละข้อ</b><small>ก่อนขึ้นทุกข้อ หมุนสล็อตสุ่มตัวคูณ ×0.5 · ×1 · ×2 · ×3 · ×5 ลุ้นทั้งห้อง!</small></span><span class="tog"><input type="checkbox" data-d="randPts"><span></span></span></label>
+  </div>
+  <div class="dp-sec"><b>🖥️ หน้าจอแสดงผล</b>
+    <div class="dp-row"><span class="dp-ico">🔠</span><span><b>ขนาดตัวอักษรโจทย์</b><small>ห้องใหญ่ / คนนั่งหลังห้อง เลือกใหญ่ขึ้น</small></span><span class="seg dp-seg" id="dpSize"><button data-qs="m">ปกติ</button><button data-qs="l">ใหญ่</button><button data-qs="xl">ใหญ่มาก</button></span></div>
+    <label class="dp-row"><span class="dp-ico">👀</span><span><b>โชว์ตัวละครคนที่ตอบแล้ว</b><small>ตัวละครเด้งเข้าแถวล่างทันทีที่ส่งคำตอบ (ไม่บอกว่าตอบข้อไหน)</small></span><span class="tog"><input type="checkbox" data-d="strip"><span></span></span></label>
+    <label class="dp-row"><span class="dp-ico">👻</span><span><b>ผีน้อยเชียร์</b><small>พูดให้กำลังใจตามสถานการณ์ เช่น ครึ่งเวลา · ใกล้หมดเวลา · ตอบครบแล้ว</small></span><span class="tog"><input type="checkbox" data-d="cheer"><span></span></span></label>
+    <label class="dp-row"><span class="dp-ico">🎉</span><span><b>พลุกระดาษ</b><small>ปิดได้ถ้าเครื่องช้าหรืออยากให้จอเรียบ ๆ</small></span><span class="tog"><input type="checkbox" data-d="fx"><span></span></span></label>
+  </div>
+  <div class="row end"><button class="btn gold" id="dispClose" type="button">เสร็จแล้ว</button></div>
+</dialog>
+
 <!-- ═══ หน้าต่างวางข้อความ ═══ -->
 <dialog id="bulkDlg" class="dlg card">
   <h3>วางคำถามหลายข้อพร้อมกัน</h3>
@@ -183,7 +200,7 @@ try{if(localStorage.getItem('gc_teacher')){document.documentElement.classList.ad
   </div>
 </dialog>
 
-<script type="module" src="js/host.js?v=20261126d"></script>
+<script type="module" src="js/host.js?v=20261126e"></script>
 <script src="js/festival.js?v=20261125a" defer></script>
 </body>
 </html>

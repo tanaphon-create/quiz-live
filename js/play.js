@@ -259,7 +259,8 @@ async function route() {
   if (st === 'ready') {
     stage().innerHTML = `<div class="msg"><div class="big-num">${qi + 1}</div>
       ${meta.showQ && cur ? `<h2 class="q-mini">${esc(cur.text)}</h2>` : '<h2>เตรียมตัว!</h2>'}
-      ${cur?.points >= 2000 ? `<div class="bonus">⭐ คะแนน x${cur.points / 1000}</div>` : ''}
+      ${cur?.mult != null ? `<div class="roll-box"><span class="rb-dice">🎲</span><span class="rb-res m${String(cur.mult).replace('.', '')}">ข้อนี้ได้ ×${cur.mult}${cur.mult >= 3 ? ' 🔥' : cur.mult < 1 ? ' 🐢' : ''}</span></div>`
+        : cur?.points >= 2000 ? `<div class="bonus">⭐ คะแนน x${cur.points / 1000}</div>` : ''}
       ${betRow()}
       <div class="ready-bar"><i></i></div></div>`;
     wireBet(); sfx.whoosh();
@@ -383,6 +384,7 @@ function answerScreen() {
     <div class="tbar"><i id="tFill"></i></div>
     ${meta.showQ ? `<div class="q-mini-card">${esc(cur.text)}</div>` : ''}
     ${meta.mode === 'vote' ? '<div class="team-tally" id="tally"></div>' : ''}
+    ${cur.mult != null && cur.mult !== 1 ? `<div class="mult-tag m${String(cur.mult).replace('.', '')}">🎲 ข้อนี้ ×${cur.mult}</div>` : ''}
     ${betRow()}
     <div class="pans n${n}">${cur.choices.map((c, k) => `
       <button class="ans a${k}" data-k="${k}"><span class="shape">${SHAPES[k]}</span>${meta.showQ ? `<span class="lbl">${esc(c)}</span>` : ''}</button>`).join('')}</div>`;
