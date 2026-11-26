@@ -1,6 +1,6 @@
 import { connect, TS } from './db.js';
 import { renderAvatar, randomAvatar, OPTS, bgCSS } from './avatar.js?v=20261126a';
-import { BOSSES, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, pctOf, MODE_COLOR, AWARDS } from './fun-modes.js?v=20261126c';
+import { BOSSES, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, pctOf, MODE_COLOR, AWARDS } from './fun-modes.js?v=20261126d';
 let myLastRank = null;
 import { sfx, unlock } from './sound.js';
 import { applyTheme, savedTheme } from './themes.js';
@@ -438,7 +438,7 @@ function modeLine(r) {
     const t = TEAMS[r.team];
     return `<div class="team-chip" style="background:${t.c}">${t.e} ${ r.correct ? 'ช่วย' + t.name + 'ทำคะแนน!' : t.name + ' สู้ต่อ!'}</div>`;
   }
-  if (meta.mode === 'boss' && r.boss) return bossMini(r.boss, r.correct ? `⚔️ คุณโจมตีบอส <b>−${(r.dmg || 0).toLocaleString('th-TH')}</b>` : r.healed ? `💚 ${r.answered ? 'ตอบผิด' : 'ไม่ได้ตอบ'} บอสฟื้นเลือด <b>+${r.healed.toLocaleString('th-TH')}</b>` : '🛡️ ข้อนี้ยังไม่ได้โจมตีบอส', r.boss.hp <= 0 ? 'dizzy' : r.correct ? 'hurt' : 'smug');
+  if (meta.mode === 'boss' && r.boss) return (r.rank ? `<div class="rk-chips"><span class="fire">⚔️ อันดับนักรบ ${r.rank} จาก ${r.of}</span></div>` : '') + bossMini(r.boss, r.correct ? `⚔️ คุณโจมตีบอส <b>−${(r.dmg || 0).toLocaleString('th-TH')}</b>` : r.healed ? `💚 ${r.answered ? 'ตอบผิด' : 'ไม่ได้ตอบ'} บอสฟื้นเลือด <b>+${r.healed.toLocaleString('th-TH')}</b>` : '🛡️ ข้อนี้ยังไม่ได้โจมตีบอส', r.boss.hp <= 0 ? 'dizzy' : r.correct ? 'hurt' : 'smug');
   if (meta.mode === 'rocket') return rocketMini(r.score, r.goal || meta.goal);
   return '';
 }

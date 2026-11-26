@@ -1,7 +1,7 @@
 import { connect, TS, isTeacher } from './db.js';
 import { renderAvatar } from './avatar.js?v=20261126a';
 import { ghost } from './ghost.js?v=20261126a';
-import { BOSSES, BOSS_LV, BOSS_HEAL, bossHP, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, rocketGoal, pctOf, MODE_COLOR, AWARDS } from './fun-modes.js?v=20261126c';
+import { BOSSES, BOSS_LV, BOSS_HEAL, bossHP, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, rocketGoal, pctOf, MODE_COLOR, AWARDS } from './fun-modes.js?v=20261126d';
 import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock, setMusicTheme } from './sound.js';
 import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js?v=20261124a';
 import { SAMPLE } from './sample.js';
@@ -367,7 +367,7 @@ function renderModes() {
     : opts.mode === 'wager'
       ? `<small class="mo-dim">🎰 เดิมพันได้ ${WAGER_BETS.map((b) => b.toLocaleString('th-TH')).join(' / ')} · ข้อคะแนน x2 ได้-เสียคูณ 2 · ไม่มีโบนัสตอบติดกัน</small>`
     : opts.mode === 'rocket'
-      ? `<small class="mo-dim">🌙 ระยะถึงดวงจันทร์ ${rocketGoal(quiz?.questions?.length || 1).toLocaleString('th-TH')} คะแนน · ถึงก่อนจบเกมทันที</small>`
+      ? `<small class="mo-dim">🌙 ระยะถึงดวงจันทร์ ${rocketGoal(quiz?.questions?.length || 1).toLocaleString('th-TH')} คะแนน · แข่งครบทุกข้อ ใครไกลสุดชนะ</small>`
       : '';
   renderTeamSum();
 }
@@ -663,7 +663,8 @@ async function endQuestion() {
   let bossRes = null;
   if (opts.mode === 'boss' && bossSt) {
     const H = Math.round(BOSS_HEAL * q.points / 1000), V = Object.values(res);
-    for (const r of V) { r.dmg = r.correct ? r.gained + r.bonus : 0; r.healed = r.correct ? 0 : r.answered ? H : Math.round(H / 2); }
+    // โหมดบอส: ไม่มีโบนัสตอบติดกัน (กันบอสตายไวเกิน) · คะแนนนักรบ = ความเสียหายที่ทำได้
+    for (const r of V) { if (r.bonus) { r.score -= r.bonus; r.bonus = 0; } r.dmg = r.correct ? r.gained : 0; r.healed = r.correct ? 0 : r.answered ? H : Math.round(H / 2); }
     const dmg = V.reduce((s, r) => s + r.dmg, 0), heal = V.reduce((s, r) => s + r.healed, 0);
     const before = bossSt.hp;
     // โจมตีก่อน ถ้าเลือดหมดในข้อนี้ = แพ้ทันที (ฟื้นไม่ได้แล้ว)
@@ -880,6 +881,11 @@ function playBossFx() {
   }
   setTimeout(playBossFx, gap);
 }
+// นักรบตัวท็อป 3 อันดับ (โชว์บนสนามบอส เพราะโหมดนี้ข้ามหน้าอันดับ)
+function top3Html() {
+  const t = Object.entries(lastReveal.res).sort((a, b) => a[1].rank - b[1].rank).slice(0, 3);
+  return t.length ? `<ol class="ar-top3"><li class="h">⚔️ นักรบตัวท็อป</li>${t.map(([u, r], i) => `<li><span>${['🥇', '🥈', '🥉'][i]}</span><i>${renderAvatar(players[u]?.avatar, { bg: false })}</i><b>${esc(players[u]?.name || '')}</b><em>${r.score.toLocaleString('th-TH')}</em></li>`).join('')}</ol>` : '';
+}
 function renderBossReveal() {
   const q = Q(), b = lastReveal.boss, n = nCh(q), B = BOSSES[bossSt.kind];
   const ko = b.after <= 0, net = b.before - b.after;
@@ -891,7 +897,7 @@ function renderBossReveal() {
         <div class="ar-chip hit">⚔️ ตอบถูก <b>${b.hits}</b> คน<small>โจมตี −${b.dmg.toLocaleString('th-TH')}</small></div>
         <div class="ar-chip heal">💚 ตอบผิด <b>${b.wrong}</b> คน${b.none ? ` · ไม่ตอบ ${b.none}` : ''}<small>${ko ? 'บอสแพ้ก่อนฟื้นทัน!' : `บอสฟื้น +${b.heal.toLocaleString('th-TH')}`}</small></div></div>
       <div class="ar-stage"><div class="ar-aura"></div><div class="ar-boss" id="arBoss">${bossSVG(bossSt.kind, 'normal')}</div><div class="ar-fx" id="arFx"></div><div class="ar-ground"></div></div>
-      <div class="ar-side ar-sum"><div class="ar-net ${net > 0 ? 'down' : 'up'}">${ko ? '💥 K.O.!' : net > 0 ? `เลือดลด<br><b>−${net.toLocaleString('th-TH')}</b>` : net < 0 ? `บอสแข็งแรงขึ้น<br><b>+${(-net).toLocaleString('th-TH')}</b>` : 'เสมอตัว'}</div></div>
+      <div class="ar-side ar-sum">${top3Html()}<div class="ar-net ${net > 0 ? 'down' : 'up'}">${ko ? '💥 K.O.!' : net > 0 ? `เลือดลด<br><b>−${net.toLocaleString('th-TH')}</b>` : net < 0 ? `บอสแข็งแรงขึ้น<br><b>+${(-net).toLocaleString('th-TH')}</b>` : 'เสมอตัว'}</div></div>
     </div>
     <div class="ar-answer"><span class="ans a${q.correct}"><span class="shape">${SHAPES[q.correct]}</span></span><span><small>เฉลย</small><b>${esc(q.choices[q.correct] ?? '')}</b></span></div>
     <div class="rev-foot"><span class="pill">🎯 ตอบถูก ${b.hits}/${b.hits + b.wrong + b.none} คน</span><span class="pill auto-next" id="autoNext"></span><button class="btn ghost sm" id="pauseBtn">⏸ หยุดชั่วคราว</button><span class="sp"></span><button class="btn gold big" id="toBoard">${isLast() ? (ko ? '🎉 ฉลองชัยชนะ ›' : '🎉 ประกาศผล ›') : 'ข้อต่อไปเลย ›'}</button></div>
@@ -926,8 +932,7 @@ function bossStrip(b) {
 function isLast() {
   const res = lastReveal?.res || {};
   const aliveN = Object.values(res).filter((r) => r.hearts > 0).length;
-  return qi >= order.length - 1 || (opts.mode === 'survival' && aliveN <= 1) || (opts.mode === 'boss' && bossSt && bossSt.hp <= 0)
-    || (opts.mode === 'rocket' && rocketG > 0 && Object.values(res).some((r) => r.score >= rocketG));
+  return qi >= order.length - 1 || (opts.mode === 'survival' && aliveN <= 1) || (opts.mode === 'boss' && bossSt && bossSt.hp <= 0);
 }
 // อันดับ: ค่อย ๆ เปิดจากอันดับ 5 → 1 บนจอครูก่อน แล้วจึงส่งให้มือถือนักเรียน
 async function showBoard() {

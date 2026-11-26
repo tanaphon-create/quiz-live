@@ -597,3 +597,10 @@
 @keyframes bossFlash { 25% { filter: brightness(1.9) saturate(.6); } }
 .auto-next b { font-size: 1.15em; color: #6C4DFF; }
 .arena .rev-foot .btn.ghost { background: rgba(255,255,255,.9); color: #2B2350; }
+
+.ar-mid { grid-template-columns: 230px 1fr 230px; }
+.ar-top3 { list-style: none; margin: 0; padding: 8px; width: 100%; display: grid; gap: 4px; border-radius: 18px; background: rgba(255,255,255,.12); animation: popIn .5s 1s both; }
+.ar-top3 .h { font-weight: 800; font-size: .85rem; text-align: center; opacity: .9; }
+.ar-top3 li:not(.h) { display: grid; grid-template-columns: 22px 30px 1fr auto; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 12px; background: rgba(255,255,255,.1); font-size: .88rem; }
+.ar-top3 i { width: 30px; height: 30px; } .ar-top3 i svg { width: 100%; height: 100%; display: block; }
+.ar-top3 b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .ar-top3 em { font-style: normal; font-weight: 700; color: #FFE066; }

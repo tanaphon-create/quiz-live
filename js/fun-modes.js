@@ -5,7 +5,7 @@ const INK = '#3A2E5C';
 Object.assign(MODES, {
   boss: { icon: '🐉', name: 'ปราบบอส', desc: 'จอใหญ่โชว์บอส นักเรียนอ่านโจทย์บนมือถือ ตอบถูก = โจมตี ตอบผิด = บอสฟื้นเลือด ทำเลือดหมดก่อนจบ ชนะทั้งห้อง!' },
   wager: { icon: '🎰', name: 'เดิมพัน', desc: `เริ่มที่ 1,000 คะแนน เลือกวางเดิมพันก่อนตอบ ถูกได้ 2 เท่า ผิดเสียเดิมพัน` },
-  rocket: { icon: '🚀', name: 'แข่งจรวด', desc: 'ตอบถูก + เร็ว จรวดพุ่งไกล ใครถึงดวงจันทร์ก่อนชนะ!' },
+  rocket: { icon: '🚀', name: 'แข่งจรวด', desc: 'ตอบถูก + เร็ว จรวดพุ่งไกล แข่งครบทุกข้อ ใครบินไกลที่สุดชนะ!' },
 });
 // สีประจำโหมด (การ์ดเลือกโหมด / ป้ายบนมือถือ)
 export const MODE_COLOR = { classic: '#FFB547', team: '#5BB8FF', survival: '#FF6B8A', vote: '#9B7BFF', land: '#3CCB8F', boss: '#5FCB6E', wager: '#FF8A3D', rocket: '#6C7BFF' };
@@ -17,7 +17,8 @@ export const BOSSES = {
   ghost: { name: 'ราชาผีขี้เล่น', c: '#C9A6FF', dk: '#8B63E0', e: '👻' },
 };
 // ระดับความยาก = สัดส่วนเลือดบอสเทียบกับคะแนนที่ทั้งห้องทำได้สูงสุด
-export const BOSS_LV = { easy: { label: 'ง่าย', f: 0.4 }, normal: { label: 'ปกติ', f: 0.6 }, hard: { label: 'ยาก', f: 0.8 } };
+// โจมตี = คะแนนข้อนั้น (ไม่รวมโบนัสตอบติดกัน) · ปกติ: ห้องตอบถูก ~70% ชนะช่วงข้อท้าย ๆ
+export const BOSS_LV = { easy: { label: 'ง่าย', f: 0.35 }, normal: { label: 'ปกติ', f: 0.45 }, hard: { label: 'ยาก', f: 0.55 } };
 // ตอบผิด บอสฟื้นเลือด (ไม่ตอบ ฟื้นครึ่งเดียว) · คูณตามคะแนนของข้อ
 export const BOSS_HEAL = 300;
 export const bossHP = (nPlayers, nQ, lv = 'normal') => Math.max(1500, Math.round(Math.max(1, nPlayers) * Math.max(1, nQ) * 1000 * (BOSS_LV[lv] || BOSS_LV.normal).f));
@@ -83,5 +84,6 @@ export const WAGER_START = 1000;
 export const wagerOf = (bet) => (WAGER_BETS.includes(+bet) ? +bet : 300);
 
 /* ───────── 🚀 แข่งจรวด ───────── */
-export const rocketGoal = (nQ) => Math.max(2000, Math.round(Math.max(1, nQ) * 1000 * 0.62));
+// ดวงจันทร์ = คะแนนเต็มทั้งเกม (ไม่จบก่อน แข่งครบทุกข้อ ใครไกลสุดชนะ)
+export const rocketGoal = (nQ) => Math.max(1000, Math.round(Math.max(1, nQ) * 1000));
 export const pctOf = (score, goal) => Math.max(0, Math.min(100, Math.round(((score || 0) / Math.max(1, goal)) * 100)));
