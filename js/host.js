@@ -1,7 +1,7 @@
 import { connect, TS, isTeacher } from './db.js';
 import { renderAvatar } from './avatar.js?v=20261126a';
 import { ghost } from './ghost.js?v=20261126a';
-import { BOSSES, BOSS_LV, bossHP, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, rocketGoal, pctOf, MODE_COLOR, AWARDS } from './fun-modes.js?v=20261126b';
+import { BOSSES, BOSS_LV, BOSS_HEAL, bossHP, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, rocketGoal, pctOf, MODE_COLOR, AWARDS } from './fun-modes.js?v=20261126c';
 import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock, setMusicTheme } from './sound.js';
 import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js?v=20261124a';
 import { SAMPLE } from './sample.js';
@@ -363,7 +363,7 @@ function renderModes() {
     : opts.mode === 'boss'
       ? `<span>บอส</span>${Object.entries(BOSSES).map(([k, b]) => `<button class="chip ${opts.boss === k ? 'on' : ''}" data-bk="${k}">${b.e} ${b.name}</button>`).join('')}
          <span class="mo-br"></span><span>ความยาก</span>${Object.entries(BOSS_LV).map(([k, l]) => `<button class="chip ${opts.bossLv === k ? 'on' : ''}" data-bl="${k}">${l.label}</button>`).join('')}
-         <small class="mo-dim">เลือดบอส ≈ ${bossHP(active().length, quiz?.questions?.length || 1, opts.bossLv).toLocaleString('th-TH')}</small>`
+         <small class="mo-dim">เลือดบอส ≈ ${bossHP(active().length, quiz?.questions?.length || 1, opts.bossLv).toLocaleString('th-TH')} · ตอบผิด บอสฟื้น +${BOSS_HEAL} · โจทย์ขึ้นบนมือถือ</small>`
     : opts.mode === 'wager'
       ? `<small class="mo-dim">🎰 เดิมพันได้ ${WAGER_BETS.map((b) => b.toLocaleString('th-TH')).join(' / ')} · ข้อคะแนน x2 ได้-เสียคูณ 2 · ไม่มีโบนัสตอบติดกัน</small>`
     : opts.mode === 'rocket'
@@ -492,6 +492,7 @@ $('#startBtn').onclick = async () => {
   if (opts.mode === 'boss') { const hp = bossHP(active().length, order.length, opts.bossLv); bossSt = { kind: opts.boss, name: BOSSES[opts.boss].name, hp, max: hp }; }
   if (opts.mode === 'rocket') rocketG = rocketGoal(order.length);
   opts.randPts = !!disp.randPts && opts.mode !== 'land';
+  if (opts.mode === 'boss') { opts.showQ = true; up['meta/showQ'] = true; }
   if (opts.mode === 'wager') active().forEach(([u]) => { up[`players/${u}/score`] = WAGER_START; });
   up['meta/boss'] = bossSt; up['meta/goal'] = rocketG || null;
   await DB.update(R, up);
@@ -534,7 +535,9 @@ async function goQuestion(i) {
   });
   const MS = [0.5, 1, 2, 3, 5], reel = [...Array(3)].flatMap(() => MS).concat(MS.slice(0, MS.indexOf(multNow ?? 1) + 1));
   const dur = spin ? 6000 : 4000;
-  stage().innerHTML = `
+  const slotHtml = spin ? `<div class="slot"><span class="sl-l">🎲 สุ่มคะแนน</span><div class="sl-win"><div class="reel" style="--k:${reel.length - 1}">${reel.map((m) => `<b class="m${String(m).replace('.', '')}">×${m}</b>`).join('')}</div></div><span class="sl-res" id="slRes">${MULT_TXT[multNow]}</span></div>` : '';
+  if (opts.mode === 'boss' && bossSt) stage().innerHTML = arenaHtml('ready', { i, slotHtml, dur });
+  else stage().innerHTML = `
     <div class="ready ${spin ? 'spin' : ''}">
       <div class="ready-num">ข้อ ${i + 1}</div>
       ${spin ? `<div class="slot"><span class="sl-l">🎲 สุ่มคะแนน</span><div class="sl-win"><div class="reel" style="--k:${reel.length - 1}">${reel.map((m) => `<b class="m${String(m).replace('.', '')}">×${m}</b>`).join('')}</div></div><span class="sl-res" id="slRes">${MULT_TXT[multNow]}</span></div>`
@@ -561,7 +564,9 @@ async function beginAnswering() {
   qStart = (await DB.get(R + '/meta/qStartAt')) || DB.now();
   sfx.go();
   music('question');
-  stage().innerHTML = `
+  bossLive = { seen: new Set(), hp: bossSt?.hp || 0, q: [], busy: false };
+  if (opts.mode === 'boss' && bossSt) stage().innerHTML = arenaHtml('question', { q });
+  else stage().innerHTML = `
     <div class="qscreen">
       <h1 class="q-title">${esc(q.text)}</h1>
       <div class="q-mid">
@@ -608,6 +613,7 @@ function updateAnswerCount() {
     el.innerHTML = renderAvatar(players[u].avatar, { bg: false }); st.append(el);
     if (st.childElementCount > 36) st.firstElementChild.remove();
   }
+  if (opts.mode === 'boss' && bossSt) bossLiveTick();
   if (total > 1 && n >= total) cheer('ตอบครบทุกคนแล้ว เก่งมาก! 🎉', 'love');
   else if (total >= 4 && n >= Math.ceil(total / 2)) cheer(`ตอบไปแล้ว ${n} คน ใครยังไม่ตอบรีบเลย! ⚡`, 'game');
   const tp = $('#teamProg');
@@ -656,10 +662,14 @@ async function endQuestion() {
   }
   let bossRes = null;
   if (opts.mode === 'boss' && bossSt) {
-    const dmg = Object.values(res).reduce((s, r) => s + (r.correct ? r.gained + r.bonus : 0), 0);
-    const before = bossSt.hp; bossSt.hp = Math.max(0, before - dmg);
-    bossRes = { before, after: bossSt.hp, max: bossSt.max, dmg, hits: Object.values(res).filter((r) => r.correct).length };
-    for (const r of Object.values(res)) { r.dmg = r.correct ? r.gained + r.bonus : 0; r.boss = { hp: bossSt.hp, max: bossSt.max }; }
+    const H = Math.round(BOSS_HEAL * q.points / 1000), V = Object.values(res);
+    for (const r of V) { r.dmg = r.correct ? r.gained + r.bonus : 0; r.healed = r.correct ? 0 : r.answered ? H : Math.round(H / 2); }
+    const dmg = V.reduce((s, r) => s + r.dmg, 0), heal = V.reduce((s, r) => s + r.healed, 0);
+    const before = bossSt.hp;
+    // โจมตีก่อน ถ้าเลือดหมดในข้อนี้ = แพ้ทันที (ฟื้นไม่ได้แล้ว)
+    bossSt.hp = before - dmg <= 0 ? 0 : Math.min(bossSt.max, before - dmg + heal);
+    bossRes = { before, after: bossSt.hp, max: bossSt.max, dmg, heal, hits: V.filter((r) => r.correct).length, wrong: V.filter((r) => r.answered && !r.correct).length, none: V.filter((r) => !r.answered).length };
+    for (const r of V) r.boss = { hp: bossSt.hp, max: bossSt.max };
   }
   if (opts.mode === 'rocket') for (const r of Object.values(res)) r.goal = rocketG;
   let vteamsRes = null;
@@ -740,6 +750,7 @@ function teamTable(members, scoreOf, gainOf = () => 0) {
 }
 
 function renderReveal() {
+  if (opts.mode === 'boss' && bossSt && lastReveal.boss) return renderBossReveal();
   const q = Q();
   const { res } = lastReveal;
   const n = nCh(q);
@@ -783,6 +794,117 @@ function renderReveal() {
     st.querySelector('.hpbar').classList.toggle('low', pc <= 25);
     st.classList.add('go'); if (b.dmg) sfx.wrong(); if (b.after <= 0) { sfx.fanfare(); fxConfetti(160, 4000); }
   }, 1300);
+}
+/* ═════════ สนามบอส: จอใหญ่โชว์แค่บอส (นักเรียนอ่านโจทย์บนมือถือ) ═════════ */
+let bossLive = { seen: new Set(), hp: 0, q: [], busy: false };
+const bossMood = (hp) => (hp <= 0 ? 'dizzy' : hp / bossSt.max <= 0.25 ? 'hurt' : 'normal');
+const hpTxt = (hp) => `${Math.max(0, Math.round(hp)).toLocaleString('th-TH')} / ${bossSt.max.toLocaleString('th-TH')}`;
+function arenaHtml(ph, o = {}) {
+  const B = BOSSES[bossSt.kind], pc = Math.max(0, Math.min(100, (bossSt.hp / bossSt.max) * 100));
+  const hp = `<div class="ar-top"><div class="ar-name">${B.e} ${esc(bossSt.name)}</div>
+    <div class="ar-hp ${pc <= 25 ? 'low' : ''}" id="arHp"><i style="width:${pc}%"></i><b></b><span>❤️ ${hpTxt(bossSt.hp)}</span></div></div>`;
+  const boss = `<div class="ar-stage"><div class="ar-aura"></div><div class="ar-boss ${pc <= 25 ? 'weak' : ''}" id="arBoss">${bossSVG(bossSt.kind, bossMood(bossSt.hp))}</div><div class="ar-fx" id="arFx"></div><div class="ar-ground"></div></div>`;
+  if (ph === 'ready') return `<div class="arena ph-ready">${hp}
+    <div class="ar-mid"><div class="ar-side"></div>${boss}<div class="ar-side"></div></div>
+    <div class="ar-call"><span class="ar-qn">ข้อ ${o.i + 1}</span>${o.slotHtml || (ptsNow >= 2000 ? `<span class="ar-x">⭐ คะแนน x${ptsNow / 1000}</span>` : '')}<span class="ar-say">${['ข้อนี้ยากแน่! 😈', 'มาสิ! ข้าไม่กลัว 😤', 'ลองตีข้าดูสิ! 👊', 'ฮ่า ๆ ตอบไม่ได้หรอก 😜'][Math.floor(Math.random() * 4)]}</span></div>
+    <div class="ar-hint">📱 ดูโจทย์บนมือถือ แล้วเตรียมโจมตี!</div>
+    <div class="ready-bar"><i style="animation-duration:${o.dur / 1000}s"></i></div></div>`;
+  const q = o.q;
+  return `<div class="arena ph-q">${hp}
+    <div class="ar-mid">
+      <div class="ar-side"><div class="timer"><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="44"/><circle class="arc" id="arc" cx="50" cy="50" r="44" pathLength="100"/></svg><span id="tNum">${q.time}</span></div></div>
+      ${boss}
+      <div class="ar-side"><div class="ans-count"><b id="aNum">0</b><span>ตอบแล้ว</span><small id="aOf"></small></div>
+        <div class="ar-tally"><span>⚔️ <b id="arHit">0</b></span><span>💚 <b id="arHeal">0</b></span></div></div>
+    </div>
+    <div class="ar-hint">📱 อ่านโจทย์และตอบบนมือถือ · ตอบถูก = โจมตี ⚔️ · ตอบผิด = บอสฟื้นเลือด 💚</div>
+    <div class="q-tools">${disp.cheer ? '<div class="cheer" id="cheer"></div>' : ''}${disp.strip ? '<div class="ans-strip" id="ansStrip"></div>' : '<span class="sp"></span>'}<div class="team-prog" id="teamProg"></div>${multNow != null ? `<span class="mult-chip m${String(multNow).replace('.', '')}">🎲 ×${multNow}</span>` : ''}<button class="btn ghost sm" id="skipBtn">ข้ามเวลา ⏭</button></div>
+  </div>`;
+}
+function setArHp(hp) {
+  const el = $('#arHp'); if (!el) return;
+  const pc = Math.max(0, Math.min(100, (hp / bossSt.max) * 100));
+  el.querySelector('i').style.width = pc + '%'; el.querySelector('span').textContent = `❤️ ${hpTxt(hp)}`;
+  el.classList.toggle('low', pc <= 25); $('#arBoss')?.classList.toggle('weak', pc <= 25);
+}
+let moodH = null;
+function setMood(m, ms = 0) {
+  const b = $('#arBoss'); if (!b) return;
+  b.innerHTML = bossSVG(bossSt.kind, m); clearTimeout(moodH);
+  if (ms) moodH = setTimeout(() => { const x = $('#arBoss'); if (x) x.innerHTML = bossSVG(bossSt.kind, bossMood(bossLive.hp)); }, ms);
+}
+function fxNum(txt, cls) {
+  const fx = $('#arFx'); if (!fx || fx.childElementCount > 40) return;
+  const n = document.createElement('b'); n.className = 'ar-num ' + cls; n.textContent = txt;
+  n.style.setProperty('--x', (Math.random() * 60 - 30).toFixed(0) + '%'); n.style.setProperty('--y', (Math.random() * 30 - 10).toFixed(0) + '%');
+  fx.append(n); setTimeout(() => n.remove(), 1400);
+}
+// คนตอบถูก: ตัวละครพุ่งไปโจมตี · คนตอบผิด: บอสหัวเราะ ฟื้นเลือด (ทยอยเล่นทีละตัว ไม่ให้ซ้อนจนดูไม่ทัน)
+function bossLiveTick() {
+  const q = Q(), T = q.time * 1000, H = Math.round(BOSS_HEAL * ptsNow / 1000);
+  for (const [u, a] of Object.entries(liveAnswers)) {
+    if (bossLive.seen.has(u) || !players[u]) continue; bossLive.seen.add(u);
+    const ms = Math.min(T, Math.max(0, (a.at || DB.now()) - qStart));
+    bossLive.q.push(a.choice === q.correct ? { hit: Math.round(ptsNow * (1 - ms / T / 2)), u } : { heal: H });
+  }
+  if (!bossLive.busy) playBossFx();
+}
+function playBossFx() {
+  const ev = bossLive.q.shift();
+  if (!ev || phase !== 'question') { bossLive.busy = false; return; }
+  bossLive.busy = true;
+  const gap = Math.max(90, 420 - bossLive.q.length * 30);
+  if (ev.hit) {
+    const fx = $('#arFx');
+    if (fx && fx.childElementCount < 40) {
+      const p = document.createElement('span'); p.className = 'ar-proj';
+      p.innerHTML = `${renderAvatar(players[ev.u]?.avatar, { bg: false })}<i>⚔️</i>`;
+      p.style.setProperty('--sx', (Math.random() < 0.5 ? -1 : 1) * (180 + Math.random() * 220) + 'px');
+      fx.append(p); setTimeout(() => p.remove(), 700);
+    }
+    setTimeout(() => {
+      if (phase !== 'question' || bossLive.hp <= 0) return;
+      bossLive.hp = Math.max(0, bossLive.hp - ev.hit);
+      fxNum('−' + ev.hit.toLocaleString('th-TH'), 'dmg');
+      const b = $('#arBoss'); if (b) { b.classList.remove('hit'); void b.offsetWidth; b.classList.add('hit'); }
+      setMood(bossLive.hp <= 0 ? 'dizzy' : 'hurt', bossLive.hp <= 0 ? 0 : 380); setArHp(bossLive.hp); sfx.pop();
+      const h = $('#arHit'); if (h) h.textContent = +h.textContent + 1;
+      if (bossLive.hp <= 0) cheer('บอสใกล้หมดแรงแล้ว! 💥', 'cheer');
+    }, 420);
+  } else {
+    if (bossLive.hp > 0) {
+      bossLive.hp = Math.min(bossSt.max, bossLive.hp + ev.heal);
+      fxNum('+' + ev.heal.toLocaleString('th-TH'), 'heal'); setMood('smug', 600); setArHp(bossLive.hp);
+      const h = $('#arHeal'); if (h) h.textContent = +h.textContent + 1;
+    }
+  }
+  setTimeout(playBossFx, gap);
+}
+function renderBossReveal() {
+  const q = Q(), b = lastReveal.boss, n = nCh(q), B = BOSSES[bossSt.kind];
+  const ko = b.after <= 0, net = b.before - b.after;
+  sfx.reveal();
+  stage().innerHTML = `<div class="arena ph-rev">
+    <div class="ar-top"><div class="ar-name">${B.e} ${esc(bossSt.name)}</div>
+      <div class="ar-hp" id="arHp"><i style="width:${Math.max(0, Math.min(100, (b.before / b.max) * 100))}%"></i><b></b><span>❤️ ${hpTxt(b.before)}</span></div></div>
+    <div class="ar-mid"><div class="ar-side ar-sum">
+        <div class="ar-chip hit">⚔️ ตอบถูก <b>${b.hits}</b> คน<small>โจมตี −${b.dmg.toLocaleString('th-TH')}</small></div>
+        <div class="ar-chip heal">💚 ตอบผิด <b>${b.wrong}</b> คน${b.none ? ` · ไม่ตอบ ${b.none}` : ''}<small>${ko ? 'บอสแพ้ก่อนฟื้นทัน!' : `บอสฟื้น +${b.heal.toLocaleString('th-TH')}`}</small></div></div>
+      <div class="ar-stage"><div class="ar-aura"></div><div class="ar-boss" id="arBoss">${bossSVG(bossSt.kind, 'normal')}</div><div class="ar-fx" id="arFx"></div><div class="ar-ground"></div></div>
+      <div class="ar-side ar-sum"><div class="ar-net ${net > 0 ? 'down' : 'up'}">${ko ? '💥 K.O.!' : net > 0 ? `เลือดลด<br><b>−${net.toLocaleString('th-TH')}</b>` : net < 0 ? `บอสแข็งแรงขึ้น<br><b>+${(-net).toLocaleString('th-TH')}</b>` : 'เสมอตัว'}</div></div>
+    </div>
+    <div class="ar-answer"><span class="ans a${q.correct}"><span class="shape">${SHAPES[q.correct]}</span></span><span><small>เฉลย</small><b>${esc(q.choices[q.correct] ?? '')}</b></span></div>
+    <div class="rev-foot"><span class="pill">🎯 ตอบถูก ${b.hits}/${b.hits + b.wrong + b.none} คน</span><span class="sp"></span><button class="btn gold big" id="toBoard">${isLast() ? (ko ? '🎉 ฉลองชัยชนะ ›' : '🎉 ประกาศผล ›') : 'ดูอันดับนักรบ ›'}</button></div>
+  </div>`;
+  $('#toBoard').onclick = () => (isLast() ? finish() : showBoard());
+  setTimeout(() => {
+    if (phase !== 'reveal') return;
+    setArHp(b.after); bossLive.hp = b.after;
+    const bb = $('#arBoss');
+    if (ko) { setMood('dizzy'); bb?.classList.add('ko'); sfx.fanfare(); fxConfetti(200, 5000); fxNum('K.O.!', 'dmg big'); }
+    else if (net > 0) { setMood('hurt', 1500); bb?.classList.add('hit'); sfx.wrong(); fxNum('−' + net.toLocaleString('th-TH'), 'dmg big'); }
+    else { setMood('smug', 1500); sfx.pop(); if (net < 0) fxNum('+' + (-net).toLocaleString('th-TH'), 'heal big'); }
+  }, 900);
 }
 // แถบบอสตอนเฉลย: เลือดลดจากเดิม → ใหม่ พร้อมตัวเลขความเสียหาย
 function bossStrip(b) {

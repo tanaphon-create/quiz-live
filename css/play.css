@@ -294,3 +294,4 @@ body.flash-bad { background: linear-gradient(160deg, #C83A50, #7A1C2E); }
 .mult-tag { display: inline-block; margin: 0 auto 6px; padding: 4px 14px; border-radius: 99px; font-weight: 800; background: #FFF1C9; color: #6A4200; }
 .mult-tag.m3, .mult-tag.m5 { background: linear-gradient(90deg, #FFB067, #FF6B3D); color: #fff; } .mult-tag.m05 { background: #EEEAF8; color: #6B6291; }
 @media (prefers-reduced-motion: reduce) { .rb-dice { animation: none; } .rb-res { animation: none; } }
+.boss-hint { display: inline-block; margin: 0 auto 6px; padding: 4px 14px; border-radius: 99px; background: linear-gradient(90deg, #5FCB6E, #3FA35A); color: #fff; font-weight: 700; font-size: .85rem; }

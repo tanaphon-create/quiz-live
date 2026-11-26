@@ -527,3 +527,71 @@
 @keyframes stripIn { from { transform: translateY(30px) scale(.3); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .reel { animation-duration: .01s; } .ans-strip span, .cheer.say .ch-gh { animation: none; } }
 .cheer { max-width: 470px; }
+
+/* ═════════ สนามบอส ═════════ */
+.arena { position: relative; flex: 1; min-height: 0; display: grid; grid-template-rows: auto 1fr auto auto; gap: 8px; padding: 14px 20px 12px; border-radius: 30px; overflow: hidden; color: #fff;
+  background: radial-gradient(ellipse 60% 35% at 50% 88%, rgba(255,255,255,.18), transparent 70%), radial-gradient(circle at 20% 15%, rgba(255,150,220,.25), transparent 40%), linear-gradient(180deg, #2A1F6B 0%, #48309A 55%, #7A4FD0 100%); box-shadow: 0 20px 50px rgba(40,20,110,.35); }
+.arena::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .9;
+  background-image: radial-gradient(2px 2px at 8% 20%, #fff, transparent), radial-gradient(1.6px 1.6px at 22% 60%, #fff, transparent), radial-gradient(2px 2px at 38% 12%, #FFE38A, transparent), radial-gradient(1.4px 1.4px at 61% 30%, #fff, transparent), radial-gradient(2px 2px at 78% 18%, #fff, transparent), radial-gradient(1.6px 1.6px at 90% 55%, #FFE38A, transparent), radial-gradient(1.4px 1.4px at 52% 48%, #fff, transparent);
+  animation: twinkle 4s ease-in-out infinite alternate; }
+@keyframes twinkle { to { opacity: .45; } }
+.ar-top { position: relative; z-index: 2; display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+.ar-name { font: 700 1.5rem 'Fredoka', 'IBM Plex Sans Thai Looped', sans-serif; text-shadow: 0 3px 0 rgba(0,0,0,.25); white-space: nowrap; }
+.ar-hp { position: relative; height: 34px; border-radius: 99px; background: rgba(0,0,0,.35); border: 3px solid rgba(255,255,255,.85); overflow: hidden; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+.ar-hp i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(180deg, #FF8FB1, #FF4D7A 60%, #E0335F); transition: width .6s cubic-bezier(.3,.9,.3,1); }
+.ar-hp b { position: absolute; inset: 0 0 50% 0; background: linear-gradient(rgba(255,255,255,.35), transparent); }
+.ar-hp span { position: relative; display: block; text-align: center; font: 700 1rem/28px 'Fredoka', sans-serif; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
+.ar-hp.low i { background: linear-gradient(180deg, #FFB067, #FF3B3B); animation: hpBlink .7s infinite; }
+.ar-mid { position: relative; z-index: 1; min-height: 0; display: grid; grid-template-columns: 180px 1fr 180px; align-items: center; gap: 12px; }
+.ar-side { display: grid; justify-items: center; gap: 12px; }
+.arena .timer { width: 130px; height: 130px; } .arena .ans-count { background: rgba(255,255,255,.14); color: #fff; min-width: 130px; }
+.ar-tally { display: flex; gap: 10px; font-weight: 700; } .ar-tally span { padding: 4px 12px; border-radius: 99px; background: rgba(255,255,255,.14); }
+.ar-stage { position: relative; height: 100%; min-height: 0; display: grid; place-items: center; }
+.ar-boss { position: relative; z-index: 2; width: min(46vh, 360px); aspect-ratio: 1; }
+.ar-boss svg { width: 100%; height: 100%; animation: bossIdle 2.6s ease-in-out infinite; transform-origin: 50% 95%; filter: drop-shadow(0 18px 18px rgba(0,0,0,.35)); }
+.ar-boss.weak svg { animation-duration: 1.2s; filter: drop-shadow(0 0 18px rgba(255,80,80,.7)) drop-shadow(0 18px 18px rgba(0,0,0,.35)); }
+.ar-boss.hit { animation: bossShake .38s; } .ar-boss.hit svg { filter: brightness(1.6) drop-shadow(0 0 20px #fff); }
+.ar-boss.ko svg { animation: bossKo 1.6s forwards; }
+@keyframes bossIdle { 0%, 100% { transform: translateY(0) scale(1, 1) rotate(-2deg); } 25% { transform: translateY(-14px) scale(.98, 1.03) rotate(0); } 50% { transform: translateY(-4px) scale(1.03, .97) rotate(2deg); } 75% { transform: translateY(-12px) scale(.99, 1.02) rotate(0); } }
+@keyframes bossShake { 0%, 100% { transform: translate(0); } 20% { transform: translate(-14px, 4px) rotate(-4deg); } 40% { transform: translate(12px, -4px) rotate(4deg); } 60% { transform: translate(-8px, 2px); } 80% { transform: translate(5px); } }
+.ar-aura { position: absolute; width: min(50vh, 400px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(255,230,140,.45), rgba(255,140,220,.15) 45%, transparent 70%); animation: aura 3s ease-in-out infinite; }
+@keyframes aura { 50% { transform: scale(1.12); opacity: .7; } }
+.ar-ground { position: absolute; bottom: 2%; width: min(40vh, 320px); height: 26px; border-radius: 50%; background: rgba(0,0,0,.28); filter: blur(3px); animation: groundPulse 2.6s ease-in-out infinite; }
+@keyframes groundPulse { 25%, 75% { transform: scaleX(.85); opacity: .7; } }
+.ar-fx { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.ar-num { position: absolute; left: calc(50% + var(--x)); top: calc(35% + var(--y)); transform: translate(-50%, 0); font: 700 2.4rem 'Fredoka', sans-serif; text-shadow: 0 3px 0 rgba(0,0,0,.35), 0 0 14px rgba(255,255,255,.6); animation: numUp 1.3s ease-out forwards; white-space: nowrap; }
+.ar-num.dmg { color: #FFE066; } .ar-num.heal { color: #7CFFB2; } .ar-num.heal::before { content: '💚'; font-size: .7em; margin-right: 4px; }
+.ar-num.big { font-size: 4.2rem; left: 50%; top: 30%; animation-duration: 2s; }
+@keyframes numUp { 0% { opacity: 0; transform: translate(-50%, 20px) scale(.5); } 18% { opacity: 1; transform: translate(-50%, -6px) scale(1.25); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -80px) scale(1); } }
+.ar-proj { position: absolute; left: 50%; top: 45%; width: 64px; height: 64px; margin: -32px; animation: projFly .45s cubic-bezier(.4,0,.8,.6) forwards; }
+.ar-proj svg { width: 100%; height: 100%; } .ar-proj i { position: absolute; right: -14px; top: -10px; font-style: normal; font-size: 1.8rem; animation: spinSw .45s linear; }
+@keyframes projFly { from { transform: translate(var(--sx), 330px) scale(.7) rotate(-20deg); opacity: .4; } 70% { opacity: 1; } to { transform: translate(0, 0) scale(1.1) rotate(10deg); opacity: 1; } }
+@keyframes spinSw { to { transform: rotate(360deg); } }
+.ar-call { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+.ar-qn { font: 700 2.6rem 'Fredoka', 'IBM Plex Sans Thai Looped', sans-serif; padding: 2px 26px; border-radius: 99px; background: linear-gradient(90deg, #FF6B8A, #FF9F45); box-shadow: 0 6px 0 rgba(0,0,0,.2); animation: popIn .5s both; }
+.ar-x { font-weight: 800; font-size: 1.3rem; padding: 6px 16px; border-radius: 99px; background: #FFD34D; color: #5A3A00; }
+.ar-say { position: relative; padding: 10px 18px; border-radius: 20px; background: #fff; color: #2B2350; font-weight: 800; font-size: 1.3rem; animation: popIn .5s .4s both; }
+.arena .slot { color: #6A4200; }
+.ar-hint { position: relative; z-index: 2; text-align: center; font-weight: 700; font-size: 1.05rem; padding: 6px 14px; border-radius: 99px; background: rgba(255,255,255,.14); justify-self: center; }
+.arena .ready-bar { justify-self: center; background: rgba(255,255,255,.2); }
+.arena .q-tools { position: relative; z-index: 2; margin-top: 0; }
+.arena .ch-bub { color: #2B2350; } .arena .ans-strip span { filter: drop-shadow(0 3px 4px rgba(0,0,0,.35)); }
+/* เฉลย */
+.ar-sum { align-content: center; }
+.ar-chip { width: 100%; display: grid; justify-items: center; gap: 2px; padding: 10px 8px; border-radius: 20px; font-weight: 700; text-align: center; animation: popIn .5s .6s both; }
+.ar-chip b { font-size: 1.6rem; } .ar-chip small { opacity: .9; font-size: .85rem; }
+.ar-chip.hit { background: rgba(255,224,102,.22); border: 2px solid rgba(255,224,102,.6); } .ar-chip.heal { background: rgba(124,255,178,.16); border: 2px solid rgba(124,255,178,.5); animation-delay: .8s; }
+.ar-net { padding: 14px 16px; border-radius: 22px; text-align: center; font-weight: 700; font-size: 1.05rem; background: rgba(255,255,255,.14); animation: popIn .5s 1.2s both; }
+.ar-net b { font: 700 2.2rem 'Fredoka', sans-serif; } .ar-net.down b { color: #FFE066; } .ar-net.up b { color: #7CFFB2; }
+.ar-answer { position: relative; z-index: 2; justify-self: center; display: flex; align-items: center; gap: 12px; padding: 8px 18px 8px 8px; border-radius: 22px; background: #fff; color: #2B2350; max-width: min(900px, 100%); box-shadow: 0 8px 20px rgba(0,0,0,.2); }
+.ar-answer .ans { width: 52px; height: 52px; min-height: 0; padding: 0; border-radius: 16px; display: grid; place-items: center; flex: none; }
+.ar-answer small { display: block; color: #6B6291; font-weight: 700; } .ar-answer b { font-size: 1.25rem; line-height: 1.3; }
+.arena .rev-foot { position: relative; z-index: 2; }
+@media (prefers-reduced-motion: reduce) { .ar-boss svg, .ar-aura, .ar-ground, .arena::before { animation: none; } .ar-proj { animation-duration: .01s; } }
+.ar-boss svg > ellipse:first-child { display: none; }
+.ar-chip { display: block; } .ar-chip b { font-size: 1.5rem; margin: 0 2px; } .ar-chip small { display: block; margin-top: 2px; }
+/* แสงวาบตอนโดนตีให้หายเอง (ไม่ค้างขาว) */
+.ar-boss.hit { animation: bossShake .38s, bossFlash .38s; }
+.ar-boss.hit svg { filter: drop-shadow(0 18px 18px rgba(0,0,0,.35)); }
+.ar-boss.weak.hit svg { filter: drop-shadow(0 0 18px rgba(255,80,80,.7)) drop-shadow(0 18px 18px rgba(0,0,0,.35)); }
+@keyframes bossFlash { 25% { filter: brightness(1.9) saturate(.6); } }

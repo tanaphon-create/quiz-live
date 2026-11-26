@@ -3,7 +3,7 @@ import { MODES } from './ui.js?v=20261124a';
 const INK = '#3A2E5C';
 
 Object.assign(MODES, {
-  boss: { icon: '🐉', name: 'ปราบบอส', desc: 'ทั้งห้องช่วยกันสู้บอส ตอบถูก = โจมตี ทำเลือดบอสหมดก่อนจบเกม ชนะทั้งห้อง!' },
+  boss: { icon: '🐉', name: 'ปราบบอส', desc: 'จอใหญ่โชว์บอส นักเรียนอ่านโจทย์บนมือถือ ตอบถูก = โจมตี ตอบผิด = บอสฟื้นเลือด ทำเลือดหมดก่อนจบ ชนะทั้งห้อง!' },
   wager: { icon: '🎰', name: 'เดิมพัน', desc: `เริ่มที่ 1,000 คะแนน เลือกวางเดิมพันก่อนตอบ ถูกได้ 2 เท่า ผิดเสียเดิมพัน` },
   rocket: { icon: '🚀', name: 'แข่งจรวด', desc: 'ตอบถูก + เร็ว จรวดพุ่งไกล ใครถึงดวงจันทร์ก่อนชนะ!' },
 });
@@ -17,7 +17,9 @@ export const BOSSES = {
   ghost: { name: 'ราชาผีขี้เล่น', c: '#C9A6FF', dk: '#8B63E0', e: '👻' },
 };
 // ระดับความยาก = สัดส่วนเลือดบอสเทียบกับคะแนนที่ทั้งห้องทำได้สูงสุด
-export const BOSS_LV = { easy: { label: 'ง่าย', f: 0.28 }, normal: { label: 'ปกติ', f: 0.42 }, hard: { label: 'ยาก', f: 0.58 } };
+export const BOSS_LV = { easy: { label: 'ง่าย', f: 0.4 }, normal: { label: 'ปกติ', f: 0.6 }, hard: { label: 'ยาก', f: 0.8 } };
+// ตอบผิด บอสฟื้นเลือด (ไม่ตอบ ฟื้นครึ่งเดียว) · คูณตามคะแนนของข้อ
+export const BOSS_HEAL = 300;
 export const bossHP = (nPlayers, nQ, lv = 'normal') => Math.max(1500, Math.round(Math.max(1, nPlayers) * Math.max(1, nQ) * 1000 * (BOSS_LV[lv] || BOSS_LV.normal).f));
 
 function face(mood, cx = 100, cy = 100) {
