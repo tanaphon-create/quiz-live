@@ -224,3 +224,4 @@ body.ex-student #scr-exam { -webkit-user-select: none; user-select: none; -webki
 .ex-bblock .btn.big { text-decoration: none; display: inline-flex; justify-content: center; }
 .ex-link { display: grid; gap: 8px; justify-items: center; width: 100%; }
 .ex-link code { font-size: .8rem; word-break: break-all; background: #F1EEFC; padding: 8px 10px; border-radius: 10px; -webkit-user-select: all; user-select: all; }
+.ex-qrtip { margin: 6px 0 0; text-align: center; font-size: .9rem; line-height: 1.45; color: var(--ex-ink); } .ex-qrtip small { color: var(--ex-ink2); }

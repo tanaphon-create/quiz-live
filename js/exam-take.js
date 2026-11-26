@@ -29,6 +29,8 @@ function showBrowserBlock() {
   $('#bLink').textContent = url.href;
   $('#bCopy').onclick = async () => { try { await navigator.clipboard.writeText(url.href); toast('คัดลอกลิงก์แล้ว'); } catch { toast('คัดลอกไม่ได้ — กดค้างที่ลิงก์เพื่อคัดลอกเอง'); } };
   show('browser');
+  // ลองพาไปเปิดในเบราว์เซอร์ที่ถูกต้องให้เองหนึ่งครั้ง (บางแอปไม่ยอมถ้าไม่ได้แตะ — ยังมีปุ่มให้แตะเอง)
+  if (!sessionStorage.getItem('gc_bjump' + pin)) { try { sessionStorage.setItem('gc_bjump' + pin, '1'); } catch {} setTimeout(() => { location.href = $('#bOpen').href; }, 400); }
 }
 
 /* ───────── เข้าห้อง ───────── */
