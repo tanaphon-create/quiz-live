@@ -4,7 +4,7 @@ import { SCOREBOOK_API } from './config.js';
 import { sfx, setMuted, isMuted, unlock, music, currentSong } from './sound.js';
 import { openMusicPicker } from './music-picker.js';
 import { $, $$, esc, wait, show, toast, confetti, VCOLORS, MASCOTS, mascotOf } from './ui.js';
-import { renderAvatar } from './avatar.js';
+import { renderAvatar } from './avatar.js?v=20261126a';
 import { makeWheel } from './wheel.js?v=20261125a';
 const av = (g) => renderAvatar(mascotOf(g), { bg: false });
 

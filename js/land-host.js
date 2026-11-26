@@ -1,7 +1,7 @@
 // โหมดยึดพื้นที่ (จอครู): สุ่มฝั่ง → นักเรียนตอบคำถามบนมือถือตัวเอง → ถูก 1 ข้อ ยึด 1 ช่อง
 // ครูเป็นคนตรวจคำตอบและยึดช่อง (เฉลยไม่ถูกส่งไปที่มือถือก่อนตอบ) · จบเมื่อพื้นที่ว่างหมดหรือหมดเวลา ฝั่งที่มีพื้นที่มากกว่าชนะ
 import { $, esc, wait, TEAMS, confetti, landQ, LAND_LOCK, LAND_STEAL } from './ui.js?v=20261124a';
-import { renderAvatar } from './avatar.js';
+import { renderAvatar } from './avatar.js?v=20261126a';
 import { sfx, music, hurry } from './sound.js';
 import { TS } from './db.js';
 

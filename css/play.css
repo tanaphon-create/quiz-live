@@ -243,3 +243,20 @@ body.flash-bad { background: linear-gradient(160deg, #C83A50, #7A1C2E); }
 .intro.leave::after { transition: transform .75s cubic-bezier(.7,0,.3,1); transform: translate(-50%, -50%) scale(220); }
 .intro.leave .intro-title span { animation: none; transform: translateY(-20px); opacity: .6; transition: .4s; }
 @media (max-height: 640px) { .intro-tag, .intro-hint { display: none; } .intro { gap: 8px; } }
+
+/* ───────── ปุ่มความรู้สึก ───────── */
+.react-bar { position: fixed; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 40; display: flex; gap: 4px; padding: 6px 8px; border-radius: 999px;
+  background: rgba(255,255,255,.92); box-shadow: 0 10px 30px rgba(108,77,255,.22), 0 0 0 2px rgba(255,255,255,.9) inset; backdrop-filter: blur(8px); max-width: calc(100vw - 24px); }
+.react-bar[hidden] { display: none; }
+.react-bar button { width: 40px; height: 40px; border: 0; border-radius: 50%; background: transparent; font-size: 24px; line-height: 1; display: grid; place-items: center; cursor: pointer; transition: transform .12s; -webkit-tap-highlight-color: transparent; }
+.react-bar button:hover { background: #F3EEFF; }
+.react-bar button:active { transform: scale(.85); }
+.react-bar button.hit { animation: rxHit .45s cubic-bezier(.3,1.6,.5,1); }
+.react-bar button.nope { animation: rxNope .3s; }
+@keyframes rxHit { 0% { transform: scale(.7); } 50% { transform: scale(1.35) rotate(-8deg); } 100% { transform: scale(1); } }
+@keyframes rxNope { 0%, 100% { transform: translateX(0); } 33% { transform: translateX(-3px); } 66% { transform: translateX(3px); } }
+.react-fly { position: fixed; z-index: 41; font-size: 34px; pointer-events: none; transform: translate(-50%, 0); animation: rxFly 1.4s ease-out forwards; }
+@keyframes rxFly { 0% { opacity: 0; transform: translate(-50%, 0) scale(.6); } 15% { opacity: 1; transform: translate(-50%, -20px) scale(1.2); } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), -160px) scale(1); } }
+body.has-react #scr-play .stage, body.has-react #pstage { padding-bottom: 70px; }
+@media (max-width: 360px) { .react-bar button { width: 34px; height: 34px; font-size: 21px; } }
+@media (prefers-reduced-motion: reduce) { .react-fly { animation-duration: .01s; } .react-bar button.hit { animation: none; } }

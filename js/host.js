@@ -1,12 +1,13 @@
 import { connect, TS, isTeacher } from './db.js';
-import { renderAvatar } from './avatar.js';
+import { REACTS } from './reacts.js';
+import { renderAvatar } from './avatar.js?v=20261126a';
 import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock, setMusicTheme } from './sound.js';
 import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js?v=20261124a';
 import { SAMPLE } from './sample.js';
 import { SCOREBOOK_API } from './config.js';
 import { applyTheme, savedTheme, openThemePicker } from './themes.js';
 import { openMusicPicker } from './music-picker.js';
-import { startLand, LAND_TIMES, LAND_SIZES, boardDims } from './land-host.js?v=20261124a';
+import { startLand, LAND_TIMES, LAND_SIZES, boardDims } from './land-host.js?v=20261126a';
 applyTheme(savedTheme());
 // เพลงตามธีม: ใช้ธีมเกมที่ครูเลือก · ถ้ายังเป็นค่าเริ่มต้น 👻 ใช้ธีมทั้งเว็บ (ลอยกระทง ฤดูร้อน กลางคืน ฝน สงคราม) แทน
 const syncMusic = () => {
@@ -297,7 +298,13 @@ async function hostGame(q) {
   $('#crowd').innerHTML = '';
   show('lobby');
   music('lobby'); $('#musicBtn').classList.add('on');
-  unsubs.push(DB.on(R + '/players', (v) => { players = v || {}; onPlayers(); }));
+  rxSeen = null; plSig = '';
+  unsubs.push(DB.on(R + '/players', (v) => {
+    players = v || {}; showReacts();
+    // กดความรู้สึกอย่างเดียว ไม่ต้องคำนวณ/วาดรายชื่อใหม่
+    const sig = JSON.stringify(players, (k, x) => (k === 'react' ? undefined : x));
+    if (sig !== plSig) { plSig = sig; onPlayers(); }
+  }));
 }
 
 const active = () => Object.entries(players).filter(([, p]) => p && p.name);
@@ -374,6 +381,30 @@ function renderTeamSum() {
   active().forEach(([, p]) => { const k = teamKey(p); k != null && k < N ? c[k]++ : none++; });
   el.innerHTML = c.map((n, k) => { const I = teamInfo(opts.mode, k); return `<span style="--tc:${I.c}">${opts.mode === 'vote' ? I.name : I.e} · ${n}</span>`; }).join('') +
     (opts.mode === 'vote' && none ? `<span style="--tc:#8A84A8">ยังไม่เลือกทีม · ${none}</span>` : '');
+}
+/* ───── ความรู้สึกจากนักเรียน: ลอยขึ้นจอ ───── */
+let rxSeen = null, plSig = '';
+function showReacts() {
+  const first = !rxSeen; if (first) rxSeen = {};
+  for (const [u, p] of Object.entries(players)) {
+    const t = p?.react?.t; if (!t || rxSeen[u] === t) continue;
+    rxSeen[u] = t; if (first || !p.name || REACTS[p.react.e] == null) continue;
+    floatReact(REACTS[p.react.e], p, u);
+  }
+}
+function floatReact(emo, p, uid) {
+  const layer = $('#reactLayer'); if (!layer || layer.childElementCount > 40) return;
+  const el = document.createElement('div'); el.className = 'rx';
+  el.innerHTML = `<span class="rx-av">${renderAvatar(p.avatar, { bg: false })}<b>${emo}</b></span><span class="rx-n">${esc(p.name)}</span>`;
+  const buddy = phase === 'lobby' && $(`#crowd [data-uid="${uid}"]`);
+  if (buddy) {
+    const r = buddy.getBoundingClientRect();
+    el.style.left = r.left + r.width / 2 + 'px'; el.style.top = r.top + 'px'; el.classList.add('at');
+    buddy.classList.remove('wiggle'); void buddy.offsetWidth; buddy.classList.add('wiggle');
+  } else { el.style.left = (6 + Math.random() * 88).toFixed(1) + '%'; el.style.top = '100%'; }
+  el.style.setProperty('--dx', (Math.random() * 80 - 40).toFixed(0) + 'px');
+  el.style.setProperty('--rot', (Math.random() * 24 - 12).toFixed(0) + 'deg');
+  layer.append(el); setTimeout(() => el.remove(), 3600);
 }
 function onPlayers() {
   const list = active();

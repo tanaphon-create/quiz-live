@@ -2,7 +2,7 @@
 import { connect, TS } from './db.js';
 import { sfx, unlock } from './sound.js';
 import { $, $$, esc, show, toast, confetti, mascotOf } from './ui.js';
-import { renderAvatar } from './avatar.js';
+import { renderAvatar } from './avatar.js?v=20261126a';
 
 const qs = new URLSearchParams(location.search);
 const ME = 'quizlive:buzzme';

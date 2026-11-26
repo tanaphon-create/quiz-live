@@ -1,5 +1,6 @@
 import { connect, TS } from './db.js';
-import { renderAvatar, randomAvatar, OPTS } from './avatar.js';
+import { renderAvatar, randomAvatar, OPTS, bgCSS } from './avatar.js?v=20261126a';
+import { REACTS } from './reacts.js';
 import { sfx, unlock } from './sound.js';
 import { applyTheme, savedTheme } from './themes.js';
 import { landPlay, landOver, landStop } from './land-play.js?v=20261124a';
@@ -191,6 +192,8 @@ function badges() {
 let tab = 'shape';
 const ITEM_LABEL = {
   round: 'กลม', bear: 'หมี', bunny: 'กระต่าย', cat: 'แมว', chick: 'ลูกเจี๊ยบ', dino: 'ไดโน', bean: 'ถั่ว', ghost: 'ผี', none: 'ไม่มี',
+  panda: 'แพนด้า', penguin: 'เพนกวิน', fox: 'จิ้งจอก', mouse: 'หนู', pig: 'หมู', unicorn: 'ยูนิคอร์น', axolotl: 'แอกโซลอเติล', sheep: 'แกะ',
+  belly: 'พุงขาว', spots: 'จุด', stripes: 'ลายเสือ', hearts: 'หัวใจ', stars: 'ดาว', rainbow: 'รุ้ง', sparkle: 'วิบวับ', freckles: 'กระ',
 };
 function renderCloset() {
   $('#lkAv').innerHTML = renderAvatar(avatar, { bg: false });
@@ -198,7 +201,7 @@ function renderCloset() {
   $('#optGrid').innerHTML = OPTS[tab].items.map((v) => {
     const isColor = tab === 'body' || tab === 'bg';
     const preview = isColor
-      ? `<span class="swatch" style="background:${v}"></span>`
+      ? `<span class="swatch" style="background:${bgCSS(v)}"></span>`
       : renderAvatar({ ...avatar, [tab]: v }, { bg: false });
     return `<button class="opt ${avatar[tab] === v ? 'on' : ''} ${isColor ? 'color' : ''}" data-v="${v}" aria-label="${ITEM_LABEL[v] || v}">${preview}</button>`;
   }).join('');
@@ -214,6 +217,33 @@ $('#leaveBtn').onclick = async () => {
   joined = false; await DB.remove(`${R}/players/${DB.uid}`);
   localStorage.setItem(ME_KEY, JSON.stringify({ avatar, sid, name: me?.name })); location.href = 'play.html';
 };
+/* ───────── ปุ่มความรู้สึก ───────── */
+// ส่งได้ทุกช่วง ยกเว้นตอนกำลังตอบคำถาม (กันกดแทนคำตอบ/กวนสมาธิ)
+const REACT_OK = new Set(['lobby', 'ready', 'reveal', 'board', 'end', 'landover']);
+let lastReact = 0;
+$('#reactBar').innerHTML = REACTS.map((e, i) => `<button type="button" data-r="${i}" aria-label="ส่ง ${e}">${e}</button>`).join('');
+$('#reactBar').onclick = (e) => {
+  const b = e.target.closest('[data-r]'); if (!b || !joined || !R) return;
+  const t = Date.now(); if (t - lastReact < 900) { b.classList.add('nope'); setTimeout(() => b.classList.remove('nope'), 300); return; }
+  lastReact = t; sfx.pop();
+  b.classList.remove('hit'); void b.offsetWidth; b.classList.add('hit');
+  floatLocal(REACTS[+b.dataset.r], b);
+  if (document.querySelector('#scr-locker.on')) bounce();
+  DB.update(`${R}/players/${DB.uid}`, { react: { e: +b.dataset.r, t: TS } }).catch(() => {});
+};
+function floatLocal(emo, from) {
+  const r = from.getBoundingClientRect(), f = document.createElement('span');
+  f.className = 'react-fly'; f.textContent = emo;
+  f.style.left = r.left + r.width / 2 + 'px'; f.style.top = r.top + 'px';
+  f.style.setProperty('--dx', (Math.random() * 60 - 30).toFixed(0) + 'px');
+  document.body.append(f); setTimeout(() => f.remove(), 1400);
+}
+function placeReact(st) {
+  const bar = $('#reactBar'), on = joined && REACT_OK.has(st);
+  bar.hidden = !on; document.body.classList.toggle('has-react', on);
+  const cl = document.querySelector('#scr-locker.on .closet');
+  bar.style.bottom = cl ? Math.round(cl.getBoundingClientRect().height + 10) + 'px' : '';
+}
 function bounce() { const a = $('#lkAv'); a.classList.remove('jump'); void a.offsetWidth; a.classList.add('jump'); }
 let pushH;
 function pushAvatar() {
@@ -237,7 +267,8 @@ async function route() {
   resUnsub && resUnsub(); resUnsub = null;
   if (st !== 'land') landStop();
 
-  if (st === 'lobby') { if (needTeam) return showTeamPick(); show('locker'); renderCloset(); return; }
+  placeReact(st);
+  if (st === 'lobby') { if (needTeam) return showTeamPick(); show('locker'); renderCloset(); placeReact(st); return; }
   show('play');
   $('#pQ').textContent = qi >= 0 ? `ข้อ ${qi + 1}/${meta.total}` : '';
   const lctx = { DB, R, stage, meta: () => meta, me: () => me, again: () => { lastState = ''; route(); } };
