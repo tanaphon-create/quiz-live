@@ -193,7 +193,7 @@ function renderScore() {
 }
 
 /* ───────── ล็อกหน้าจอ ───────── */
-function fullscreen() { const el = document.documentElement; if (!IOS && document.fullscreenEnabled && !document.fullscreenElement) el.requestFullscreen({ navigationUI: 'hide' }).then(() => { wasFs = true; fsGate(); }).catch(() => { fsFail = true; fsGate(); }); }
+function fullscreen() { const el = document.documentElement; if (!IOS && document.fullscreenEnabled && !document.fullscreenElement) { grace(); el.requestFullscreen({ navigationUI: 'hide' }).then(() => { wasFs = true; fsGate(); }).catch(() => { fsFail = true; fsGate(); }); } }
 // บังคับเต็มจอ: แถบเครื่องมือ Chrome (ปุ่ม Gemini / Google Lens / เมนู ⋮) ซ่อนอยู่ในโหมดเต็มจอ
 // ถ้าไม่ได้อยู่ในเต็มจอ ข้อสอบจะถูกซ่อนทั้งหน้า จนกว่าจะกลับเข้าเต็มจอ (เบราว์เซอร์ที่เปิดเต็มจอไม่ได้ เช่น iPhone ข้ามขั้นนี้)
 let fsFail = false;
@@ -201,7 +201,10 @@ function fsGate() {
   const need = !IOS && armed && me?.status === 'doing' && document.fullscreenEnabled && !fsFail && !document.fullscreenElement;
   $('#fsOv').hidden = !need; document.body.classList.toggle('ex-nofs', need);
 }
-function arm() { armed = true; history.pushState({ ex: 1 }, ''); }
+function arm() { armed = true; grace(); history.pushState({ ex: 1 }, ''); }
+// ช่วงเปลี่ยนเข้า/ออกเต็มจอ Android จะเสียโฟกัสแวบเดียว — ไม่นับเป็นการออกนอกจอ
+let graceUntil = 0;
+const grace = (ms = 2500) => { graceUntil = Math.max(graceUntil, Date.now() + ms); };
 function disarm() { armed = false; shield(false); fsGate(); }
 const isVoid = (qi) => !!me?.voids?.['q' + qi];
 let wmKey = '', wmVal = '';
@@ -213,18 +216,14 @@ function wmURL() {
 }
 // ซ่อนโจทย์ทันทีที่หน้าจอไม่ได้อยู่ในมือ (เช่น เปิด Gemini/ผู้ช่วย AI ทับหน้าจอแล้วกด "ถามเกี่ยวกับหน้าจอ")
 function shield(on) { document.body.classList.toggle('ex-shield', !!on && armed); }
-// บางแอปเปิดทับหน้าเว็บโดยไม่ส่งสัญญาณ blur — ตรวจโฟกัสซ้ำทุก 0.4 วิ (ไม่มีโฟกัสติดกัน 2 รอบ = ออกนอกจอ)
-// iPhone/iPad: document.hasFocus() คืนค่า false สลับไปมาเองบ่อย ทำให้จอกระพริบ — ใช้แค่ visibilitychange/blur
+// ไม่ใช้ document.hasFocus() เพราะบนมือถือ (ทั้ง iPhone และ Android ตอนเต็มจอ) คืนค่า false เองบ่อย — ทำให้จอกระพริบ/ถูกล็อกเอง
+// ใช้สัญญาณ blur/focus แทน: เสียโฟกัสนานเกิน 0.8 วิ ถึงนับว่าออกนอกจอ (แวบเดียวแล้วกลับมาไม่นับ)
 const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-let noFocus = 0;
-setInterval(() => {
-  fsGate();
-  if (IOS || !armed || me?.status !== 'doing') { noFocus = 0; return; }
-  if (document.hidden || !document.hasFocus()) { if (++noFocus === 2) { shield(true); violation('focus'); } }
-  else { if (noFocus >= 2) back(); noFocus = 0; }
-}, 400);
+let focused = true, blurH = null;
+setInterval(fsGate, 500);
 function violation(kind) {
   if (!armed || !me || me.status !== 'doing') return;
+  if (kind !== 'reload' && Date.now() < graceUntil) return;
   const t = Date.now(); if (t - lastV < 2500) return; lastV = t;
   const leaves = (me.leaves || 0) + 1, over = leaves > limit();
   // ตัดสิทธิ์ข้อที่เปิดอยู่ตอนออกนอกจอ (กันแคปจอ/วงกลมค้นหา/ถาม AI) — ยกเว้นรีเฟรช เพราะไม่รู้ว่าเปิดข้อไหนอยู่
@@ -240,7 +239,7 @@ function violation(kind) {
   }
   renderLeave();
 }
-function back() { if (!document.hidden && document.hasFocus()) shield(false); if (armed && me?.status === 'doing' && !document.hidden && document.hasFocus()) DB.update(`${R}/students/${uid}`, { away: false }).catch(() => {}); }
+function back() { if (document.hidden || !focused) return; shield(false); if (armed && me?.status === 'doing' && me.away) DB.update(`${R}/students/${uid}`, { away: false }).catch(() => {}); }
 $('#backBtn').onclick = () => { $('#warnOv').hidden = true; fullscreen(); back(); };
 $('#fsBtn').onclick = () => fullscreen();
 $('#startBtn').onclick = async () => {
@@ -250,10 +249,16 @@ $('#startBtn').onclick = async () => {
   catch (err) { console.error(err); toast('เริ่มสอบไม่ได้ ลองอีกครั้ง'); }
 };
 document.addEventListener('visibilitychange', () => (document.hidden ? (shield(true), violation('hidden')) : back()));
-window.addEventListener('blur', () => { shield(true); violation('blur'); });
+window.addEventListener('blur', () => {
+  focused = false; if (!armed || Date.now() < graceUntil) return;
+  shield(true); clearTimeout(blurH);
+  blurH = setTimeout(() => { if (!focused) violation('blur'); else shield(false); }, 800);
+});
 window.addEventListener('pagehide', () => shield(true));
-window.addEventListener('focus', back);
-document.addEventListener('fullscreenchange', () => { if (IOS) return; if (document.fullscreenElement) wasFs = true; else if (wasFs) violation('fullscreen'); fsGate(); });
+window.addEventListener('focus', () => { focused = true; clearTimeout(blurH); back(); });
+// แตะหน้าจอได้ = หน้านี้อยู่ในมือแน่นอน
+document.addEventListener('pointerdown', () => { if (!focused && !document.hidden) { focused = true; clearTimeout(blurH); back(); } }, true);
+document.addEventListener('fullscreenchange', () => { if (IOS) return; if (document.fullscreenElement) { wasFs = true; grace(1500); } else if (wasFs) violation('fullscreen'); fsGate(); });
 window.addEventListener('popstate', () => { if (armed) { history.pushState({ ex: 1 }, ''); toast('ห้ามย้อนกลับระหว่างสอบ'); } });
 window.addEventListener('beforeunload', (e) => { if (armed && me?.status === 'doing') { e.preventDefault(); e.returnValue = ''; } });
 // กันคัดลอก/คลิกขวา/พิมพ์ระหว่างสอบ
