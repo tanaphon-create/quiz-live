@@ -334,17 +334,74 @@
 /* แถบล่างห้องรอ: ให้สวิตช์ทั้ง 4 + ปุ่มอยู่แถวเดียวบนจอ 1366 */
 @media (min-width: 1100px) { .lobby-bar { gap: 14px; } }
 
-/* ───── ความรู้สึกจากนักเรียน ───── */
-.react-layer { position: fixed; inset: 0; pointer-events: none; z-index: 60; overflow: hidden; }
-.rx { position: absolute; transform: translate(-50%, 0); display: grid; justify-items: center; gap: 2px; animation: rxUp 3.4s cubic-bezier(.2,.7,.3,1) forwards; }
-.rx.at { animation-name: rxPop; animation-duration: 2.6s; }
-.rx-av { position: relative; width: 64px; height: 64px; filter: drop-shadow(0 6px 10px rgba(80,50,160,.25)); }
-.rx-av svg { width: 100%; height: 100%; }
-.rx-av b { position: absolute; right: -16px; top: -14px; font-size: 38px; line-height: 1; animation: rxEmo .5s cubic-bezier(.3,1.7,.5,1) both .1s; }
-.rx-n { font-size: .8rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: rgba(255,255,255,.92); color: #3A2E5C; box-shadow: 0 4px 10px rgba(80,50,160,.15); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rx.at .rx-av { width: 0; height: 0; } .rx.at .rx-av svg { display: none; } .rx.at .rx-av b { right: auto; left: 50%; top: -48px; transform: translateX(-50%); font-size: 46px; } .rx.at .rx-n { display: none; }
-@keyframes rxUp { 0% { opacity: 0; transform: translate(-50%, 0) scale(.6); } 10% { opacity: 1; transform: translate(-50%, -90px) scale(1.05) rotate(var(--rot)); }
-  60% { opacity: 1; transform: translate(calc(-50% + var(--dx)), -46vh) scale(1) rotate(calc(var(--rot) * -1)); } 100% { opacity: 0; transform: translate(calc(-50% - var(--dx)), -78vh) scale(.9) rotate(var(--rot)); } }
-@keyframes rxPop { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.5); } 15% { opacity: 1; transform: translate(-50%, -10px) scale(1.15); } 70% { opacity: 1; transform: translate(calc(-50% + var(--dx) / 3), -60px) scale(1); } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx) / 2), -110px) scale(.9); } }
-@keyframes rxEmo { from { transform: scale(0) rotate(-30deg); } to { transform: scale(1) rotate(0); } }
-@media (prefers-reduced-motion: reduce) { .rx, .rx.at { animation-duration: 1.2s; } }
+/* ───── การ์ดเลือกโหมด (น่ารัก) ───── */
+.modes { grid-template-columns: repeat(4, 1fr) !important; gap: 8px; }
+.mode { position: relative; gap: 4px; padding: 10px 4px 9px; border-radius: 18px; border: 0; background: color-mix(in srgb, var(--mc) 14%, #fff);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--mc) 35%, #fff); transition: transform .15s, box-shadow .15s; }
+.mode:hover { background: color-mix(in srgb, var(--mc) 22%, #fff); transform: translateY(-2px); }
+.mode .mi { width: 46px; height: 46px; display: grid; place-items: center; font-size: 1.65rem; border-radius: 50%; background: #fff;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--mc) 35%, transparent), inset 0 -3px 0 color-mix(in srgb, var(--mc) 25%, #fff); }
+.mode b { font-size: .86rem; color: color-mix(in srgb, var(--mc) 55%, #2B2350); line-height: 1.2; }
+.mode.on { background: var(--mc); box-shadow: 0 4px 0 color-mix(in srgb, var(--mc) 65%, #000), 0 10px 22px color-mix(in srgb, var(--mc) 40%, transparent); transform: translateY(-2px); }
+.mode.on b { color: #fff; }
+.mode.on .mi { animation: modeBob 1.6s ease-in-out infinite; }
+.mode.on::after { content: '✓'; position: absolute; top: -6px; right: -4px; width: 22px; height: 22px; border-radius: 50%; background: #fff; color: var(--mc); font-weight: 800; font-size: .8rem; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+@keyframes modeBob { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-4px) rotate(-6deg); } }
+.mode-desc { display: flex; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 16px; background: #FBF9FF; border: 2px dashed #E4DDFB; font-size: .84rem; color: #4A4170; line-height: 1.4; }
+.mode-desc b { color: #2B2350; }
+.mode-desc .md-i { flex: none; width: 34px; height: 34px; border-radius: 12px; display: grid; place-items: center; font-size: 1.2rem; background: color-mix(in srgb, var(--mc) 20%, #fff); }
+@media (prefers-reduced-motion: reduce) { .mode.on .mi { animation: none; } }
+
+/* ───── แถบเลือด ───── */
+.hpbar { position: relative; height: 22px; border-radius: 999px; background: #FFE4EA; overflow: hidden; box-shadow: inset 0 2px 0 rgba(0,0,0,.06); }
+.hpbar i { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: linear-gradient(90deg, #FF5D8F, #FF9F68); transition: width 1.2s cubic-bezier(.3,.9,.3,1); }
+.hpbar.low i { background: linear-gradient(90deg, #FF3B5C, #FF5D8F); animation: hpBlink .8s infinite; }
+.hpbar span { position: relative; display: block; text-align: center; font: 700 .8rem/22px 'Fredoka', sans-serif; color: #5A1F33; }
+@keyframes hpBlink { 50% { opacity: .65; } }
+
+/* ───── ปราบบอส ───── */
+.boss-strip { display: flex; align-items: center; gap: 18px; width: min(760px, 100%); margin: 0 auto; padding: 10px 18px; border-radius: 24px; background: rgba(255,255,255,.92); box-shadow: 0 10px 30px rgba(80,50,160,.15); }
+.bs-boss { position: relative; flex: none; width: 120px; height: 120px; }
+.bs-boss svg { width: 100%; height: 100%; }
+.boss-strip.hit.go .bs-boss svg { animation: bossHit .5s 2; }
+.boss-strip.ko.go .bs-boss svg { animation: bossKo 1.2s forwards; }
+.bs-dmg { position: absolute; top: 4px; right: -18px; font: 700 1.7rem 'Fredoka', sans-serif; color: #FF3B5C; text-shadow: 0 2px 0 #fff, 0 0 12px #fff; opacity: 0; }
+.boss-strip.go .bs-dmg { animation: dmgPop 1.4s ease-out forwards; }
+.bs-main { flex: 1; display: grid; gap: 6px; }
+.bs-name { font-weight: 700; font-size: 1.15rem; color: #2B2350; }
+.bs-note { font-size: .92rem; color: #5B5480; font-weight: 600; }
+.boss-line { display: flex; align-items: center; gap: 12px; width: min(560px, 100%); margin: 0 auto 10px; padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,.9); }
+.boss-line svg { width: 64px; height: 64px; flex: none; } .boss-line > div { flex: 1; display: grid; gap: 4px; }
+@keyframes bossHit { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-10px) rotate(-6deg); } 40% { transform: translateX(10px) rotate(6deg); } 60% { transform: translateX(-6px); } 80% { transform: translateX(4px); } }
+@keyframes bossKo { 0% { transform: rotate(0); } 40% { transform: rotate(-14deg) translateY(-10px); } 100% { transform: rotate(90deg) translateY(10px) scale(.9); opacity: .8; } }
+@keyframes dmgPop { 0% { opacity: 0; transform: translateY(10px) scale(.5); } 20% { opacity: 1; transform: translateY(-6px) scale(1.25); } 80% { opacity: 1; transform: translateY(-20px) scale(1); } 100% { opacity: 0; transform: translateY(-30px); } }
+.boss-end { display: flex; align-items: center; gap: 14px; width: min(640px, 100%); margin: -6px auto 6px; padding: 8px 18px; border-radius: 22px; background: rgba(255,255,255,.94); box-shadow: 0 8px 24px rgba(80,50,160,.15); font-size: 2.4rem; }
+.boss-end svg { width: 76px; height: 76px; flex: none; }
+.boss-end > div { display: grid; gap: 2px; font-size: 1rem; } .boss-end b { font-size: 1.2rem; color: #2B2350; } .boss-end small { color: #5B5480; }
+.boss-end.win { background: linear-gradient(135deg, #FFF6C9, #FFE1EC); }
+
+/* ───── แข่งจรวด ───── */
+.rocket-race { background: linear-gradient(180deg, #2A2766, #4B3A9A); border-radius: 26px; padding: 12px; gap: 6px; position: relative; overflow: hidden; }
+.rocket-race::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(2px 2px at 12% 20%, #fff, transparent), radial-gradient(1.6px 1.6px at 40% 70%, #fff, transparent), radial-gradient(2px 2px at 70% 30%, #FFE38A, transparent), radial-gradient(1.4px 1.4px at 88% 80%, #fff, transparent), radial-gradient(1.6px 1.6px at 55% 12%, #fff, transparent); opacity: .8; pointer-events: none; }
+.rk.rl { display: grid; grid-template-columns: 34px 130px 1fr auto auto; align-items: center; gap: 10px; background: rgba(255,255,255,.1); color: #fff; padding: 4px 10px; border-radius: 16px; }
+.rk.rl .rk-n { background: rgba(255,255,255,.2); color: #fff; }
+.rl-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rl-track { position: relative; height: 44px; border-radius: 999px; background: rgba(255,255,255,.08); border: 2px dashed rgba(255,255,255,.22); }
+.rl-moon { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); font-size: 1.6rem; filter: drop-shadow(0 0 8px #FFE38A); }
+.rl-rocket { position: absolute; top: 50%; left: calc(var(--p0) * (100% - 64px) / 100); transform: translateY(-50%); display: flex; align-items: center; transition: left 1.1s cubic-bezier(.3,.9,.3,1); }
+.rk.rl.show .rl-rocket { left: calc(var(--p1) * (100% - 64px) / 100); }
+.rl-av { width: 40px; height: 40px; } .rl-av svg { width: 100%; height: 100%; }
+.rl-fire { font-size: 1.3rem; transform: rotate(45deg); margin-left: -8px; }
+.rk.rl .rk-s { color: #fff; } .rk.rl .gain { background: #FFE38A; color: #5A3A00; }
+.gain.neg { background: #FFE1E6 !important; color: #D93A52 !important; }
+.pill b.up { color: #119868; } .pill b.down { color: #D93A52; }
+/* จอกว้าง: ป้ายผลบอส/จรวดไปอยู่ขอบซ้าย ไม่บังโพเดียม */
+@media (min-width: 1200px) {
+  .end { position: relative; }
+  .end .boss-end { position: absolute; left: 24px; top: 150px; width: 250px; margin: 0; flex-direction: column; text-align: center; padding: 14px; }
+  .end .boss-end svg { width: 110px; height: 110px; }
+}
+.rank-list.rocket-race { flex: 0 0 auto; margin-bottom: auto; }
+.rocket-race .rk.rl, .rocket-race .rk.rl:first-child { background: rgba(255,255,255,.1); border: 0; color: #fff; font-size: 1.05rem; }
+.rocket-race .rk.rl:first-child { outline: 3px solid #FFD34D; background: rgba(255,211,77,.2); }
+.rocket-race .rk.rl:first-child .rk-n { background: #FFD34D; color: #5A3A00; }

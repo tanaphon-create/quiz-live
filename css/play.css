@@ -244,19 +244,26 @@ body.flash-bad { background: linear-gradient(160deg, #C83A50, #7A1C2E); }
 .intro.leave .intro-title span { animation: none; transform: translateY(-20px); opacity: .6; transition: .4s; }
 @media (max-height: 640px) { .intro-tag, .intro-hint { display: none; } .intro { gap: 8px; } }
 
-/* ───────── ปุ่มความรู้สึก ───────── */
-.react-bar { position: fixed; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 40; display: flex; gap: 4px; padding: 6px 8px; border-radius: 999px;
-  background: rgba(255,255,255,.92); box-shadow: 0 10px 30px rgba(108,77,255,.22), 0 0 0 2px rgba(255,255,255,.9) inset; backdrop-filter: blur(8px); max-width: calc(100vw - 24px); }
-.react-bar[hidden] { display: none; }
-.react-bar button { width: 40px; height: 40px; border: 0; border-radius: 50%; background: transparent; font-size: 24px; line-height: 1; display: grid; place-items: center; cursor: pointer; transition: transform .12s; -webkit-tap-highlight-color: transparent; }
-.react-bar button:hover { background: #F3EEFF; }
-.react-bar button:active { transform: scale(.85); }
-.react-bar button.hit { animation: rxHit .45s cubic-bezier(.3,1.6,.5,1); }
-.react-bar button.nope { animation: rxNope .3s; }
-@keyframes rxHit { 0% { transform: scale(.7); } 50% { transform: scale(1.35) rotate(-8deg); } 100% { transform: scale(1); } }
-@keyframes rxNope { 0%, 100% { transform: translateX(0); } 33% { transform: translateX(-3px); } 66% { transform: translateX(3px); } }
-.react-fly { position: fixed; z-index: 41; font-size: 34px; pointer-events: none; transform: translate(-50%, 0); animation: rxFly 1.4s ease-out forwards; }
-@keyframes rxFly { 0% { opacity: 0; transform: translate(-50%, 0) scale(.6); } 15% { opacity: 1; transform: translate(-50%, -20px) scale(1.2); } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), -160px) scale(1); } }
-body.has-react #scr-play .stage, body.has-react #pstage { padding-bottom: 70px; }
-@media (max-width: 360px) { .react-bar button { width: 34px; height: 34px; font-size: 21px; } }
-@media (prefers-reduced-motion: reduce) { .react-fly { animation-duration: .01s; } .react-bar button.hit { animation: none; } }
+/* ───── โหมดสนุก: เดิมพัน / ปราบบอส / แข่งจรวด ───── */
+.bet-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; margin: 4px auto 8px; padding: 6px 10px; border-radius: 18px; background: rgba(255,255,255,.9); box-shadow: 0 6px 18px rgba(255,138,61,.18); font-weight: 700; color: #8A4A12; }
+.bet { min-width: 58px; padding: 7px 10px; border-radius: 999px; border: 2px solid #FFD2B0; background: #FFF6EE; color: #8A4A12; font: 700 .95rem 'Fredoka', 'IBM Plex Sans Thai Looped', sans-serif; transition: transform .12s; }
+.bet.on { background: linear-gradient(180deg, #FFB067, #FF8A3D); border-color: #FF8A3D; color: #fff; box-shadow: 0 3px 0 #D9661B; transform: translateY(-1px); }
+.bet:disabled { opacity: .35; }
+.bet-lock { display: inline-block; margin: 6px auto; padding: 6px 14px; border-radius: 999px; background: #FFF1E3; color: #8A4A12; font-weight: 600; }
+.minus { font: 700 2.6rem 'Fredoka', sans-serif; color: #FF5D73; text-shadow: 0 3px 0 rgba(255,255,255,.8); }
+.hpbar { position: relative; height: 20px; border-radius: 999px; background: #FFE4EA; overflow: hidden; }
+.hpbar i { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: linear-gradient(90deg, #FF5D8F, #FF9F68); }
+.hpbar.low i { background: linear-gradient(90deg, #FF3B5C, #FF5D8F); }
+.hpbar span { position: relative; display: block; text-align: center; font: 700 .75rem/20px 'Fredoka', sans-serif; color: #5A1F33; }
+.boss-mini { display: flex; align-items: center; gap: 10px; width: min(330px, 100%); margin: 8px auto; padding: 8px 12px; border-radius: 20px; background: rgba(255,255,255,.92); box-shadow: 0 6px 18px rgba(80,50,160,.12); text-align: left; }
+.boss-mini svg { width: 62px; height: 62px; flex: none; } .boss-mini > div { flex: 1; display: grid; gap: 4px; font-size: .9rem; color: #3A2E5C; }
+.boss-final { display: grid; justify-items: center; gap: 4px; margin: 4px auto; padding: 8px 14px; border-radius: 20px; background: rgba(255,255,255,.92); }
+.boss-final svg { width: 84px; height: 84px; } .boss-final.win { background: linear-gradient(135deg, #FFF6C9, #FFE1EC); }
+.rocket-mini { width: min(330px, 100%); margin: 8px auto; display: grid; gap: 4px; }
+.rm-track { position: relative; height: 40px; border-radius: 999px; background: linear-gradient(90deg, #2A2766, #4B3A9A); box-shadow: inset 0 0 0 2px rgba(255,255,255,.25); }
+.rm-r { position: absolute; top: 50%; transform: translateY(-50%) rotate(45deg); font-size: 1.5rem; transition: left 1s cubic-bezier(.3,.9,.3,1); }
+.rm-moon { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 1.4rem; filter: drop-shadow(0 0 6px #FFE38A); }
+.rocket-mini small { color: inherit; opacity: .85; }
+.mode-badge { background: var(--mc, rgba(31,26,61,.82)) !important; box-shadow: 0 4px 0 rgba(0,0,0,.15); }
+.bet-row { gap: 5px; padding: 6px 8px; flex-wrap: nowrap; } .bet-row > span { font-size: .85rem; white-space: nowrap; }
+.bet { min-width: 0; padding: 7px 9px; font-size: .9rem; }

@@ -1,6 +1,6 @@
 import { connect, TS } from './db.js';
 import { renderAvatar, randomAvatar, OPTS, bgCSS } from './avatar.js?v=20261126a';
-import { REACTS } from './reacts.js';
+import { BOSSES, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, pctOf, MODE_COLOR } from './fun-modes.js?v=20261126a';
 import { sfx, unlock } from './sound.js';
 import { applyTheme, savedTheme } from './themes.js';
 import { landPlay, landOver, landStop } from './land-play.js?v=20261124a';
@@ -179,13 +179,20 @@ function badges() {
   if (mode === 'survival') lk += ` — มี ${hearts(maxH(), maxH())}`;
   if (mode === 'land') lk += tm ? ` — คุณอยู่ฝั่ง <b style="background:${tm.c}">${tm.e} ${tm.name}</b>` : ' — รอครูสุ่มฝั่ง…';
   if (mode === 'vote') lk += tm ? ` — คุณอยู่ <b style="background:${tm.c}">${tm.name}</b> <button class="chg" id="chgTeam">เปลี่ยน</button>` : ' — ยังไม่ได้เลือกทีม';
+  if (mode === 'boss') lk += meta.boss ? ` — ช่วยกันปราบ <b style="background:#3FA35A">${BOSSES[meta.boss.kind]?.e || '🐉'} ${esc(meta.boss.name)}</b>` : ' — ทั้งห้องช่วยกันสู้บอส!';
+  if (mode === 'wager') lk += ` — เริ่มที่ ${WAGER_START.toLocaleString('th-TH')} คะแนน เลือกเดิมพันก่อนตอบ`;
+  if (mode === 'rocket') lk += ' — บินไปให้ถึงดวงจันทร์ 🌙';
   $('#lkMode').innerHTML = lk;
+  $('#lkMode').style.setProperty('--mc', MODE_COLOR[mode] || '#9B7BFF');
   const cb = $('#chgTeam'); if (cb) cb.onclick = () => showTeamPick();
   const pm = $('#pMode');
   pm.hidden = mode === 'classic';
   if ((mode === 'team' || mode === 'vote' || mode === 'land') && tm) { pm.textContent = `${tm.e} ${tm.name}`; pm.style.background = tm.c; }
   document.body.classList.toggle('land-on', mode === 'land');
   if (mode === 'survival') { pm.textContent = myHearts() > 0 ? hearts(myHearts(), maxH()) : '👻 ตกรอบ'; pm.style.background = ''; }
+  if (mode === 'boss') { pm.textContent = meta.boss ? `${BOSSES[meta.boss.kind]?.e || '🐉'} ${Math.round((meta.boss.hp / meta.boss.max) * 100)}%` : '🐉'; pm.style.background = ''; }
+  if (mode === 'rocket') { pm.textContent = `🚀 ${pctOf(me?.score, meta.goal)}%`; pm.style.background = ''; }
+  if (mode === 'wager') { pm.textContent = '🎰 เดิมพัน'; pm.style.background = ''; }
 }
 
 /* ───────── ห้องล็อกเกอร์: แต่งตัว ───────── */
@@ -217,33 +224,6 @@ $('#leaveBtn').onclick = async () => {
   joined = false; await DB.remove(`${R}/players/${DB.uid}`);
   localStorage.setItem(ME_KEY, JSON.stringify({ avatar, sid, name: me?.name })); location.href = 'play.html';
 };
-/* ───────── ปุ่มความรู้สึก ───────── */
-// ส่งได้ทุกช่วง ยกเว้นตอนกำลังตอบคำถาม (กันกดแทนคำตอบ/กวนสมาธิ)
-const REACT_OK = new Set(['lobby', 'ready', 'reveal', 'board', 'end', 'landover']);
-let lastReact = 0;
-$('#reactBar').innerHTML = REACTS.map((e, i) => `<button type="button" data-r="${i}" aria-label="ส่ง ${e}">${e}</button>`).join('');
-$('#reactBar').onclick = (e) => {
-  const b = e.target.closest('[data-r]'); if (!b || !joined || !R) return;
-  const t = Date.now(); if (t - lastReact < 900) { b.classList.add('nope'); setTimeout(() => b.classList.remove('nope'), 300); return; }
-  lastReact = t; sfx.pop();
-  b.classList.remove('hit'); void b.offsetWidth; b.classList.add('hit');
-  floatLocal(REACTS[+b.dataset.r], b);
-  if (document.querySelector('#scr-locker.on')) bounce();
-  DB.update(`${R}/players/${DB.uid}`, { react: { e: +b.dataset.r, t: TS } }).catch(() => {});
-};
-function floatLocal(emo, from) {
-  const r = from.getBoundingClientRect(), f = document.createElement('span');
-  f.className = 'react-fly'; f.textContent = emo;
-  f.style.left = r.left + r.width / 2 + 'px'; f.style.top = r.top + 'px';
-  f.style.setProperty('--dx', (Math.random() * 60 - 30).toFixed(0) + 'px');
-  document.body.append(f); setTimeout(() => f.remove(), 1400);
-}
-function placeReact(st) {
-  const bar = $('#reactBar'), on = joined && REACT_OK.has(st);
-  bar.hidden = !on; document.body.classList.toggle('has-react', on);
-  const cl = document.querySelector('#scr-locker.on .closet');
-  bar.style.bottom = cl ? Math.round(cl.getBoundingClientRect().height + 10) + 'px' : '';
-}
 function bounce() { const a = $('#lkAv'); a.classList.remove('jump'); void a.offsetWidth; a.classList.add('jump'); }
 let pushH;
 function pushAvatar() {
@@ -267,8 +247,7 @@ async function route() {
   resUnsub && resUnsub(); resUnsub = null;
   if (st !== 'land') landStop();
 
-  placeReact(st);
-  if (st === 'lobby') { if (needTeam) return showTeamPick(); show('locker'); renderCloset(); placeReact(st); return; }
+  if (st === 'lobby') { if (needTeam) return showTeamPick(); show('locker'); renderCloset(); return; }
   show('play');
   $('#pQ').textContent = qi >= 0 ? `ข้อ ${qi + 1}/${meta.total}` : '';
   const lctx = { DB, R, stage, meta: () => meta, me: () => me, again: () => { lastState = ''; route(); } };
@@ -280,8 +259,9 @@ async function route() {
     stage().innerHTML = `<div class="msg"><div class="big-num">${qi + 1}</div>
       ${meta.showQ && cur ? `<h2 class="q-mini">${esc(cur.text)}</h2>` : '<h2>เตรียมตัว!</h2>'}
       ${cur?.points >= 2000 ? `<div class="bonus">⭐ คะแนน x${cur.points / 1000}</div>` : ''}
+      ${betRow()}
       <div class="ready-bar"><i></i></div></div>`;
-    sfx.whoosh();
+    wireBet(); sfx.whoosh();
   } else if (st === 'question') {
     if (!meta.qStartAt || !cur) { lastState = ''; return; }
     const mine = await DB.get(`${R}/answers/${qi}/${DB.uid}`);
@@ -299,6 +279,8 @@ async function route() {
       <div class="rank-big">ทีมอันดับ <b>${r.teamRank}</b><small> จาก ${r.teamsOf} ทีม</small></div>
       <p class="soft">คะแนนทีม ${(r.teamScore || 0).toLocaleString('th-TH')} · คะแนนคุณ ${r.score.toLocaleString('th-TH')}</p>` : ''}
       ${r && meta.mode === 'survival' ? `<div class="hp-line">${r.hearts > 0 ? hearts(r.hearts, maxH()) : '👻 ตกรอบแล้ว'}</div>` : ''}
+      ${meta.mode === 'boss' && meta.boss ? bossMini(meta.boss, '', meta.boss.hp <= 0 ? 'dizzy' : 'normal') : ''}
+      ${meta.mode === 'rocket' ? rocketMini(r?.score ?? me?.score, meta.goal) : ''}
       ${r && meta.mode !== 'team' && meta.mode !== 'vote' ? `<div class="rank-big">อันดับ <b>${r.rank}</b><small> จาก ${r.of}</small></div>
       ${r.ahead && !(meta.mode === 'survival' && r.hearts <= 0) ? `<p class="soft">ตามหลัง <b>${esc(r.ahead.name)}</b> อยู่ ${r.ahead.gap.toLocaleString('th-TH')} คะแนน สู้ๆ!</p>` : '<p class="soft">🥇 นำอยู่ตอนนี้!</p>'}` : '<h2>ดูอันดับบนจอใหญ่</h2>'}
       </div>`;
@@ -318,8 +300,11 @@ async function route() {
       <div class="avatar-box hero">${renderAvatar(p.avatar)}</div>
       ${teamEnd(p)}
       ${meta.mode === 'survival' ? `<div class="hp-line">${(p.hearts ?? 1) > 0 ? '🏅 รอดจนจบเกม! ' + hearts(p.hearts, maxH()) : '👻 ตกรอบที่ข้อ ' + ((p.outAt ?? 0) + 1)}</div>` : ''}
+      ${meta.mode === 'boss' && meta.boss ? `<div class="boss-final ${meta.boss.hp <= 0 ? 'win' : ''}">${bossSVG(meta.boss.kind, meta.boss.hp <= 0 ? 'dizzy' : 'smug')}<b>${meta.boss.hp <= 0 ? '🎉 ทั้งห้องปราบบอสสำเร็จ!' : '😝 บอสหนีไปได้… ครั้งหน้าเอาใหม่!'}</b></div>` : ''}
+      ${meta.mode === 'rocket' ? rocketMini(p.score, meta.goal) : ''}
       ${meta.mode === 'vote' ? '' : `<div class="rank-big">อันดับ <b>${i + 1}</b><small> จาก ${list.length}</small></div>`}
-      <div class="final-score">${(p.score || 0).toLocaleString('th-TH')} <small>${meta.mode === 'land' ? 'ครั้งที่ยึดช่องได้' : 'คะแนน'}</small></div>
+      <div class="final-score">${(p.score || 0).toLocaleString('th-TH')} <small>${meta.mode === 'land' ? 'ครั้งที่ยึดช่องได้' : meta.mode === 'boss' ? 'ความเสียหายที่ทำได้' : 'คะแนน'}</small></div>
+      ${meta.mode === 'wager' ? `<p class="soft">${(p.score || 0) >= WAGER_START ? `🤑 กำไร +${((p.score || 0) - WAGER_START).toLocaleString('th-TH')}` : `😅 ขาดทุน −${(WAGER_START - (p.score || 0)).toLocaleString('th-TH')}`} จากทุนเริ่มต้น ${WAGER_START.toLocaleString('th-TH')}</p>` : ''}
       <p class="soft">${meta.mode === 'vote' ? 'คุณโหวตถูก' : 'ตอบถูก'} ${p.correct || 0} จาก ${meta.mode === 'land' ? p.answered || 0 : meta.played || meta.total} ข้อ</p>
       <a class="btn light" href="play.html">เล่นเกมใหม่</a></div>`;
     localStorage.setItem(ME_KEY, JSON.stringify({ avatar, sid, name: p.name }));
@@ -387,6 +372,7 @@ function answerScreen() {
     <div class="tbar"><i id="tFill"></i></div>
     ${meta.showQ ? `<div class="q-mini-card">${esc(cur.text)}</div>` : ''}
     ${meta.mode === 'vote' ? '<div class="team-tally" id="tally"></div>' : ''}
+    ${betRow()}
     <div class="pans n${n}">${cur.choices.map((c, k) => `
       <button class="ans a${k}" data-k="${k}"><span class="shape">${SHAPES[k]}</span>${meta.showQ ? `<span class="lbl">${esc(c)}</span>` : ''}</button>`).join('')}</div>`;
   const T = cur.time * 1000;
@@ -397,7 +383,7 @@ function answerScreen() {
   };
   tick(); timerH = setInterval(tick, 100);
   $$('.pans .ans').forEach((b) => (b.onclick = () => submit(+b.dataset.k)));
-  watchTally(); renderTally();
+  wireBet(); watchTally(); renderTally();
 }
 
 async function submit(k) {
@@ -407,7 +393,7 @@ async function submit(k) {
   sfx.tap();
   if (navigator.vibrate) navigator.vibrate(30);
   $$('.pans .ans').forEach((b) => { b.disabled = true; b.classList.toggle('picked', +b.dataset.k === k); });
-  try { await DB.set(`${R}/answers/${qi}/${DB.uid}`, { choice: k, at: TS }); }
+  try { await DB.set(`${R}/answers/${qi}/${DB.uid}`, { choice: k, at: TS, ...(meta.mode === 'wager' ? { bet: betNow() } : {}) }); }
   catch (e) { console.error(e); }
   setTimeout(() => waitScreen(k), 350);
 }
@@ -418,6 +404,7 @@ function waitScreen(k) {
   const fast = ['ไวมาก! ⚡', 'ส่งแล้ว! 🚀', 'เยี่ยม! ✨', 'ล็อกคำตอบ! 🔒'][Math.floor(Math.random() * 4)];
   const vote = meta.mode === 'vote';
   stage().innerHTML = `<div class="msg"><div class="picked-shape a${k}">${SHAPES[k]}</div><h2>${vote ? 'โหวตแล้ว! 🗳️' : fast}</h2>
+    ${meta.mode === 'wager' ? `<div class="bet-lock">🎰 เดิมพัน <b>${betNow().toLocaleString('th-TH')}</b> ลุ้น ๆ!</div>` : ''}
     ${vote ? '<div class="team-tally" id="tally"></div><p class="soft">ตัวเลือกที่ได้เสียงมากสุดในทีมจะเป็นคำตอบของทีม</p>' : '<p class="soft">รอเพื่อนๆ ตอบ…</p>'}<span class="dots"><i></i><i></i><i></i></span></div>`;
   if (vote) { if (!resUnsub) watchTally(); renderTally(); }
 }
@@ -437,7 +424,33 @@ function modeLine(r) {
     const t = TEAMS[r.team];
     return `<div class="team-chip" style="background:${t.c}">${t.e} ${ r.correct ? 'ช่วย' + t.name + 'ทำคะแนน!' : t.name + ' สู้ต่อ!'}</div>`;
   }
+  if (meta.mode === 'boss' && r.boss) return bossMini(r.boss, r.correct ? `⚔️ คุณโจมตีบอส <b>−${(r.dmg || 0).toLocaleString('th-TH')}</b>` : '🛡️ ข้อนี้ยังไม่ได้โจมตีบอส', r.boss.hp <= 0 ? 'dizzy' : r.correct ? 'hurt' : 'smug');
+  if (meta.mode === 'rocket') return rocketMini(r.score, r.goal || meta.goal);
   return '';
+}
+// ───── ชิ้นส่วนโหมดสนุก ─────
+function bossMini(b, line, mood) {
+  return `<div class="boss-mini">${bossSVG(meta.boss?.kind, mood)}<div>${line ? `<span>${line}</span>` : ''}${hpBar(b.hp, b.max)}</div></div>`;
+}
+function rocketMini(score, goal) {
+  const p = pctOf(score, goal);
+  return `<div class="rocket-mini"><div class="rm-track"><span class="rm-moon">🌙</span><span class="rm-r" style="left:calc(${p} * (100% - 34px) / 100)">🚀</span></div><small>${p >= 100 ? '🌙 ถึงดวงจันทร์แล้ว!' : `บินมาแล้ว ${p}% ของทางไปดวงจันทร์`}</small></div>`;
+}
+let bet = wagerOf(localStorage.getItem('gc_bet') || 300);
+const betMax = () => Math.max(100, me?.score || 0);
+const betNow = () => (bet <= betMax() ? bet : [...WAGER_BETS].reverse().find((b) => b <= betMax()) || 100);
+function betRow() {
+  if (meta?.mode !== 'wager') return '';
+  const now = betNow();
+  return `<div class="bet-row" id="betRow"><span>🎰 เดิมพัน</span>${WAGER_BETS.map((b) => `<button type="button" class="bet ${now === b ? 'on' : ''}" data-bet="${b}" ${b > betMax() ? 'disabled' : ''}>${b === 1000 ? '🔥' : ''}${b.toLocaleString('th-TH')}</button>`).join('')}</div>`;
+}
+function wireBet() {
+  const r = $('#betRow'); if (!r) return;
+  r.onclick = (e) => {
+    const b = e.target.closest('[data-bet]'); if (!b || b.disabled) return;
+    bet = +b.dataset.bet; try { localStorage.setItem('gc_bet', bet); } catch {}
+    sfx.tap(); $$('#betRow .bet').forEach((x) => x.classList.toggle('on', x === b));
+  };
 }
 
 function voteResult(r) {
@@ -476,6 +489,8 @@ function resultScreen(r) {
   stage().innerHTML = `<div class="msg result ${ok ? 'ok' : 'bad'}">
     <div class="res-ico">${ok ? '✓' : r.answered ? '✗' : '⏰'}</div>
     <h1>${ok ? 'ถูกต้อง!' : r.answered ? 'ยังไม่ถูกนะ' : 'ไม่ทันเวลา'}</h1>
+    ${!ok && r.lose ? `<div class="minus">−${r.lose.toLocaleString('th-TH')}</div>` : ''}
+    ${meta.mode === 'wager' && r.bet ? `<div class="bet-lock">🎰 เดิมพัน ${r.bet.toLocaleString('th-TH')} → ${ok ? `ได้ <b>+${r.gained.toLocaleString('th-TH')}</b>` : `เสีย <b>−${(r.lose || 0).toLocaleString('th-TH')}</b>`}</div>` : ''}
     ${ok ? `<div class="plus">+<b id="plusN">0</b></div>` : `<p class="soft">คำตอบที่ถูก: <b>${esc(cur?.choices?.[cur.correct] ?? '')}</b></p>`}
     ${ok && r.ms != null ? `<p class="soft">ตอบใน ${(r.ms / 1000).toFixed(1)} วินาที</p>` : ''}
     ${r.bonus ? `<div class="streak">🔥 ถูกติดกัน ${r.streak} ข้อ · โบนัส +${r.bonus}</div>` : r.streak >= 2 ? `<div class="streak">🔥 ถูกติดกัน ${r.streak} ข้อ</div>` : ''}
