@@ -125,7 +125,8 @@ function route() {
     $('#eTitle').textContent = meta.title; $('#eWho').textContent = `${me.name} · ${me.sid}`;
     show('exam'); renderQ(); renderGrid(); arm();
     clearInterval(timerH); timerH = setInterval(tick, 500); tick();
-    if (resumed && st === 'doing') { resumed = false; setTimeout(() => violation('reload'), 300); }
+    // รีเฟรช/เปิดหน้าใหม่ = นับ 1 ครั้ง — ถ้าเพิ่งบันทึกออกนอกจอตอนหน้าปิด (ภายใน 15 วิ) ไม่นับซ้ำ
+    if (resumed && st === 'doing') { resumed = false; setTimeout(() => { if (!(me?.lastLeaveAt && DB.now() - me.lastLeaveAt < 15000)) violation('reload'); }, 300); }
   }
   if (st === 'doing' && lockedBefore) { lockedBefore = false; $('#warnTxt').innerHTML = '🔓 ครูคุมสอบปลดล็อกแล้ว<br><b>ถ้าออกนอกหน้าจออีกครั้ง ข้อสอบจะถูกล็อกทันที</b>'; $('#warnOv').hidden = false; }
   if (st === 'locked') { lockedBefore = true; $('#warnOv').hidden = true; $('#lockTxt').textContent = `ออกนอกจอ ${me.leaves} ครั้ง (อนุญาต ${limit()} ครั้ง)`; }
