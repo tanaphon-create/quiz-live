@@ -71,6 +71,7 @@ function route() {
         `${meta.shuffleQ || meta.shuffleC ? 'ข้อสอบของแต่ละคน<b>สลับลำดับไม่เหมือนกัน</b>' : 'ตอบทุกข้อให้ครบ'}`,
         `ระหว่างสอบ <b>ห้ามสลับแอป เปิดแท็บอื่น ออกจากเต็มจอ หรือรีเฟรช</b>`,
         `ออกนอกหน้าจอได้ไม่เกิน <b>${meta.maxLeave} ครั้ง</b> — ครั้งถัดไป<b>ข้อสอบจะถูกล็อก</b>และแจ้งครูคุมสอบทันที`,
+        ...(meta.voidOnLeave ? ['<b>ใช้ AI / Google Lens / วงกลมเพื่อค้นหา / แคปจอ / สลับแอป</b> ระหว่างเปิดข้อไหน <b>ข้อนั้นถูกตัดสิทธิ์ทันที (ได้ 0 คะแนน แก้คำตอบไม่ได้)</b>'] : []),
         'คำตอบบันทึกอัตโนมัติทุกครั้งที่เลือก <b>หมดเวลาระบบส่งให้อัตโนมัติ</b>',
         `เกณฑ์ผ่าน <b>${passScore()} คะแนน</b> จาก ${meta.n}${!meta.round ? ' · ไม่ผ่านสอบแก้ตัวได้' : myKind === 'makeup' ? ' · <b>สอบซ่อม: ได้คะแนนตามที่ทำได้จริง</b>' : ' · <b>สอบแก้ตัว: ทำได้เกินเกณฑ์จะได้คะแนนเท่าเกณฑ์ผ่าน</b>'}`,
       ].map((t) => `<li>${t}</li>`).join('');
@@ -104,10 +105,15 @@ const qIndex = (k) => (me.order || [])[k];
 function renderQ() {
   if (!me || !paper.length) return;
   const n = paper.length, qi = qIndex(cur), q = paper[qi]; if (!q) return;
-  const pick = ans['q' + qi];
-  $('#eQ').innerHTML = `<div class="ex-qn">ข้อ ${cur + 1} / ${n}</div>
+  const pick = ans['q' + qi], vd = isVoid(qi);
+  const wm = esc(`${me.name} · ${me.sid}`);
+  $('#eQ').classList.toggle('void', vd);
+  $('#eQ').innerHTML = `<div class="ex-wm" aria-hidden="true">${Array(24).fill(`<span>${wm}</span>`).join('')}</div>
+    <div class="ex-shield-msg" aria-hidden="true">🙈 ซ่อนข้อสอบไว้ — กลับมาที่หน้านี้เพื่อทำต่อ</div>
+    ${vd ? '<div class="ex-void">🚫 ข้อนี้ถูกตัดสิทธิ์ — ออกนอกหน้าจอระหว่างเปิดข้อนี้ (ได้ 0 คะแนน)</div>' : ''}
+    <div class="ex-qn">ข้อ ${cur + 1} / ${n}</div>
     <h2 class="ex-qt">${esc(q.text)}</h2>${q.image ? `<img class="ex-img" src="${esc(q.image)}" alt="" draggable="false">` : ''}
-    <div class="ex-ch">${(me.corder?.[qi] || []).map((ci, k) => `<button type="button" class="ex-opt${pick === ci ? ' on' : ''}" data-ci="${ci}" aria-pressed="${pick === ci}">
+    <div class="ex-ch">${(me.corder?.[qi] || []).map((ci, k) => `<button type="button" class="ex-opt${pick === ci ? ' on' : ''}" data-ci="${ci}" aria-pressed="${pick === ci}"${vd ? ' disabled' : ''}>
       <span class="lb">${LABEL[k]}</span><span>${esc(q.choices[ci])}</span></button>`).join('')}</div>`;
   $('#prevBtn').disabled = cur === 0; $('#nextBtn').disabled = cur === n - 1;
   const done = Object.values(ans).filter((v) => v != null).length;
@@ -116,11 +122,12 @@ function renderQ() {
 function renderGrid() {
   if (!me) return;
   $('#eGrid').innerHTML = `<small>ข้อที่ตอบแล้วเป็นสีเขียว · แตะเลขข้อเพื่อไปยังข้อนั้น</small><div class="ex-nums">${paper.map((_, k) =>
-    `<button type="button" class="${ans['q' + qIndex(k)] != null ? 'ok' : ''}${k === cur ? ' cur' : ''}" data-go="${k}">${k + 1}</button>`).join('')}</div>`;
+    `<button type="button" class="${isVoid(qIndex(k)) ? 'void' : ans['q' + qIndex(k)] != null ? 'ok' : ''}${k === cur ? ' cur' : ''}" data-go="${k}">${k + 1}</button>`).join('')}</div>`;
 }
 $('#eQ').onclick = async (e) => {
   const b = e.target.closest('[data-ci]'); if (!b || me.status !== 'doing') return;
   const qi = qIndex(cur), ci = +b.dataset.ci;
+  if (isVoid(qi)) return toast('ข้อนี้ถูกตัดสิทธิ์แล้ว');
   ans = { ...ans, ['q' + qi]: ci }; renderQ(); renderGrid();
   try { await DB.set(`${R}/ans/${uid}/q${qi}`, ci); } catch (err) { toast('บันทึกคำตอบไม่ได้ (หมดเวลาหรือถูกล็อก)'); }
 };
@@ -188,21 +195,35 @@ function renderScore() {
 /* ───────── ล็อกหน้าจอ ───────── */
 function fullscreen() { const el = document.documentElement; if (document.fullscreenEnabled && !document.fullscreenElement) el.requestFullscreen({ navigationUI: 'hide' }).then(() => (wasFs = true)).catch(() => {}); }
 function arm() { armed = true; history.pushState({ ex: 1 }, ''); }
-function disarm() { armed = false; }
+function disarm() { armed = false; shield(false); }
+const isVoid = (qi) => !!me?.voids?.['q' + qi];
+// ซ่อนโจทย์ทันทีที่หน้าจอไม่ได้อยู่ในมือ (เช่น เปิด Gemini/ผู้ช่วย AI ทับหน้าจอแล้วกด "ถามเกี่ยวกับหน้าจอ")
+function shield(on) { document.body.classList.toggle('ex-shield', !!on && armed); }
+// บางแอปเปิดทับหน้าเว็บโดยไม่ส่งสัญญาณ blur — ตรวจโฟกัสซ้ำทุก 0.4 วิ (ไม่มีโฟกัสติดกัน 2 รอบ = ออกนอกจอ)
+let noFocus = 0;
+setInterval(() => {
+  if (!armed || me?.status !== 'doing') { noFocus = 0; return; }
+  if (document.hidden || !document.hasFocus()) { shield(true); if (++noFocus === 2) violation('focus'); }
+  else { if (noFocus) back(); noFocus = 0; }
+}, 400);
 function violation(kind) {
   if (!armed || !me || me.status !== 'doing') return;
   const t = Date.now(); if (t - lastV < 2500) return; lastV = t;
   const leaves = (me.leaves || 0) + 1, over = leaves > limit();
-  me = { ...me, leaves };
-  DB.update(`${R}/students/${uid}`, { leaves, away: true, lastKind: kind, lastLeaveAt: TS, ...(over ? { status: 'locked' } : {}) }).catch(() => {});
+  // ตัดสิทธิ์ข้อที่เปิดอยู่ตอนออกนอกจอ (กันแคปจอ/วงกลมค้นหา/ถาม AI) — ยกเว้นรีเฟรช เพราะไม่รู้ว่าเปิดข้อไหนอยู่
+  const qi = meta.voidOnLeave && kind !== 'reload' && paper.length ? qIndex(cur) : null, vNew = qi != null && !isVoid(qi);
+  me = { ...me, leaves, ...(vNew ? { voids: { ...(me.voids || {}), ['q' + qi]: true } } : {}) };
+  DB.update(`${R}/students/${uid}`, { leaves, away: true, lastKind: kind, lastLeaveAt: TS, ...(vNew ? { ['voids/q' + qi]: true, lastVoid: cur + 1 } : {}), ...(over ? { status: 'locked' } : {}) }).catch(() => {});
+  if (vNew) { ans = { ...ans, [`q${qi}`]: null }; Promise.resolve(DB.set(`${R}/ans/${uid}/q${qi}`, null)).catch(() => {}); }
+  renderQ(); renderGrid();
   if (!over) {
     const left = limit() - leaves;
-    $('#warnTxt').innerHTML = `ระบบบันทึกว่าออกนอกหน้าจอ <b>ครั้งที่ ${leaves}/${limit()}</b> และแจ้งครูคุมสอบแล้ว<br>${left > 0 ? `ออกได้อีก ${left} ครั้ง` : '<b>ถ้าออกอีกครั้ง ข้อสอบจะถูกล็อก</b>'}`;
+    $('#warnTxt').innerHTML = `ระบบบันทึกว่าออกนอกหน้าจอ <b>ครั้งที่ ${leaves}/${limit()}</b> และแจ้งครูคุมสอบแล้ว${vNew ? `<br>🚫 <b>ข้อ ${cur + 1} ถูกตัดสิทธิ์</b> (ได้ 0 คะแนน)` : ''}<br>${left > 0 ? `ออกได้อีก ${left} ครั้ง` : '<b>ถ้าออกอีกครั้ง ข้อสอบจะถูกล็อก</b>'}`;
     $('#warnOv').hidden = false;
   }
   renderLeave();
 }
-function back() { if (armed && me?.status === 'doing' && !document.hidden && document.hasFocus()) DB.update(`${R}/students/${uid}`, { away: false }).catch(() => {}); }
+function back() { if (!document.hidden && document.hasFocus()) shield(false); if (armed && me?.status === 'doing' && !document.hidden && document.hasFocus()) DB.update(`${R}/students/${uid}`, { away: false }).catch(() => {}); }
 $('#backBtn').onclick = () => { $('#warnOv').hidden = true; fullscreen(); back(); };
 $('#startBtn').onclick = async () => {
   if (meta.state !== 'open') return toast('ห้องสอบปิดแล้ว');
@@ -210,8 +231,9 @@ $('#startBtn').onclick = async () => {
   try { await DB.update(`${R}/students/${uid}`, { status: 'doing', startAt: DB.now() - 3000 }); }
   catch (err) { console.error(err); toast('เริ่มสอบไม่ได้ ลองอีกครั้ง'); }
 };
-document.addEventListener('visibilitychange', () => (document.hidden ? violation('hidden') : back()));
-window.addEventListener('blur', () => violation('blur'));
+document.addEventListener('visibilitychange', () => (document.hidden ? (shield(true), violation('hidden')) : back()));
+window.addEventListener('blur', () => { shield(true); violation('blur'); });
+window.addEventListener('pagehide', () => shield(true));
 window.addEventListener('focus', back);
 document.addEventListener('fullscreenchange', () => { if (document.fullscreenElement) wasFs = true; else if (wasFs) violation('fullscreen'); });
 window.addEventListener('popstate', () => { if (armed) { history.pushState({ ex: 1 }, ''); toast('ห้ามย้อนกลับระหว่างสอบ'); } });

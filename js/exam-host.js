@@ -139,7 +139,7 @@ $('#setupForm').onsubmit = async (e) => {
   try {
     const p = await newPin();
     const m = { hostUid: me, title: q.title, state: 'open', n: qs.length, duration: Math.max(1, +$('#dur').value || 30), maxLeave: Math.max(1, +$('#maxLeave').value || 1),
-      passPct: Math.min(100, Math.max(1, +$('#passPct').value || 50)), shuffleQ: $('#shufQ').checked, shuffleC: $('#shufC').checked, showScore: $('#showScore').checked, createdAt: Date.now() };
+      passPct: Math.min(100, Math.max(1, +$('#passPct').value || 50)), shuffleQ: $('#shufQ').checked, shuffleC: $('#shufC').checked, voidOnLeave: $('#voidQ').checked, showScore: $('#showScore').checked, createdAt: Date.now() };
     const paper = qs.map((x) => ({ type: x.type, text: x.text, image: x.image || '', choices: (x.choices || []).slice(0, x.type === 'tf' ? 2 : 4).map((c) => String(c ?? '')) }));
     await DB.set(`quiz/exams/${p}`, { meta: m, paper });
     const rec = { title: q.title, setId: q.id, key: qs.map((x) => +x.correct || 0), createdAt: m.createdAt };
@@ -183,7 +183,7 @@ function openProctor(p) {
   show('proctor');
   let first = true;
   unsubs.push(DB.on(`quiz/exams/${p}/meta`, (m) => { meta = m; if (!m) return; renderHead(); render(); if (m.revealed && !family) loadFamily(); }));
-  unsubs.push(DB.on(`quiz/exams/${p}/students`, (v) => { students = v || {}; detect(first); first = false; render(); grade(); }));
+  unsubs.push(DB.on(`quiz/exams/${p}/students`, (v) => { students = v || {}; detect(first); first = false; keepVoids(); render(); grade(); }));
   unsubs.push(DB.on(`quiz/exams/${p}/ans`, (v) => { ans = v || {}; render(); grade(); }));
   unsubs.push(DB.on(`quiz/exams/${p}/results`, (v) => { results = v || {}; render(); if (family) loadFamily(); }));
   unsubs.push(DB.on(`quiz/exams/${p}/allow`, (v) => { allowMap = v || {}; render(); }));
@@ -194,7 +194,7 @@ function renderHead() {
   $('#pTitle').innerHTML = esc(meta.title) + (meta.round ? ` <small class="ex-round">${meta.round ? 'สอบแก้ตัว/ซ่อม รอบ ' + meta.round : ''}</small>` : '');
   const pass = passOf(meta, meta.n);
   $('#pState').textContent = meta.state === 'open' ? `🟢 เปิดสอบ · ${meta.duration} นาที` : meta.revealed ? '📢 เฉลยแล้ว' : '⚪ ปิดห้องสอบแล้ว';
-  $('#pRule').innerHTML = `${meta.n} ข้อ · ${meta.duration} นาที · ผ่าน ${pass} คะแนน (${meta.passPct ?? 50}%)<br>ออกนอกจอได้ ${meta.maxLeave} ครั้ง · ${meta.shuffleQ ? 'สุ่มข้อ' : 'ไม่สุ่มข้อ'} · ${meta.shuffleC ? 'สุ่มตัวเลือก' : 'ไม่สุ่มตัวเลือก'}`
+  $('#pRule').innerHTML = `${meta.n} ข้อ · ${meta.duration} นาที · ผ่าน ${pass} คะแนน (${meta.passPct ?? 50}%)<br>ออกนอกจอได้ ${meta.maxLeave} ครั้ง · ${meta.shuffleQ ? 'สุ่มข้อ' : 'ไม่สุ่มข้อ'} · ${meta.shuffleC ? 'สุ่มตัวเลือก' : 'ไม่สุ่มตัวเลือก'}${meta.voidOnLeave ? ' · 🛡️ ออกนอกจอ = ตัดสิทธิ์ข้อนั้น' : ''}`
     + (meta.round ? '<br><b>เข้าได้เฉพาะคนในรายชื่อ · แก้ตัว: ได้ไม่เกินเกณฑ์ผ่าน · ซ่อม: ได้คะแนนตามจริง</b>' : '');
   $('#closeBtn').hidden = $('#addTime').hidden = meta.state !== 'open';
 }
@@ -203,7 +203,18 @@ const answered = (u) => Object.values(ans[u] || {}).filter((v) => v != null).len
 const limitOf = (s) => (meta?.maxLeave || 0) + (s.extra || 0);
 const deadlineOf = (s) => (s.startAt ? s.startAt + (meta?.duration || 0) * 60000 : null);
 const nameOf = (s) => `${esc(s.name || '-')} <small>(${esc(s.sid || '-')})</small>`;
-const KIND = { hidden: 'สลับแอป/แท็บ', blur: 'คลิกออกนอกหน้าต่าง', fullscreen: 'ออกจากเต็มจอ', reload: 'รีเฟรช/ปิดหน้า' };
+const KIND = { hidden: 'สลับแอป/แท็บ', blur: 'คลิกออกนอกหน้าต่าง/เปิดแอปทับ', focus: 'มีแอปเปิดทับหน้าจอ', fullscreen: 'ออกจากเต็มจอ', reload: 'รีเฟรช/ปิดหน้า' };
+// ข้อที่ถูกตัดสิทธิ์: เก็บสำเนาไว้ฝั่งครูด้วย (นักเรียนแก้ไม่ได้)
+const voidsOf = (u) => ({ ...(exams[pin]?.voids?.[u] || {}), ...(students[u]?.voids || {}) });
+const voidCount = (u) => Object.keys(voidsOf(u)).length;
+function keepVoids() {
+  const rec = exams[pin]; if (!rec) return;
+  for (const [u, s] of Object.entries(students)) for (const q of Object.keys(s.voids || {})) {
+    if (rec.voids?.[u]?.[q]) continue;
+    rec.voids = rec.voids || {}; (rec.voids[u] = rec.voids[u] || {})[q] = true;
+    Promise.resolve(DB.set(`quiz/banks/${me}/exams/${pin}/voids/${u}/${q}`, true)).catch(() => {});
+  }
+}
 function log(html, cls = '') {
   const t = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   feed.unshift(`<li class="${cls}"><time>${t}</time> ${html}</li>`); feed.length = Math.min(feed.length, 60);
@@ -215,7 +226,7 @@ function detect(first) {
     const L = s.leaves || 0, was = seenLeaves[u] ?? (first ? L : 0);
     if (!first && L > was) {
       const over = L > limitOf(s);
-      log(`👀 <b>${nameOf(s)}</b> ออกนอกหน้าจอ ครั้งที่ ${L}${over ? ` (เกินที่อนุญาต ${limitOf(s)} ครั้ง)` : `/${limitOf(s)}`}${s.lastKind ? ` <small>(${esc(KIND[s.lastKind] || s.lastKind)})</small>` : ''}`, over ? 'bad' : 'warn');
+      log(`👀 <b>${nameOf(s)}</b> ออกนอกหน้าจอ ครั้งที่ ${L}${over ? ` (เกินที่อนุญาต ${limitOf(s)} ครั้ง)` : `/${limitOf(s)}`}${s.lastKind ? ` <small>(${esc(KIND[s.lastKind] || s.lastKind)})</small>` : ''}${s.lastVoid && meta?.voidOnLeave ? ` · 🚫 ตัดสิทธิ์ข้อ ${s.lastVoid}` : ''}`, over ? 'bad' : 'warn');
       if (!over) { sfx.urgent(); warnBanner(s, L); }
     }
     seenLeaves[u] = L;
@@ -278,7 +289,7 @@ function render() {
       <td>${esc(s.sid)}</td><td><b>${esc(s.name)}</b>${meta.round ? (allowMap[s.sid] === 'makeup' ? ' <span class="chip doing">ซ่อม</span>' : ' <span class="chip warn">แก้ตัว</span>') : ''}${s.online === false && s.status !== 'submitted' ? ' <small class="off">ออฟไลน์</small>' : ''}</td>
       <td><span class="chip ${sc}">${st}</span>${s.away && s.status === 'doing' ? ' <span class="chip warn">👀 ออกนอกจออยู่</span>' : ''}</td>
       <td><div class="ex-bar"><i style="width:${(done / n) * 100}%"></i></div><small>${done}/${n}</small></td>
-      <td class="lv ${L > lim ? 'over' : L ? 'some' : ''}">${L}/${lim}</td>
+      <td class="lv ${L > lim ? 'over' : L ? 'some' : ''}">${L}/${lim}${voidCount(u) ? `<br><small title="ข้อที่ถูกตัดสิทธิ์เพราะออกนอกจอ">🚫 ตัด ${voidCount(u)} ข้อ</small>` : ''}</td>
       <td>${s.status === 'submitted' ? '-' : dl ? fmt(dl - now) : '-'}</td>
       <td>${r ? `<b>${r.score}</b>/${r.total}` : '-'}${meta.round && r && r.score > pass && allowMap[s.sid] !== 'makeup' ? ` <small>→ ได้ ${pass}</small>` : ''}</td>
       <td>${res}${fin != null && family.rounds > 0 ? ` <small>สุดท้าย ${fin}</small>` : ''}</td>
@@ -307,8 +318,8 @@ function grade() {
   const pass = passOf(meta, key.length);
   for (const [u, s] of Object.entries(students)) {
     if (s.status !== 'submitted') continue;
-    const a = ans[u] || {};
-    const marks = key.map((k, i) => (a['q' + i] === k ? '1' : '0')).join('');
+    const a = ans[u] || {}, vd = voidsOf(u);
+    const marks = key.map((k, i) => (a['q' + i] === k && !vd['q' + i] ? '1' : '0')).join('');
     const score = [...marks].filter((x) => x === '1').length;
     const r = results[u];
     if (!r || r.score !== score || r.marks !== marks || r.total !== key.length || r.pass !== pass)
