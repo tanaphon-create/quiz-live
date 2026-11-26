@@ -293,12 +293,23 @@ function render() {
       <td>${s.status === 'submitted' ? '-' : dl ? fmt(dl - now) : '-'}</td>
       <td>${r ? `<b>${r.score}</b>/${r.total}` : '-'}${meta.round && r && r.score > pass && allowMap[s.sid] !== 'makeup' ? ` <small>→ ได้ ${pass}</small>` : ''}</td>
       <td>${res}${fin != null && family.rounds > 0 ? ` <small>สุดท้าย ${fin}</small>` : ''}</td>
-      <td class="act">${s.status === 'locked' ? `<button class="btn green sm" data-unlock="${u}">ปลดล็อก</button>` : ''}${s.status === 'doing' || s.status === 'locked' ? `<button class="btn light sm" data-submit="${u}">บังคับส่ง</button>` : ''}</td>
+      <td class="act">${s.status === 'locked' ? `<button class="btn green sm" data-unlock="${u}">ปลดล็อก</button>` : ''}${s.status === 'doing' || s.status === 'locked' ? `<button class="btn light sm" data-submit="${u}">บังคับส่ง</button>` : ''}<button class="btn light sm ex-reset" data-reset="${u}" title="ลบการเข้าสอบของคนนี้ทั้งหมด ให้เข้าห้องสอบใหม่ได้">↺ ล้างสิทธิ์</button></td>
     </tr>`;
   }).join('');
 }
 $('#pRows').onclick = async (e) => {
-  const u1 = e.target.closest('[data-unlock]')?.dataset.unlock, u2 = e.target.closest('[data-submit]')?.dataset.submit;
+  const u1 = e.target.closest('[data-unlock]')?.dataset.unlock, u2 = e.target.closest('[data-submit]')?.dataset.submit, u3 = e.target.closest('[data-reset]')?.dataset.reset;
+  if (u3) {
+    const s = students[u3]; if (!s) return;
+    if (!confirm(`ล้างสิทธิ์ของ ${s.name} (${s.sid})?\n\nคำตอบ คะแนน จำนวนครั้งที่ออกนอกจอ และข้อที่ถูกตัดสิทธิ์ของคนนี้จะถูกลบทั้งหมด (กู้คืนไม่ได้)\nนักเรียนจะเข้าห้องสอบและเริ่มทำใหม่ได้ตั้งแต่ต้น — ห้องสอบต้องยังเปิดอยู่`)) return;
+    try {
+      await DB.update(`quiz/exams/${pin}`, { [`students/${u3}`]: null, [`ans/${u3}`]: null, [`results/${u3}`]: null });
+      if (exams[pin]?.voids?.[u3]) { delete exams[pin].voids[u3]; Promise.resolve(DB.remove(`quiz/banks/${me}/exams/${pin}/voids/${u3}`)).catch(() => {}); }
+      delete seenLeaves[u3]; delete seenStatus[u3];
+      log(`↺ ล้างสิทธิ์ <b>${nameOf(s)}</b> — เข้าห้องสอบใหม่ได้`, 'ok');
+    } catch (err) { console.error(err); toast('ล้างสิทธิ์ไม่สำเร็จ ลองอีกครั้ง'); }
+    return;
+  }
   if (u1) {
     const s = students[u1]; if (!s) return;
     // ปลดล็อก: ให้ทำต่อได้ แต่ถ้าออกนอกจออีกครั้งจะถูกล็อกทันที

@@ -49,11 +49,24 @@ async function enter(resume) {
   if (!paper.length) paper = (await DB.get(`${R}/paper`)) || [];
   subs.forEach((u) => typeof u === 'function' && u()); subs = [];
   subs.push(DB.on(`${R}/meta`, (m) => { if (m) { meta = m; route(); renderScore(); } }));
-  subs.push(DB.on(`${R}/students/${uid}`, (s) => { if (s) { me = s; route(); } }));
+  subs.push(DB.on(`${R}/students/${uid}`, (s) => { if (s?.sid) { me = s; route(); } else if (me) wiped(); }));
   subs.push(DB.on(`${R}/ans/${uid}`, (v) => { ans = v || {}; if (routed === 'exam') { renderQ(); renderGrid(); } }));
   subs.push(DB.on(`${R}/results/${uid}`, (r) => { myRes = r; renderScore(); }));
   subs.push(DB.on(`${R}/reveal`, (v) => { revealKey = v?.key || null; renderScore(); }));
   try { Promise.resolve(DB.set(`${R}/students/${uid}/online`, true)).catch(() => {}); Promise.resolve(DB.onDisconnect(`${R}/students/${uid}/online`, false)).catch(() => {}); } catch {}
+}
+
+// ครูกด "ล้างสิทธิ์": กลับไปหน้ากรอกข้อมูล เพื่อเข้าห้องสอบใหม่ตั้งแต่ต้น
+function wiped() {
+  subs.forEach((u) => typeof u === 'function' && u()); subs = [];
+  const old = me; disarm(); me = null; ans = {}; myRes = null; routed = ''; cur = 0; lockedBefore = false;
+  clearInterval(timerH);
+  ['#warnOv', '#lockOv', '#fsOv'].forEach((k) => ($(k).hidden = true)); document.body.classList.remove('ex-nofs', 'ex-shield');
+  if ($('#confirmDlg').open) $('#confirmDlg').close();
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  $('#infoTitle').textContent = '📝 ' + (meta?.title || 'ข้อสอบ');
+  if (old) { $('#sidIn').value = old.sid || ''; $('#nameIn').value = old.name || ''; }
+  show('info'); toast('ครูล้างสิทธิ์ให้แล้ว — กด “เข้าห้องสอบ” เพื่อเริ่มใหม่', 5000);
 }
 
 /* ───────── เปลี่ยนหน้าตามสถานะ ───────── */
