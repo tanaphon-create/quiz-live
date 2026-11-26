@@ -1,6 +1,7 @@
 import { connect, TS } from './db.js';
 import { renderAvatar, randomAvatar, OPTS, bgCSS } from './avatar.js?v=20261126a';
-import { BOSSES, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, pctOf, MODE_COLOR } from './fun-modes.js?v=20261126a';
+import { BOSSES, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, pctOf, MODE_COLOR, AWARDS } from './fun-modes.js?v=20261126b';
+let myLastRank = null;
 import { sfx, unlock } from './sound.js';
 import { applyTheme, savedTheme } from './themes.js';
 import { landPlay, landOver, landStop } from './land-play.js?v=20261124a';
@@ -273,7 +274,14 @@ async function route() {
   } else if (st === 'board' && !shown) {
     drumWait('🏆 ครูกำลังประกาศอันดับบนจอใหญ่…');
   } else if (st === 'board') {
-    const r = await DB.get(`${R}/results/${qi}/${DB.uid}`);
+    const solo = meta.mode !== 'team' && meta.mode !== 'vote';
+    const allR = solo ? (await DB.get(`${R}/results/${qi}`)) || {} : null;
+    const r = allR ? allR[DB.uid] : await DB.get(`${R}/results/${qi}/${DB.uid}`);
+    const g = r ? r.gained + r.bonus - (r.lose || 0) : 0;
+    const mv = r && myLastRank != null ? myLastRank - r.rank : 0; if (r) myLastRank = r.rank;
+    const top3 = allR ? Object.entries(allR).sort((a, b) => a[1].rank - b[1].rank).slice(0, 3) : [];
+    const chips = r && solo ? `<div class="rk-chips">${g ? `<span class="${g < 0 ? 'neg' : 'pos'}">${g > 0 ? '+' : '−'}${Math.abs(g).toLocaleString('th-TH')} ข้อนี้</span>` : '<span class="zero">ข้อนี้ +0</span>'}${mv > 0 ? `<span class="up">▲ ขึ้น ${mv} อันดับ</span>` : mv < 0 ? `<span class="down">▼ ลง ${-mv} อันดับ</span>` : ''}${r.streak >= 2 ? `<span class="fire">🔥 ${r.streak} ติด</span>` : ''}</div>` : '';
+    const mini = top3.length ? `<ol class="mini-top">${top3.map(([u, x]) => `<li class="${u === DB.uid ? 'me' : ''}"><span>${['🥇', '🥈', '🥉'][x.rank - 1] || x.rank}</span><i>${renderAvatar(allPlayers[u]?.avatar, { bg: false })}</i><b>${esc(allPlayers[u]?.name || '')}</b><em>${(x.score || 0).toLocaleString('th-TH')}</em></li>`).join('')}</ol>` : '';
     stage().innerHTML = `<div class="msg"><div class="avatar-box hero">${renderAvatar(me?.avatar)}</div>
       ${r && (meta.mode === 'team' || meta.mode === 'vote') && r.team != null ? `<div class="team-chip big" style="background:${teamInfo(meta.mode, r.team).c}">${teamInfo(meta.mode, r.team).e} ${teamInfo(meta.mode, r.team).name}</div>
       <div class="rank-big">ทีมอันดับ <b>${r.teamRank}</b><small> จาก ${r.teamsOf} ทีม</small></div>
@@ -281,8 +289,8 @@ async function route() {
       ${r && meta.mode === 'survival' ? `<div class="hp-line">${r.hearts > 0 ? hearts(r.hearts, maxH()) : '👻 ตกรอบแล้ว'}</div>` : ''}
       ${meta.mode === 'boss' && meta.boss ? bossMini(meta.boss, '', meta.boss.hp <= 0 ? 'dizzy' : 'normal') : ''}
       ${meta.mode === 'rocket' ? rocketMini(r?.score ?? me?.score, meta.goal) : ''}
-      ${r && meta.mode !== 'team' && meta.mode !== 'vote' ? `<div class="rank-big">อันดับ <b>${r.rank}</b><small> จาก ${r.of}</small></div>
-      ${r.ahead && !(meta.mode === 'survival' && r.hearts <= 0) ? `<p class="soft">ตามหลัง <b>${esc(r.ahead.name)}</b> อยู่ ${r.ahead.gap.toLocaleString('th-TH')} คะแนน สู้ๆ!</p>` : '<p class="soft">🥇 นำอยู่ตอนนี้!</p>'}` : '<h2>ดูอันดับบนจอใหญ่</h2>'}
+      ${r && meta.mode !== 'team' && meta.mode !== 'vote' ? `<div class="rank-big">อันดับ <b>${r.rank}</b><small> จาก ${r.of}</small></div>${chips}
+      ${r.ahead && !(meta.mode === 'survival' && r.hearts <= 0) ? `<p class="soft">ตามหลัง <b>${esc(r.ahead.name)}</b> อยู่ ${r.ahead.gap.toLocaleString('th-TH')} คะแนน สู้ๆ!</p>` : '<p class="soft">🥇 นำอยู่ตอนนี้!</p>'}${mini}` : '<h2>ดูอันดับบนจอใหญ่</h2>'}
       </div>`;
     r && r.rank <= 3 ? sfx.correct() : sfx.pop();
   } else if (st === 'end' && !meta.cancelled && !shown) {
@@ -295,6 +303,7 @@ async function route() {
     const p = list[i] || me || {};
     const tRank = meta.mode === 'vote' && meta.finalTeams ? Object.values(meta.finalTeams).find((t) => t.k === p.vteam)?.rank : null;
     const medal = ['🥇', '🥈', '🥉'][tRank != null ? tRank - 1 : i] || '🎖️';
+    const myAw = Object.entries(meta.awards || {}).filter(([, u]) => u === DB.uid).map(([k]) => AWARDS[k]).filter(Boolean);
     stage().innerHTML = `<div class="msg final">
       <div class="medal" style="animation-delay:.3s">${medal}</div>
       <div class="avatar-box hero">${renderAvatar(p.avatar)}</div>
@@ -306,6 +315,8 @@ async function route() {
       <div class="final-score">${(p.score || 0).toLocaleString('th-TH')} <small>${meta.mode === 'land' ? 'ครั้งที่ยึดช่องได้' : meta.mode === 'boss' ? 'ความเสียหายที่ทำได้' : 'คะแนน'}</small></div>
       ${meta.mode === 'wager' ? `<p class="soft">${(p.score || 0) >= WAGER_START ? `🤑 กำไร +${((p.score || 0) - WAGER_START).toLocaleString('th-TH')}` : `😅 ขาดทุน −${(WAGER_START - (p.score || 0)).toLocaleString('th-TH')}`} จากทุนเริ่มต้น ${WAGER_START.toLocaleString('th-TH')}</p>` : ''}
       <p class="soft">${meta.mode === 'vote' ? 'คุณโหวตถูก' : 'ตอบถูก'} ${p.correct || 0} จาก ${meta.mode === 'land' ? p.answered || 0 : meta.played || meta.total} ข้อ</p>
+      ${myAw.length ? `<div class="my-awards"><small>🏅 รางวัลพิเศษของคุณ</small>${myAw.map((a) => `<span>${a.e} ${a.t}</span>`).join('')}</div>` : ''}
+      ${p.st && meta.mode !== 'land' ? `<div class="my-stats"><span><b>${Math.round(((p.st.ok || 0) / Math.max(1, meta.played || meta.total)) * 100)}%</b><small>ตอบถูก</small></span><span><b>${((p.st.avg || 0) / 1000).toFixed(1)}</b><small>วินาที/ข้อ</small></span><span><b>${p.st.best || 0}</b><small>ถูกติดกันสูงสุด</small></span></div>` : ''}
       <a class="btn light" href="play.html">เล่นเกมใหม่</a></div>`;
     localStorage.setItem(ME_KEY, JSON.stringify({ avatar, sid, name: p.name }));
     const myT = meta.mode === 'vote' ? p.vteam : p.team;

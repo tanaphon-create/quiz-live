@@ -66,6 +66,14 @@ export const hpBar = (hp, max) => {
   return `<div class="hpbar ${p <= 25 ? 'low' : ''}"><i style="width:${p}%"></i><span>❤️ ${Math.round(p)}%</span></div>`;
 };
 
+/* ───────── 🏅 รางวัลพิเศษตอนจบเกม ───────── */
+export const AWARDS = {
+  acc: { e: '🎯', t: 'แม่นยำที่สุด' },
+  fast: { e: '⚡', t: 'สายฟ้าแลบ' },
+  fire: { e: '🔥', t: 'ไฟลุกโชน' },
+  rise: { e: '🚀', t: 'ดาวรุ่งพุ่งแรง' },
+};
+
 /* ───────── 🎰 เดิมพัน ───────── */
 export const WAGER_BETS = [100, 300, 500, 1000];
 export const WAGER_START = 1000;

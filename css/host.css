@@ -405,3 +405,84 @@
 .rocket-race .rk.rl, .rocket-race .rk.rl:first-child { background: rgba(255,255,255,.1); border: 0; color: #fff; font-size: 1.05rem; }
 .rocket-race .rk.rl:first-child { outline: 3px solid #FFD34D; background: rgba(255,211,77,.2); }
 .rocket-race .rk.rl:first-child .rk-n { background: #FFD34D; color: #5A3A00; }
+
+/* ═════ หน้าอันดับ (ปรับใหม่) ═════ */
+.board-sub { text-align: center; margin: 0 0 -10px; font-weight: 700; color: #7C6CC8; letter-spacing: .02em; }
+.board-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 18px; width: min(1220px, 100%); margin: 0 auto; align-items: start; }
+.bg-main { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.board-grid .rank-list { width: 100%; flex: none; gap: 10px; }
+.board .rk { padding: 8px 20px 8px 10px; font-size: 1.2rem; }
+.rk-n { font-size: 1.15rem; }
+.rk.r1 .rk-n, .rk.r2 .rk-n, .rk.r3 .rk-n { background: transparent !important; font-size: 1.9rem; }
+.rk-mid { flex: 1; min-width: 0; display: grid; gap: 6px; }
+.rk-mid .rk-name { flex: none; }
+.rk-bar { height: 8px; border-radius: 99px; background: #F0ECFB; overflow: hidden; }
+.rk-bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #A78BFA, #6C4DFF); transition: width 1s .25s cubic-bezier(.3,.9,.3,1); }
+.rk.show .rk-bar i { width: var(--w); }
+.rk.r1 .rk-bar i { background: linear-gradient(90deg, #FFD666, #F5A524); }
+.mv.down { color: #E05570; font-size: 1rem; font-weight: 600; }
+.rk-rest { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 10px 12px; border-radius: 18px; background: rgba(255,255,255,.75); }
+.rr-h { font-weight: 700; color: #6B6291; font-size: .85rem; margin-right: 4px; }
+.rr { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px 3px 4px; border-radius: 99px; background: #fff; border: 1px solid #ECE7FB; font-size: .85rem; font-weight: 600; color: #3A2E5C; }
+.rr b { min-width: 22px; height: 22px; border-radius: 99px; display: grid; place-items: center; background: #F1EEFC; font-size: .75rem; }
+.rr i { width: 24px; height: 24px; } .rr i svg { width: 100%; height: 100%; display: block; }
+.rr.more { padding: 3px 12px; color: #6B6291; }
+.board-stats { display: grid; gap: 12px; padding: 16px; border-radius: 24px; background: rgba(255,255,255,.92); box-shadow: 0 10px 30px rgba(80,50,160,.12); color: #2B2350; }
+.board-stats h3 { margin: 0; font-size: 1.05rem; }
+.ring { --c: #22C58B; width: 150px; aspect-ratio: 1; margin: 0 auto; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--c) calc(var(--p) * 1%), #EEEAF8 0); }
+.ring.mid { --c: #F5A524; } .ring.low { --c: #FF5D73; }
+.ring > span { width: 76%; aspect-ratio: 1; border-radius: 50%; background: #fff; display: grid; place-items: center; align-content: center; box-shadow: inset 0 2px 6px rgba(0,0,0,.06); }
+.ring b { font: 700 2rem/1 'Fredoka', sans-serif; } .ring small { font-size: .78rem; color: #6B6291; }
+.board-stats ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.board-stats li { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 14px; background: #F8F6FF; }
+.bs-ico { width: 32px; height: 32px; flex: none; border-radius: 10px; background: #fff; display: grid; place-items: center; font-size: 1.1rem; }
+.board-stats li > span:last-child { display: grid; min-width: 0; } .board-stats li small { color: #6B6291; font-size: .75rem; }
+.board-stats li b { font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1000px) { .board-grid { grid-template-columns: 1fr; } .board-stats { display: none; } }
+
+/* ═════ หน้าจบเกม: แท็บ ═════ */
+.end { gap: 10px; }
+.end .board-h { margin: 0; }
+.end-tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; }
+.end-tabs button { position: relative; padding: 8px 16px; border-radius: 99px; border: 2px solid #E6E0FA; background: rgba(255,255,255,.9); color: #4A4170; font-weight: 700; font-size: .95rem; }
+.end-tabs button.on { background: #6C4DFF; border-color: #6C4DFF; color: #fff; box-shadow: 0 4px 0 #4B32C9; }
+.end-tabs button.ping::after { content: ''; position: absolute; top: -3px; right: -3px; width: 12px; height: 12px; border-radius: 50%; background: #FF5D8F; box-shadow: 0 0 0 0 rgba(255,93,143,.6); animation: ping 1.4s infinite; }
+@keyframes ping { 70% { box-shadow: 0 0 0 10px rgba(255,93,143,0); } 100% { box-shadow: 0 0 0 0 rgba(255,93,143,0); } }
+.end-panel { display: none; flex: 1; min-height: 0; flex-direction: column; }
+.end-panel.on { display: flex; animation: panelIn .35s ease both; }
+@keyframes panelIn { from { opacity: 0; transform: translateY(8px); } }
+.end-panel[data-p="podium"] .podium { flex: 1; }
+.end-panel .all-rank { max-height: none; flex: 1; overflow: auto; width: min(900px, 100%); }
+.all-rank tr.top td { background: #FFF9E6; }
+.ar-n { font-weight: 800; } .all-rank tr.top .ar-n { font-size: 1.3rem; }
+.ar-who { display: inline-flex; align-items: center; gap: 8px; } .ar-who i { width: 30px; height: 30px; } .ar-who svg { width: 100%; height: 100%; display: block; }
+.end-empty { text-align: center; margin: 40px auto; }
+/* รางวัลพิเศษ */
+.awards { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 250px)); justify-content: center; align-content: center; gap: 18px; }
+.award { position: relative; display: grid; justify-items: center; gap: 4px; padding: 20px 14px 18px; border-radius: 26px; background: #fff; box-shadow: 0 12px 30px rgba(80,50,160,.14); text-align: center; animation: awIn .6s calc(var(--i) * .15s) cubic-bezier(.3,1.5,.5,1) both; }
+.award::before { content: ''; position: absolute; inset: 0 0 auto; height: 90px; border-radius: 26px 26px 50% 50% / 26px 26px 30px 30px; background: var(--ab, #EEE9FF); }
+.aw-acc { --ab: #DDF7E8; } .aw-fast { --ab: #FFF3C4; } .aw-fire { --ab: #FFE1D6; } .aw-rise { --ab: #E1E8FF; }
+.award > * { position: relative; }
+.aw-badge { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; font-size: 2rem; background: #fff; box-shadow: 0 6px 14px rgba(80,50,160,.18); margin-top: -2px; }
+.aw-t { font-weight: 800; font-size: 1.05rem; color: #2B2350; }
+.aw-av { width: 96px; height: 96px; animation: bob 2.4s infinite; } .aw-av svg { width: 100%; height: 100%; }
+.aw-name { font-size: 1.15rem; color: #2B2350; } .award small { color: #6B6291; font-size: .85rem; }
+.aw-note { text-align: center; font-weight: 700; color: #4A4170; margin: 8px 0 0; }
+@keyframes awIn { from { opacity: 0; transform: translateY(30px) scale(.85); } }
+/* สรุปห้องเรียน */
+.sum { flex: 1; min-height: 0; display: grid; grid-template-rows: auto 1fr auto; gap: 12px; width: min(1000px, 100%); margin: 0 auto; }
+.st-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.st-tile { display: grid; justify-items: center; padding: 10px; border-radius: 20px; background: #fff; box-shadow: 0 6px 18px rgba(80,50,160,.1); }
+.st-tile span { font-size: 1.4rem; } .st-tile b { font: 700 1.9rem/1.1 'Fredoka', sans-serif; color: #2B2350; } .st-tile small { color: #6B6291; }
+.q-chart { display: flex; align-items: flex-end; gap: 8px; padding: 14px 16px 8px; border-radius: 22px; background: rgba(255,255,255,.88); min-height: 150px; overflow-x: auto; }
+.qc { flex: 1 0 34px; max-width: 70px; height: 100%; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; gap: 4px; }
+.qc i { align-self: end; width: 100%; height: var(--h); min-height: 4px; border-radius: 10px 10px 4px 4px; background: #22C58B; animation: barUp .8s cubic-bezier(.3,1.2,.5,1) both; transform-origin: bottom; }
+.qc.mid i { background: #F5A524; } .qc.low i { background: #FF5D73; }
+.qc-v { font-weight: 700; font-size: .8rem; color: #4A4170; } .qc small { font-size: .75rem; color: #6B6291; white-space: nowrap; }
+@keyframes barUp { from { transform: scaleY(0); } }
+.q-call { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.q-call > div { display: grid; gap: 2px; padding: 10px 14px; border-radius: 18px; background: #fff; font-size: .88rem; color: #4A4170; }
+.q-call span { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.q-call .hard { border-left: 6px solid #FF5D73; } .q-call .easy { border-left: 6px solid #22C58B; }
+@media (prefers-reduced-motion: reduce) { .award, .aw-av, .qc i, .end-panel.on { animation: none; } }
+.q-chart { justify-content: center; }

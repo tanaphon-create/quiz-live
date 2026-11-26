@@ -1,6 +1,6 @@
 import { connect, TS, isTeacher } from './db.js';
 import { renderAvatar } from './avatar.js?v=20261126a';
-import { BOSSES, BOSS_LV, bossHP, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, rocketGoal, pctOf, MODE_COLOR } from './fun-modes.js?v=20261126a';
+import { BOSSES, BOSS_LV, bossHP, bossSVG, hpBar, WAGER_BETS, WAGER_START, wagerOf, rocketGoal, pctOf, MODE_COLOR, AWARDS } from './fun-modes.js?v=20261126b';
 import { sfx, music, musicOn, hurry, setMuted, isMuted, unlock, setMusicTheme } from './sound.js';
 import { $, $$, esc, wait, SHAPES, show, toast, countUp, confetti, rankScores, MODES, TEAMS, hearts, sortPlayers, teamInfo, teamDecision } from './ui.js?v=20261124a';
 import { SAMPLE } from './sample.js';
@@ -271,6 +271,7 @@ $('#logoutBtn').onclick = async () => { if (confirm('ออกจากระบ
 let R = '', pin = '', quiz = null, order = [], qi = -1, phase = '', players = {};
 let opts = { showQ: true, streak: true, shuffle: false, mode: 'classic', teams: 2, hearts: 3, vteams: 4, ltime: 3, lsize: 'M', boss: 'dragon', bossLv: 'normal' };
 let bossSt = null, rocketG = 0; // สถานะบอส / ระยะถึงดวงจันทร์ของเกมนี้
+let gstats = {}, qstats = []; // สถิติสะสมรายคน / รายข้อ (ทำรางวัลพิเศษ + สรุปห้อง)
 let land = null, landTeams = null;
 let vstate = [], played = 0, gameStartAt = 0;
 let joinHref = '';
@@ -454,7 +455,7 @@ $('#startBtn').onclick = async () => {
   if (opts.shuffle) order.sort(() => Math.random() - 0.5);
   const up = { 'meta/showQ': opts.showQ, 'meta/streak': opts.streak, 'meta/mode': opts.mode, 'meta/teams': opts.teams, 'meta/hearts': opts.hearts, 'meta/vteams': opts.vteams };
   if (opts.mode === 'survival') active().forEach(([u]) => { up[`players/${u}/hearts`] = opts.hearts; up[`players/${u}/outAt`] = null; });
-  bossSt = null; rocketG = 0;
+  bossSt = null; rocketG = 0; gstats = {}; qstats = [];
   if (opts.mode === 'boss') { const hp = bossHP(active().length, order.length, opts.bossLv); bossSt = { kind: opts.boss, name: BOSSES[opts.boss].name, hp, max: hp }; }
   if (opts.mode === 'rocket') rocketG = rocketGoal(order.length);
   if (opts.mode === 'wager') active().forEach(([u]) => { up[`players/${u}/score`] = WAGER_START; });
@@ -658,6 +659,16 @@ async function endQuestion() {
   Object.entries(res).forEach(([uid, r]) => (upd[`results/${qi}/${uid}`] = r));
   await DB.update(R, upd);
   played = qi + 1;
+  const qs = { n: qi + 1, text: q.text, ok: 0, ans: 0, tot: 0 };
+  for (const [uid, r] of Object.entries(res)) {
+    if (r.alive === false) continue;
+    qs.tot++; if (r.answered) qs.ans++; if (r.correct) qs.ok++;
+    const s = gstats[uid] || (gstats[uid] = { ok: 0, ans: 0, ms: 0, okMs: 0, best: 0, r0: r.rank });
+    if (r.answered) { s.ans++; s.ms += r.ms || 0; }
+    if (r.correct) { s.ok++; s.okMs += r.ms || 0; }
+    if (opts.mode !== 'vote') s.best = Math.max(s.best, r.streak || 0);
+  }
+  qstats[qi] = qs;
   lastReveal = { res, answers, mercy, teams, boss: bossRes };
   phase = 'reveal';
   renderReveal();
@@ -757,23 +768,28 @@ async function showBoard() {
   };
   stage().innerHTML = `
     <div class="board">
+      <div class="board-sub">หลังข้อ ${qi + 1} จาก ${order.length} ข้อ</div>
       <h1 class="board-h">${opts.mode === 'team' || opts.mode === 'vote' ? '👥 คะแนนทีม' : opts.mode === 'survival' ? `❤️ ผู้รอดชีวิต ${aliveN} คน` : opts.mode === 'boss' ? '⚔️ นักรบตัวท็อป' : opts.mode === 'rocket' ? '🚀 แข่งจรวดไปดวงจันทร์' : opts.mode === 'wager' ? '🎰 อันดับเซียนเดิมพัน' : '🏆 อันดับคะแนน'}</h1>
       ${opts.mode === 'boss' && bossSt ? `<div class="boss-line">${bossSVG(bossSt.kind, bossSt.hp <= 0 ? 'dizzy' : 'normal')}<div><b>${BOSSES[bossSt.kind].e} ${esc(bossSt.name)}</b>${hpBar(bossSt.hp, bossSt.max)}</div></div>` : ''}
+      <div class="board-grid"><div class="bg-main">
       ${opts.mode === 'team' || opts.mode === 'vote' ? teamHtml() : opts.mode === 'rocket' ? rocketHtml(top) : `<ol class="rank-list">${top.map(([uid, r]) => {
         const p = players[uid] || {};
         const mv = (prevRanks[uid] || r.rank) - r.rank;
         const g = r.gained + r.bonus - (r.lose || 0);
-        return `<li class="rk">
-          <span class="rk-n">${r.rank}</span>
+        const lead = Math.max(1, top[0]?.[1].score || 1);
+        return `<li class="rk r${r.rank}">
+          <span class="rk-n">${r.rank <= 3 ? ['🥇', '🥈', '🥉'][r.rank - 1] : r.rank}</span>
           <span class="rk-av">${renderAvatar(p.avatar)}</span>
-          <span class="rk-name">${esc(p.name)} ${r.streak >= 2 ? `<span class="fire">🔥${r.streak}</span>` : ''}</span>
+          <span class="rk-mid"><span class="rk-name">${esc(p.name)} ${r.streak >= 2 ? `<span class="fire">🔥${r.streak}</span>` : ''}</span>
+            <span class="rk-bar"><i style="--w:${Math.max(2, Math.round((Math.max(0, r.score) / lead) * 100))}%"></i></span></span>
           ${opts.mode === 'survival' ? `<span class="hp">${r.hearts > 0 ? hearts(r.hearts, opts.hearts) : '👻'}</span>` : ''}
-          ${mv > 0 && qi > 0 ? `<span class="mv up">▲${mv}</span>` : ''}
+          ${mv > 0 && qi > 0 ? `<span class="mv up">▲${mv}</span>` : mv < 0 && qi > 0 ? `<span class="mv down">▼${-mv}</span>` : ''}
           ${g ? `<span class="gain ${g < 0 ? 'neg' : ''}">${g > 0 ? '+' : '−'}${Math.abs(g).toLocaleString('th-TH')}</span>` : ''}
           <b class="rk-s" data-from="${r.score - g}" data-to="${r.score}">${(r.score - g).toLocaleString('th-TH')}</b>
         </li>`;
       }).join('')}</ol>
       ${outNow.length ? `<div class="out-line">👻 ตกรอบข้อนี้: ${outNow.join(', ')}</div>` : ''}`}
+      ${othersHtml(top.length)}</div>${boardStats()}</div>
       <div class="rev-foot"><span class="pill" id="boardNote">🥁 กำลังประกาศอันดับ…</span><span class="sp"></span>
         <button class="btn gold big" id="nextBtn" disabled>${last ? '🎉 ประกาศผล' : 'ข้อต่อไป ›'}</button></div>
     </div>`;
@@ -797,6 +813,32 @@ async function showBoard() {
   $('#nextBtn').disabled = false;
 }
 
+// สรุปข้อนี้ (ขวามือ): % ตอบถูก · เร็วสุด · ถูกติดกันยาวสุด · ไต่อันดับมากสุด
+function boardStats() {
+  const R0 = Object.entries(lastReveal.res).filter(([, r]) => r.alive !== false);
+  const tot = R0.length, ok = R0.filter(([, r]) => r.correct).length, pc = tot ? Math.round((ok / tot) * 100) : 0;
+  const fast = R0.filter(([, r]) => r.correct && r.ms != null).sort((a, b) => a[1].ms - b[1].ms)[0];
+  const fire = opts.mode === 'vote' ? null : R0.filter(([, r]) => (r.streak || 0) >= 2).sort((a, b) => b[1].streak - a[1].streak)[0];
+  const climb = R0.map(([u, r]) => [u, (prevRanks[u] || r.rank) - r.rank]).filter(([, m]) => m > 0).sort((a, b) => b[1] - a[1])[0];
+  const nm = (u) => esc(players[u]?.name || '-');
+  const item = (ico, t, v) => `<li><span class="bs-ico">${ico}</span><span><small>${t}</small><b>${v}</b></span></li>`;
+  return `<aside class="board-stats">
+    <h3>📊 สรุปข้อ ${qi + 1}</h3>
+    <div class="ring ${pc >= 70 ? 'good' : pc >= 40 ? 'mid' : 'low'}" style="--p:${pc}"><span><b>${pc}%</b><small>ตอบถูก ${ok}/${tot}</small></span></div>
+    <ul>${item('⚡', 'เร็วที่สุด', fast ? `${nm(fast[0])} · ${(fast[1].ms / 1000).toFixed(1)} วิ` : '—')}
+      ${item('🔥', 'ถูกติดกันยาวสุด', fire ? `${nm(fire[0])} · ${fire[1].streak} ข้อ` : '—')}
+      ${item('🚀', 'ไต่อันดับมากสุด', climb && qi > 0 ? `${nm(climb[0])} · ▲${climb[1]}` : '—')}
+      ${item('🙋', 'ส่งคำตอบ', `${R0.filter(([, r]) => r.answered).length} จาก ${tot} คน`)}</ul>
+  </aside>`;
+}
+// อันดับถัดจาก 5 อันดับแรก: ชิปเล็ก ๆ ให้ทุกคนเห็นตัวเองบนจอ
+function othersHtml(shown) {
+  if (opts.mode === 'team' || opts.mode === 'vote') return '';
+  const rest = Object.entries(lastReveal.res).sort((a, b) => a[1].rank - b[1].rank).slice(shown);
+  if (!rest.length) return '';
+  const MAX = 24;
+  return `<div class="rk-rest"><span class="rr-h">อันดับถัดไป</span>${rest.slice(0, MAX).map(([u, r]) => `<span class="rr"><b>${r.rank}</b><i>${renderAvatar(players[u]?.avatar, { bg: false })}</i>${esc(players[u]?.name || '')}</span>`).join('')}${rest.length > MAX ? `<span class="rr more">+${rest.length - MAX} คน</span>` : ''}</div>`;
+}
 // สนามแข่งจรวด: จรวดเลื่อนจากตำแหน่งเดิม → ใหม่ เมื่อแถวนั้นถูกเปิด
 function rocketHtml(top) {
   return `<ol class="rank-list rocket-race">${top.map(([uid, r]) => {
@@ -808,14 +850,57 @@ function rocketHtml(top) {
       <b class="rk-s" data-from="${r.score - g}" data-to="${r.score}">${(r.score - g).toLocaleString('th-TH')}</b></li>`;
   }).join('')}</ol>`;
 }
+// รางวัลพิเศษจากสถิติทั้งเกม (ไม่ซ้ำคน ถ้าเป็นไปได้)
+function calcAwards(fin) {
+  const A = Object.entries(gstats).filter(([u]) => players[u]);
+  const avgOk = (s) => s.okMs / Math.max(1, s.ok);
+  const rise = (u, s) => (s.r0 || 0) - (fin[u] || s.r0 || 0);
+  const defs = [
+    ['acc', ([, s]) => s.ok > 0, (a, b) => b[1].ok - a[1].ok || avgOk(a[1]) - avgOk(b[1]), (s) => `ตอบถูก ${s.ok} ข้อ`],
+    ['fast', ([, s]) => s.ok > 0, (a, b) => avgOk(a[1]) - avgOk(b[1]), (s) => `ตอบถูกเฉลี่ย ${(avgOk(s) / 1000).toFixed(1)} วินาที`],
+    ['fire', ([, s]) => s.best >= 2, (a, b) => b[1].best - a[1].best, (s) => `ถูกติดกัน ${s.best} ข้อ`],
+    ['rise', ([u, s]) => rise(u, s) > 0, (a, b) => rise(b[0], b[1]) - rise(a[0], a[1]), (s, u) => `จากอันดับ ${s.r0} ขึ้นมาอันดับ ${fin[u]}`],
+  ];
+  const used = new Set(), out = [];
+  for (const [k, ok, cmp, val] of defs) {
+    const c = A.filter(ok).sort(cmp); if (!c.length) continue;
+    const w = c.find(([u]) => !used.has(u)) || c[0];
+    used.add(w[0]); out.push({ k, u: w[0], v: val(w[1], w[0]) });
+  }
+  return out;
+}
+function awardsHtml(awards, list, total) {
+  if (!awards.length) return '<p class="muted end-empty">ยังไม่มีรางวัลพิเศษ — ต้องมีคนตอบถูกอย่างน้อย 1 ข้อ</p>';
+  const full = list.filter((p) => gstats[p.uid]?.ans === total).length;
+  return `<div class="awards">${awards.map((a, i) => { const p = players[a.u] || {}, A = AWARDS[a.k]; return `<div class="award aw-${a.k}" style="--i:${i}">
+      <div class="aw-badge">${A.e}</div><div class="aw-t">${A.t}</div>
+      <div class="aw-av">${renderAvatar(p.avatar, { bg: false })}</div><b class="aw-name">${esc(p.name || '-')}</b><small>${a.v}</small></div>`; }).join('')}</div>
+    ${full ? `<p class="aw-note">💪 ตอบครบทุกข้อ ${full} คน — เก่งมาก!</p>` : ''}`;
+}
+function summaryHtml(list, total) {
+  const Q = qstats.filter(Boolean), S = list.map((p) => gstats[p.uid]).filter(Boolean);
+  const acc = Q.length ? Math.round(Q.reduce((s, q) => s + q.ok / Math.max(1, q.tot), 0) / Q.length * 100) : 0;
+  const ansN = S.reduce((s, x) => s + x.ans, 0), avg = ansN ? S.reduce((s, x) => s + x.ms, 0) / ansN / 1000 : 0;
+  const pc = (q) => Math.round((q.ok / Math.max(1, q.tot)) * 100);
+  const hard = [...Q].sort((a, b) => pc(a) - pc(b))[0], easy = [...Q].sort((a, b) => pc(b) - pc(a))[0];
+  const tile = (e, v, t) => `<div class="st-tile"><span>${e}</span><b>${v}</b><small>${t}</small></div>`;
+  return `<div class="sum">
+    <div class="st-tiles">${tile('👥', list.length, 'ผู้เล่น')}${tile('📝', total, 'ข้อที่เล่น')}${tile('🎯', acc + '%', 'ตอบถูกเฉลี่ย')}${tile('⏱️', avg.toFixed(1), 'วินาที/ข้อ')}</div>
+    <div class="q-chart">${Q.map((q) => `<div class="qc ${pc(q) >= 70 ? 'good' : pc(q) >= 40 ? 'mid' : 'low'}" title="${esc(q.text)}"><span class="qc-v">${pc(q)}%</span><i style="--h:${Math.max(3, pc(q))}%"></i><small>ข้อ ${q.n}</small></div>`).join('')}</div>
+    <div class="q-call">${hard ? `<div class="hard"><b>😰 ข้อที่ยากที่สุด · ข้อ ${hard.n} (ถูก ${pc(hard)}%)</b><span>${esc(hard.text)}</span></div>` : ''}${easy && easy !== hard ? `<div class="easy"><b>😊 ข้อที่ง่ายที่สุด · ข้อ ${easy.n} (ถูก ${pc(easy)}%)</b><span>${esc(easy.text)}</span></div>` : ''}</div>
+  </div>`;
+}
 async function finish() {
   phase = 'end'; clearInterval(tickH); music(null);
   land?.destroy();
   const total = Math.max(1, played); // นับเฉพาะข้อที่เฉลยแล้ว (กรณีจบเกมก่อน)
   const isLand = opts.mode === 'land';
   const totOf = (p) => (isLand ? Math.max(1, p.answered || 0) : total);
-  await DB.update(R, { 'meta/state': 'end', 'meta/podiumDone': false, 'meta/played': total, ...(bossSt ? { 'meta/bossWin': bossSt.hp <= 0 } : {}) });
   const list = sortPlayers(rankScores(players), opts.mode);
+  const fin = {}; list.forEach((p, i) => (fin[p.uid] = i + 1));
+  const awards = calcAwards(fin), stUp = {};
+  for (const [u, s] of Object.entries(gstats)) if (players[u]) stUp[`players/${u}/st`] = { ok: s.ok, ans: s.ans, avg: s.ans ? Math.round(s.ms / s.ans) : 0, best: s.best };
+  await DB.update(R, { 'meta/state': 'end', 'meta/podiumDone': false, 'meta/played': total, 'meta/awards': Object.fromEntries(awards.map((a) => [a.k, a.u])) || null, ...stUp, ...(bossSt ? { 'meta/bossWin': bossSt.hp <= 0 } : {}) });
   let teams = opts.mode === 'team' ? teamTable(list, (p) => p.score).sort((a, b) => a.rank - b.rank) : null;
   if (opts.mode === 'vote') {
     teams = vstate.map((st, k) => ({ k, n: list.filter((p) => p.vteam === k).length, score: st.score })).filter((t) => t.n > 0 || t.score > 0)
@@ -829,9 +914,13 @@ async function finish() {
     : list.map((p) => ({ name: p.name, score: p.score, icon: renderAvatar(p.avatar, { bg: false }) }));
   const podium = [ent[1], ent[0], ent[2]];
   const T3 = 2.2, T2 = 5.6, T1 = 10.0; // วินาทีที่แต่ละอันดับขึ้น (กลองรัวก่อนทุกอันดับ)
+  const hasStats = !isLand && qstats.some(Boolean);
   stage().innerHTML = `
     <div class="end">
       <h1 class="board-h">🎉 ${esc(quiz.title)} <small class="mode-tag">${MODES[opts.mode].icon} ${MODES[opts.mode].name}</small></h1>
+      <nav class="end-tabs" role="tablist">${[['podium', '🏆 โพเดียม'], ...(hasStats ? [['awards', '🏅 รางวัลพิเศษ'], ['sum', '📊 สรุปห้องเรียน']] : []), ['all', `📋 คะแนนทุกคน (${list.length})`]]
+        .map(([k, t], i) => `<button class="${i ? '' : 'on'}" data-tab="${k}" role="tab">${t}</button>`).join('')}</nav>
+      <div class="end-panel on" data-p="podium">
       ${opts.mode === 'boss' && bossSt ? `<div class="boss-end ${bossSt.hp <= 0 ? 'win' : 'lose'}">${bossSVG(bossSt.kind, bossSt.hp <= 0 ? 'dizzy' : 'smug')}<div><b>${bossSt.hp <= 0 ? `🎉 ทั้งห้องปราบ${esc(bossSt.name)}สำเร็จ!` : `😝 ${esc(bossSt.name)}หนีไปได้!`}</b><small>${bossSt.hp <= 0 ? 'เก่งมากทุกคน — โพเดียมคือนักรบที่โจมตีแรงที่สุด' : `เหลือเลือดอีก ${Math.round((bossSt.hp / bossSt.max) * 100)}% ครั้งหน้าลองใหม่นะ!`}</small></div></div>` : ''}
       ${opts.mode === 'rocket' && list[0] ? `<div class="boss-end rocket">🚀<div><b>${list[0].score >= rocketG ? `🌙 ${esc(list[0].name)} ถึงดวงจันทร์เป็นคนแรก!` : `ยังไม่มีใครถึงดวงจันทร์ — ${esc(list[0].name)} ไปไกลที่สุด`}</b><small>${pctOf(list[0].score, rocketG)}% ของทางไปดวงจันทร์</small></div></div>` : ''}
       <div class="podium">${podium.map((p, k) => {
@@ -841,11 +930,12 @@ async function finish() {
           <div class="pod-name">${esc(p.name)}</div>
           <div class="pod-col"><span>${place}</span><small>${p.score.toLocaleString('th-TH')}${isLand ? ' ช่อง' : ''}</small></div>
         </div>` : '<div class="pod empty-pod"></div>';
-      }).join('')}</div>
-      <details class="all-rank card"><summary>ดูคะแนนทุกคน (${list.length} คน)</summary>
+      }).join('')}</div></div>
+      ${hasStats ? `<div class="end-panel" data-p="awards">${awardsHtml(awards, list, total)}</div><div class="end-panel" data-p="sum">${summaryHtml(list, total)}</div>` : ''}
+      <div class="end-panel" data-p="all"><div class="all-rank card">
         <table><thead><tr><th>อันดับ</th><th>เลขประจำตัว</th><th>ชื่อ</th>${opts.mode !== 'classic' ? '<th>หมายเหตุ</th>' : ''}<th>ตอบถูก</th><th>${isLand ? 'ยึดได้ (ช่อง)' : 'คะแนน'}</th></tr></thead><tbody>
-        ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.sid || '-')}</td><td>${esc(p.name)}</td>${opts.mode !== 'classic' ? `<td>${note(p)}</td>` : ''}<td>${p.correct || 0}/${isLand ? p.answered || 0 : total}</td><td>${p.score.toLocaleString('th-TH')}</td></tr>`).join('')}
-        </tbody></table></details>
+        ${list.map((p, i) => `<tr class="${i < 3 ? 'top' : ''}"><td><span class="ar-n">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span></td><td>${esc(p.sid || '-')}</td><td><span class="ar-who"><i>${renderAvatar(p.avatar, { bg: false })}</i>${esc(p.name)}</span></td>${opts.mode !== 'classic' ? `<td>${note(p)}</td>` : ''}<td>${p.correct || 0}/${isLand ? p.answered || 0 : total}</td><td>${p.score.toLocaleString('th-TH')}</td></tr>`).join('')}
+        </tbody></table></div></div>
       <div class="rev-foot">
         <label class="pill conv">แปลงเป็นคะแนนเก็บ เต็ม <input type="number" id="fullPts" value="10" min="1" max="100"> คะแนน</label>
         ${$('#optAnon').checked ? '<span class="muted">🙈 โหมดไม่ระบุตัวตน — ไม่มีเลขประจำตัว จึงบันทึกลงสมุดคะแนนไม่ได้</span>' : '<button class="btn green" id="bonusBtn">🏅 บันทึกคะแนนพิเศษ (อันดับ 1–3)</button>'}<button class="btn light" id="csvBtn">⤓ ดาวน์โหลดคะแนน (CSV)</button><span class="sp"></span><button class="btn gold" id="homeBtn">กลับหน้าหลัก</button></div>
@@ -865,6 +955,13 @@ async function finish() {
   at(T1, () => { sfx.fanfare(); confetti(220, 6000); });
   at(T1 + 1.2, () => DB.update(R, { 'meta/podiumDone': true }));
   $('#homeBtn').onclick = leave;
+  $('.end-tabs').onclick = (e) => {
+    const b = e.target.closest('[data-tab]'); if (!b) return;
+    sfx.tap(); $$('.end-tabs button').forEach((x) => x.classList.toggle('on', x === b));
+    $$('.end-panel').forEach((p) => p.classList.toggle('on', p.dataset.p === b.dataset.tab));
+  };
+  // โพเดียมขึ้นครบแล้ว: ชวนดูรางวัลพิเศษ
+  at(T1 + 3, () => $('.end-tabs [data-tab="awards"]')?.classList.add('ping'));
   const recips = bonusRecipients(list, teams);
   if ($('#bonusBtn')) $('#bonusBtn').onclick = () => openBonus(recips);
   $('#csvBtn').onclick = () => {
