@@ -318,11 +318,6 @@ const THEME_SONGS = {
     question: { bpm: 150, prog: ['Am', 'Dm', 'E', 'Am'], drum: 'drive', bass: 'walk', lead: { type: 'triangle', vol: 0.05, attack: 0.002 }, mel: '0.1.2.1.0.1.2.4.', fx: 'tick' },
   },
   /* ───── ชุดเพลงเพิ่มเติม (เลือกได้จากปุ่ม 🎼 เลือกเพลง) ───── */
-  // คริสต์มาส: เพลง Jingle Bells (ท่อน Dashing through the snow + ท่อนฮุก) + กระดิ่งเลื่อน
-  christmas: {
-    lobby: { bpm: 116, prog: [...JB_VERSE_CH, ...JB_CHORUS_CH], tune: [...JB_VERSE, ...JB_CHORUS], drum: 'pop', bass: 'oompah', skank: [4, 12], lead: { type: 'triangle', vol: 0.075, bell: true }, fx: ['sleigh', 'chime'] },
-    question: { bpm: 148, prog: JB_CHORUS_CH, tune: JB_CHORUS, drum: 'drive', bass: 'eighth', lead: { type: 'triangle', vol: 0.065, bell: true }, fx: ['tick', 'sleigh'] },
-  },
   calm: {
     lobby: { bpm: 76, prog: ['C', 'G', 'Am', 'F'], bass: 'root', pad: { vol: 0.022 }, lead: { type: 'triangle', vol: 0.05, attack: 0.004 }, mel: ['2...1...0...1...', '2...4...2-------'] },
     question: { bpm: 112, prog: ['Am', 'F', 'C', 'G'], drum: 'soft', bass: 'root', pad: { vol: 0.015 }, lead: { type: 'triangle', vol: 0.045, attack: 0.004 }, mel: '0.1.2...1.0.2...', fx: 'tick' },
@@ -354,9 +349,72 @@ const THEME_SONGS = {
   },
 };
 THEME_SONGS.plain = THEME_SONGS.calm;
-// เพลงหน้า INTRO คริสต์มาส (กดปุ่ม 🔔 เปิดเพลง)
-SONGS.jingle = make({ bpm: 128, prog: [...JB_CHORUS_CH, ...JB_VERSE_CH], tune: [...JB_CHORUS, ...JB_VERSE], drum: 'pop', bass: 'oompah', skank: [4, 12], lead: { type: 'triangle', vol: 0.08, bell: true }, fx: ['sleigh', 'chime'] });   // ธีมเรียบง่าย ใช้เพลงเปียโนเบา ๆ
 for (const [th, v] of Object.entries(THEME_SONGS)) for (const [k, c] of Object.entries(v)) SONGS[`${th}:${k}`] = make(c);
+
+/* ───── Jingle Bells แบบเรียบเรียงใหม่: เปียโน + ระฆัง (glockenspiel) + กระดิ่งเลื่อน + เบสเดิน ─────
+   ทำนอง: James Lord Pierpont (1857) สาธารณสมบัติ · เสียงทั้งหมดสังเคราะห์ด้วย WebAudio ไม่ใช้ไฟล์ */
+function piano(f, dur, t, vol) {
+  note(f, dur, { t, type: 'triangle', vol, attack: 0.003 });
+  note(f * 2, Math.min(dur, 0.7), { t, type: 'sine', vol: vol * 0.32, attack: 0.002 });
+  note(f * 3, 0.14, { t, type: 'sine', vol: vol * 0.1, attack: 0.001 });
+  note(f, 0.05, { t, type: 'square', vol: vol * 0.12, attack: 0.001, filter: 2400 });   // เสียงค้อนกระทบสาย
+}
+function glock(f, t, vol, dur = 1.1) {
+  note(f, dur, { t, type: 'sine', vol, attack: 0.001 });
+  note(f * 2.76, dur * 0.35, { t, type: 'sine', vol: vol * 0.28, attack: 0.001 });
+  note(f * 5.4, 0.12, { t, type: 'sine', vol: vol * 0.12, attack: 0.001 });
+}
+function sleigh(t, v) {   // กระดิ่งเลื่อน = กระดิ่งเล็กหลายลูกกระทบกันพร้อมกัน
+  for (let k = 0; k < 4; k++) hiss(0.045 + k * 0.012, { t: t + k * 0.009 + Math.random() * 0.005, vol: v * (1 - k * 0.2), type: 'bandpass', freq: 6500 + k * 1400 + Math.random() * 900, q: 4 });
+  note(5200 + Math.random() * 600, 0.05, { t, type: 'sine', vol: v * 0.12, attack: 0.001 });
+}
+const BARS = (a) => a.map(parseTune);
+function carol(c) {
+  const mel = BARS(c.tune), glockOn = new Set(c.glock || []);
+  const ARP = [[72, 76, 79, 84], [79, 83, 86, 91]];   // อินโทร: ระฆังไล่เสียงขึ้น C → G
+  return {
+    bpm: c.bpm, prog: c.prog,
+    step(i, t, ch, sd) {
+      const s = i % 16, bar = Math.floor(i / 16) % mel.length, intro = bar < (c.intro || 0), fast = c.fast || tempoMul > 1;
+      // กระดิ่งเลื่อน: ทุกจังหวะ 8 ส่วน (เน้นจังหวะตก) · อินโทรเขย่าถี่
+      if (s % 2 === 0) sleigh(t, s % 4 === 0 ? 0.075 : 0.045);
+      else if (fast || intro) sleigh(t, 0.022);
+      if (intro) {
+        if (s % 4 === 0) glock(NOTE(ARP[bar % 2][s / 4]), t, 0.05, 0.9);
+        if (s === 0) ch.forEach((n) => piano(NOTE(n), sd * 15, t, 0.03));
+        if (bar === c.intro - 1 && s === 12) kick(t, 0.25);
+        return;
+      }
+      // กลองเบา ๆ แบบแปรงปัด
+      if (s === 0 || s === 8 || (fast && s % 4 === 0)) kick(t, fast ? 0.32 : 0.24);
+      if (s === 4 || s === 12) { hiss(0.12, { t, vol: 0.06, freq: 2600, attack: 0.004 }); if (fast) snare(t, 0.08); }
+      // มือซ้ายเปียโน: เบสจังหวะ 1, 3 · คอร์ดจังหวะ 2, 4 · เบสเดินเข้าห้องถัดไป
+      const root = ch[0] - 24;
+      if (s === 0) piano(NOTE(root), sd * 6, t, 0.11);
+      if (s === 8) piano(NOTE(ch[2] - 24), sd * 6, t, 0.09);
+      if (s === 12 && bar % 2 === 1) piano(NOTE(root + 2), sd * 3.5, t, 0.07);
+      if (s === 4 || s === 12) ch.forEach((n) => piano(NOTE(n - 12), sd * 3, t, 0.026));
+      // ทำนอง: เปียโนมือขวา (+ระฆังคู่แปดในท่อนฮุก)
+      const q = mel[bar][s];
+      if (q) {
+        const f = NOTE(q.midi), d = Math.max(0.22, q.len * sd * 0.98);
+        piano(f, d, t, c.vol || 0.085);
+        if (glockOn.has(bar)) glock(f * 2, t, 0.032, Math.min(1, d));
+      } else if (glockOn.has(bar) && s === 8 && mel[bar][0]?.len >= 12) {
+        glock(NOTE(ch[1] + 24), t, 0.03); glock(NOTE(ch[2] + 24), t + sd * 2, 0.026);   // ประดับตอนโน้ตยาว
+      }
+      if (c.tick && s % 4 === 0) note(1760, 0.03, { t, type: 'square', vol: 0.018 });
+    },
+  };
+}
+const range = (a, b) => Array.from({ length: b - a }, (_, k) => a + k);
+const INTRO = ['r:16', 'r:16'], INTRO_CH = ['C', 'G'];
+// ห้องรอเล่น: อินโทร → Dashing through the snow → ท่อนฮุก (ระฆังเข้าตอนฮุก)
+SONGS['christmas:lobby'] = carol({ bpm: 112, intro: 2, prog: [...INTRO_CH, ...JB_VERSE_CH, ...JB_CHORUS_CH], tune: [...INTRO, ...JB_VERSE, ...JB_CHORUS], glock: range(18, 34) });
+// ระหว่างตอบ: ท่อนฮุกจังหวะเร็ว กลองแน่นขึ้น ระฆังตลอด
+SONGS['christmas:question'] = carol({ bpm: 148, fast: true, tick: true, prog: JB_CHORUS_CH, tune: JB_CHORUS, glock: range(0, 16) });
+// หน้า INTRO (ปุ่ม 🔔): อินโทร → ฮุก → ท่อนร้อง → ฮุก
+SONGS.jingle = carol({ bpm: 120, intro: 2, prog: [...INTRO_CH, ...JB_CHORUS_CH, ...JB_VERSE_CH, ...JB_CHORUS_CH], tune: [...INTRO, ...JB_CHORUS, ...JB_VERSE, ...JB_CHORUS], glock: [...range(2, 18), ...range(34, 50)] });
 
 /* ───── ชุดเพลงที่ครูเลือกได้ (จำไว้ในเครื่อง) · 'auto' = เปลี่ยนตามธีม ───── */
 export const MUSIC_PACKS = [
