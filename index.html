@@ -135,6 +135,7 @@ function openIntro() {
   exitH = setTimeout(closeIntro, 5200);
 }
 $('#inGo').onclick = closeIntro; $('#inSkip').onclick = closeIntro;
+addEventListener('gc-intro-hold', () => clearTimeout(exitH));
 intro.addEventListener('keydown', (e) => (e.key === 'Escape' || e.key === 'Enter') && closeIntro());
 window.gcOpenIntro = () => { clearInterval(sayH); sayH = setInterval(() => { li = (li + 1) % lines.length; $('#inBubble').textContent = lines[li]; }, 1500); openIntro(); window.scrollTo(0, 0); };
 $('#replay').onclick = () => { window.GCFest?.decorateIntro(); sayH = setInterval(() => { li = (li + 1) % lines.length; $('#inBubble').textContent = lines[li]; }, 1500); openIntro(); window.scrollTo(0, 0); };
@@ -172,6 +173,6 @@ connect({ host: true }).then((DB) => DB.onUser((u) => {
   }
 })).catch(() => { txt.textContent = 'ออฟไลน์'; });
 </script>
-<script src="js/festival.js?v=20261125a" defer></script>
+<script src="js/festival.js?v=20261127a" defer></script>
 </body>
 </html>

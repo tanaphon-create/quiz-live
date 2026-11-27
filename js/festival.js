@@ -225,41 +225,41 @@
   const snow = (n, sm = 1) => [...Array(n)].map((_, i) => `<i class="gf-snow" style="left:${(3 + i * 37) % 99}%;--s:${((3 + (i % 4) * 2) * sm + 2).toFixed(1)}px;--d:${9 + (i % 5) * 3}s;--w:${-(i * 1.9).toFixed(1)}s;--x:${(i % 2 ? 1 : -1) * (14 + (i % 4) * 8)}px"></i>`).join('');
   const lights = (n) => { const cs = ['#FF4D5E', '#FFD23D', '#3BD17A', '#4FB3FF', '#FF8FD0'];
     const segs = [...Array(n)].map((_, i) => { const x0 = (i / n) * 1000, x1 = ((i + 1) / n) * 1000; return `M${x0.toFixed(1)} 3 Q${((x0 + x1) / 2).toFixed(1)} 34 ${x1.toFixed(1)} 3`; }).join(' ');
-    return `<div class="gf-lights"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path d="${segs}" stroke="#7FBF94" stroke-width="2.5" fill="none" vector-effect="non-scaling-stroke"/></svg>${[...Array(n)].map((_, i) => `<i class="gf-bulb" style="left:${((i + .5) / n * 100).toFixed(2)}%;--c:${cs[i % 5]};--w:${-(i * .37).toFixed(2)}s"></i>`).join('')}</div>`; };
+    return `<div class="gf-lights"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path d="${segs}" stroke="#1E8A4C" stroke-width="3" fill="none" vector-effect="non-scaling-stroke"/></svg>${[...Array(n)].map((_, i) => `<i class="gf-bulb" style="left:${((i + .5) / n * 100).toFixed(2)}%;--c:${cs[i % 5]};--w:${-(i * .37).toFixed(2)}s"></i>`).join('')}</div>`; };
   // คริสต์มาสสไตล์น่ารัก: ต้นคริสต์มาสหน้ายิ้ม ตุ๊กตาหิมะ กล่องของขวัญ ไม้เท้าลูกกวาด
   const kface = (x, y, k = 1, ink = '#3A2E5C') => `<g transform="translate(${x} ${y}) scale(${k})"><ellipse cx="-9" cy="0" rx="3.4" ry="4.2" fill="${ink}"/><ellipse cx="9" cy="0" rx="3.4" ry="4.2" fill="${ink}"/><circle cx="-8" cy="-1.6" r="1.3" fill="#fff"/><circle cx="10" cy="-1.6" r="1.3" fill="#fff"/><ellipse cx="-15" cy="6" rx="4.6" ry="2.8" fill="#FF8FB1" opacity=".75"/><ellipse cx="15" cy="6" rx="4.6" ry="2.8" fill="#FF8FB1" opacity=".75"/><path d="M-4 5 Q-2 8.5 0 5.5 Q2 8.5 4 5" stroke="${ink}" stroke-width="1.8" fill="none" stroke-linecap="round"/></g>`;
   const tree = `<svg viewBox="0 0 140 190" aria-hidden="true" class="gf-sway">
-    <path d="M44 156 h52 l-6 28 q-1 4 -5 4 h-30 q-4 0 -5 -4 Z" fill="#FF6F8E" stroke="#D9486A" stroke-width="3" stroke-linejoin="round"/><rect x="42" y="152" width="56" height="10" rx="5" fill="#FFB3C6" stroke="#D9486A" stroke-width="3"/>
-    <path d="M70 92 C92 112 118 128 126 146 Q128 156 116 156 H24 Q12 156 14 146 C22 128 48 112 70 92 Z" fill="#5FCB96" stroke="#2F9A6A" stroke-width="3.5" stroke-linejoin="round"/>
-    <path d="M70 56 C88 72 106 86 112 102 Q114 112 103 112 H37 Q26 112 28 102 C34 86 52 72 70 56 Z" fill="#6FD6A3" stroke="#2F9A6A" stroke-width="3.5" stroke-linejoin="round"/>
-    <path d="M70 24 C82 36 94 48 98 62 Q100 70 91 70 H49 Q40 70 42 62 C46 48 58 36 70 24 Z" fill="#7FE0B0" stroke="#2F9A6A" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M44 156 h52 l-6 28 q-1 4 -5 4 h-30 q-4 0 -5 -4 Z" fill="#E8243F" stroke="#A8102E" stroke-width="3" stroke-linejoin="round"/><rect x="42" y="152" width="56" height="10" rx="5" fill="#FFD23D" stroke="#A8102E" stroke-width="3"/>
+    <path d="M70 92 C92 112 118 128 126 146 Q128 156 116 156 H24 Q12 156 14 146 C22 128 48 112 70 92 Z" fill="#1FA85C" stroke="#0E6E3C" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M70 56 C88 72 106 86 112 102 Q114 112 103 112 H37 Q26 112 28 102 C34 86 52 72 70 56 Z" fill="#2BC26E" stroke="#0E6E3C" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M70 24 C82 36 94 48 98 62 Q100 70 91 70 H49 Q40 70 42 62 C46 48 58 36 70 24 Z" fill="#43D985" stroke="#0E6E3C" stroke-width="3.5" stroke-linejoin="round"/>
     <path d="M30 104 Q38 98 46 104 Q54 98 62 104 Q70 98 78 104 Q86 98 94 104 Q102 98 110 104" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".95"/>
     <path d="M44 63 Q51 58 58 63 Q64 58 70 63 Q76 58 82 63 Q89 58 96 63" stroke="#fff" stroke-width="4.5" fill="none" stroke-linecap="round" opacity=".95"/>
     ${kface(70, 128, 1.15)}
-    <path d="M30 140 Q70 152 112 138" stroke="#FFD86B" stroke-width="3" fill="none" stroke-dasharray="1 7" stroke-linecap="round"/>
-    ${[[50, 86, '#FF8FB1'], [90, 90, '#8FD3FF'], [70, 44, '#FFD86B'], [36, 146, '#C9B2FF'], [104, 146, '#FF8FB1'], [60, 98, '#FFD86B']].map(([x, y, c], i) => `<g class="gf-orn" style="--w:${-i * .45}s"><circle cx="${x}" cy="${y}" r="5.6" fill="${c}" stroke="#fff" stroke-width="1.6"/><circle cx="${x - 1.8}" cy="${y - 1.8}" r="1.6" fill="#fff" opacity=".9"/></g>`).join('')}
-    <g class="gf-twinkle" style="transform-origin:70px 16px"><path d="M70 1 L75 11 L86 12 L78 19 L80 30 L70 25 L60 30 L62 19 L54 12 L65 11 Z" fill="#FFD86B" stroke="#E8A93A" stroke-width="2.4" stroke-linejoin="round"/><circle cx="66.5" cy="16" r="1.4" fill="#5A3E1B"/><circle cx="73.5" cy="16" r="1.4" fill="#5A3E1B"/><path d="M68 19.5 Q70 21 72 19.5" stroke="#5A3E1B" stroke-width="1.2" fill="none" stroke-linecap="round"/></g></svg>`;
+    <path d="M30 140 Q70 152 112 138" stroke="#FFC21A" stroke-width="3" fill="none" stroke-dasharray="1 7" stroke-linecap="round"/>
+    ${[[50, 86, '#FF2E55'], [90, 90, '#2E9BFF'], [70, 44, '#FFC21A'], [36, 146, '#B15CFF'], [104, 146, '#FF2E55'], [60, 98, '#FFC21A']].map(([x, y, c], i) => `<g class="gf-orn" style="--w:${-i * .45}s"><circle cx="${x}" cy="${y}" r="5.6" fill="${c}" stroke="#fff" stroke-width="1.6"/><circle cx="${x - 1.8}" cy="${y - 1.8}" r="1.6" fill="#fff" opacity=".9"/></g>`).join('')}
+    <g class="gf-twinkle" style="transform-origin:70px 16px"><path d="M70 1 L75 11 L86 12 L78 19 L80 30 L70 25 L60 30 L62 19 L54 12 L65 11 Z" fill="#FFC21A" stroke="#E8A93A" stroke-width="2.4" stroke-linejoin="round"/><circle cx="66.5" cy="16" r="1.4" fill="#5A3E1B"/><circle cx="73.5" cy="16" r="1.4" fill="#5A3E1B"/><path d="M68 19.5 Q70 21 72 19.5" stroke="#5A3E1B" stroke-width="1.2" fill="none" stroke-linecap="round"/></g></svg>`;
   const snowman = `<svg viewBox="0 0 130 170" aria-hidden="true" class="gf-sway" style="--sw:3s">
     <path class="gf-wave-arm" d="M28 104 L6 86 M14 93 L8 98" stroke="#9A6B47" stroke-width="4" stroke-linecap="round" fill="none"/>
     <path d="M102 104 L122 92 M115 96 L120 104" stroke="#9A6B47" stroke-width="4" stroke-linecap="round" fill="none"/>
     <ellipse cx="65" cy="163" rx="46" ry="6" fill="#B9D6F2" opacity=".6"/>
     <circle cx="65" cy="122" r="40" fill="#fff" stroke="#A9C8EC" stroke-width="3.5"/>
-    <circle cx="65" cy="112" r="3.6" fill="#FF6F8E"/><circle cx="65" cy="128" r="3.6" fill="#FF6F8E"/><circle cx="65" cy="144" r="3.6" fill="#FF6F8E"/>
+    <circle cx="65" cy="112" r="3.6" fill="#E8243F"/><circle cx="65" cy="128" r="3.6" fill="#E8243F"/><circle cx="65" cy="144" r="3.6" fill="#E8243F"/>
     <circle cx="65" cy="62" r="30" fill="#fff" stroke="#A9C8EC" stroke-width="3.5"/>
     ${kface(65, 62, 1.05)}
     <path d="M65 69 l11 2.5 -11 2.5 Z" fill="#FF9A3D" stroke="#E07B1E" stroke-width="1.2" stroke-linejoin="round"/>
-    <path d="M38 88 Q65 100 92 88 L92 96 Q65 108 38 96 Z" fill="#FF6F8E" stroke="#D9486A" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M78 96 l4 24 -10 0 -2 -22 Z" fill="#FF6F8E" stroke="#D9486A" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M38 88 Q65 100 92 88 L92 96 Q65 108 38 96 Z" fill="#E8243F" stroke="#A8102E" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M78 96 l4 24 -10 0 -2 -22 Z" fill="#E8243F" stroke="#A8102E" stroke-width="2.5" stroke-linejoin="round"/>
     <path d="M44 92 l0 6 M52 95 l0 6 M60 97 l0 6 M70 97 l0 6 M80 95 l0 6" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-    <path d="M36 40 Q38 18 62 16 Q86 14 96 30 L104 24" fill="none" stroke="#FF6F8E" stroke-width="0"/>
-    <path d="M38 42 Q44 14 70 18 Q90 22 98 40 Z" fill="#FF6F8E" stroke="#D9486A" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M70 18 Q96 4 110 24" fill="none" stroke="#FF6F8E" stroke-width="9" stroke-linecap="round"/>
+    <path d="M36 40 Q38 18 62 16 Q86 14 96 30 L104 24" fill="none" stroke="#E8243F" stroke-width="0"/>
+    <path d="M38 42 Q44 14 70 18 Q90 22 98 40 Z" fill="#E8243F" stroke="#A8102E" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M70 18 Q96 4 110 24" fill="none" stroke="#E8243F" stroke-width="9" stroke-linecap="round"/>
     <circle cx="111" cy="27" r="7" fill="#fff" stroke="#DCE8F5" stroke-width="2"/>
     <rect x="34" y="38" width="68" height="11" rx="5.5" fill="#fff" stroke="#DCE8F5" stroke-width="2"/></svg>`;
   const gifts = `<svg viewBox="0 0 120 80" aria-hidden="true">
-    <g class="gf-hop" style="--w:-.3s"><rect x="6" y="34" width="50" height="42" rx="7" fill="#FF8FB1" stroke="#D9486A" stroke-width="3"/><rect x="26" y="34" width="10" height="42" fill="#FFF3B0"/><rect x="6" y="48" width="50" height="9" fill="#FFF3B0"/><path d="M31 34 C20 20 12 30 26 34 Z M31 34 C42 20 50 30 36 34 Z" fill="#FFF3B0" stroke="#E8A93A" stroke-width="2"/>${kface(31, 66, .55)}</g>
-    <g class="gf-hop" style="--w:-1.1s"><rect x="62" y="44" width="50" height="32" rx="7" fill="#7FE0B0" stroke="#2F9A6A" stroke-width="3"/><rect x="82" y="44" width="10" height="32" fill="#FFD86B"/><path d="M87 44 C76 32 70 40 82 44 Z M87 44 C98 32 104 40 92 44 Z" fill="#FFD86B" stroke="#E8A93A" stroke-width="2"/></g>
-    <g transform="translate(50 6) rotate(-12)"><path d="M10 74 V20 Q10 4 24 4 Q38 4 38 18" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/><path d="M10 74 V20 Q10 4 24 4 Q38 4 38 18" fill="none" stroke="#FF6F8E" stroke-width="9" stroke-linecap="round" stroke-dasharray="6 7"/></g></svg>`;
+    <g class="gf-hop" style="--w:-.3s"><rect x="6" y="34" width="50" height="42" rx="7" fill="#FF2E55" stroke="#A8102E" stroke-width="3"/><rect x="26" y="34" width="10" height="42" fill="#FFE14D"/><rect x="6" y="48" width="50" height="9" fill="#FFE14D"/><path d="M31 34 C20 20 12 30 26 34 Z M31 34 C42 20 50 30 36 34 Z" fill="#FFE14D" stroke="#E8A93A" stroke-width="2"/>${kface(31, 66, .55)}</g>
+    <g class="gf-hop" style="--w:-1.1s"><rect x="62" y="44" width="50" height="32" rx="7" fill="#43D985" stroke="#0E6E3C" stroke-width="3"/><rect x="82" y="44" width="10" height="32" fill="#FFC21A"/><path d="M87 44 C76 32 70 40 82 44 Z M87 44 C98 32 104 40 92 44 Z" fill="#FFC21A" stroke="#E8A93A" stroke-width="2"/></g>
+    <g transform="translate(50 6) rotate(-12)"><path d="M10 74 V20 Q10 4 24 4 Q38 4 38 18" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/><path d="M10 74 V20 Q10 4 24 4 Q38 4 38 18" fill="none" stroke="#E8243F" stroke-width="9" stroke-linecap="round" stroke-dasharray="6 7"/></g></svg>`;
   const flakeSvg = `<svg viewBox="-12 -12 24 24"><g stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M0 -10 V10 M-8.7 -5 L8.7 5 M-8.7 5 L8.7 -5"/><path d="M-3 -7.5 L0 -5 L3 -7.5 M-3 7.5 L0 5 L3 7.5" fill="none"/></g></svg>`;
   const flakes = (n) => [...Array(n)].map((_, i) => `<i class="gf-flk" style="left:${(11 + i * 43) % 97}%;--s:${12 + (i % 3) * 6}px;--d:${12 + (i % 4) * 3}s;--w:${-(i * 2.3).toFixed(1)}s;--x:${(i % 2 ? 1 : -1) * (20 + (i % 3) * 10)}px">${flakeSvg}</i>`).join('');
   const xmasScene = (phone, big = false) => `${lights(N(phone, 8, 16))}${snow(N(phone, 18, big ? 50 : 30))}${flakes(N(phone, 5, big ? 14 : 9))}<div class="gf-snowbank"${big ? ` style="height:${phone ? 8 : 13}vh"` : ''}></div>
@@ -307,7 +307,7 @@
         front: '', ft: ['#6B7F3A', '#B45309'] };
     },
     christmas(phone) {
-      return { back: `<div class="gf-tint" style="background:linear-gradient(180deg,rgba(255,200,225,.20),rgba(235,240,255,.10) 50%,rgba(200,240,220,.20))"></div>${xmasScene(phone)}`,
+      return { back: `<div class="gf-tint" style="background:linear-gradient(180deg,rgba(255,46,85,.13),rgba(255,200,60,.08) 50%,rgba(31,168,92,.15))"></div>${xmasScene(phone)}`,
         front: snow(N(phone, 3, 6), .4), ft: ['#FF6F8E', '#3FBF84'] };
     },
     plain() { return { back: '', front: '', ft: ['#64748B', '#475569'] }; },
@@ -386,13 +386,26 @@
   #intro.fx-rain .in-skip{background:rgba(255,255,255,.5);color:#1F3358}
   #intro.fx-rain .gf-drop{background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.8))}
   /* สงคราม: ฟ้ายามเย็นสีกากี ไฟฉายส่อง เครื่องบิน รถถัง */
-  #intro.fx-christmas{background:linear-gradient(180deg,#3A3486 0%,#6A5FC8 38%,#B49BE6 68%,#F7C4DC 92%,#FFE1EC 100%)!important}
-  #intro.fx-christmas .in-title span{color:#fff;text-shadow:0 0 16px rgba(255,255,255,.55),0 4px 0 #D9486A}#intro.fx-christmas .in-title span:nth-child(n+7){color:#FFC2D4}
-  #intro.fx-christmas :is(.in-sub,.intro-tag,.intro-hint){color:#EAF3FF}#intro.fx-christmas .fx-hello{color:#FFE7A3;text-shadow:0 0 12px rgba(255,214,120,.6)}
-  #intro.fx-christmas .intro-title span{text-shadow:0 0 16px rgba(255,255,255,.4),0 5px 0 #D9486A}
-  #intro.fx-christmas :is(.in-go,.intro-go){background:linear-gradient(135deg,#FF6F8E,#3FBF84);box-shadow:0 8px 0 #C2405F,0 14px 34px rgba(255,111,142,.45)}
-  #intro.fx-christmas .in-skip{background:rgba(255,255,255,.16);color:#fff}
-  #intro.fx-christmas .hill{background:radial-gradient(ellipse at 50% 30%,rgba(255,255,255,.55),rgba(255,255,255,.12) 60%,transparent 72%)}
+  #intro.fx-christmas{background:linear-gradient(180deg,#06164A 0%,#0B2F86 30%,#1859C9 56%,#3E95F0 78%,#A9DBFF 92%,#EAF7FF 100%)!important}
+  #intro.fx-christmas .gf-aur{position:absolute;left:-20%;right:-20%;top:-6%;height:46%;background:linear-gradient(100deg,transparent 8%,rgba(46,255,160,.55) 26%,rgba(60,210,255,.42) 42%,rgba(190,90,255,.4) 58%,rgba(255,70,150,.48) 72%,transparent 90%);filter:blur(30px);opacity:.75;border-radius:50%;animation:gf-aur 11s ease-in-out infinite alternate}
+  #intro.fx-christmas .gf-aur.a2{top:6%;height:30%;opacity:.5;animation-duration:15s;animation-direction:alternate-reverse;background:linear-gradient(80deg,transparent 12%,rgba(255,220,80,.45) 34%,rgba(46,255,160,.45) 54%,rgba(60,210,255,.35) 70%,transparent 88%)}
+  @keyframes gf-aur{from{transform:translateX(-7%) skewX(-8deg) scaleY(.9)}to{transform:translateX(7%) skewX(8deg) scaleY(1.12)}}
+  #intro.fx-christmas .gf-glow{position:absolute;left:50%;top:52%;width:min(90vw,820px);height:min(56vh,480px);translate:-50% -50%;background:radial-gradient(closest-side,rgba(255,214,90,.42),rgba(255,120,90,.16) 55%,transparent);animation:gf-glow 3.2s ease-in-out infinite alternate}
+  @keyframes gf-glow{from{opacity:.65;scale:.94}to{opacity:1;scale:1.05}}
+  #intro.fx-christmas .gf-star{background:#FFE36B;box-shadow:0 0 8px 2px rgba(255,227,107,.85)}
+  #intro.fx-christmas .gf-bulb{width:15px;height:20px;margin-left:-7.5px;box-shadow:0 0 16px 5px var(--c)}
+  #intro.fx-christmas :is(.in-title,.intro-title) span{color:#FF2E55;-webkit-text-stroke:5px #fff;paint-order:stroke fill;text-shadow:0 6px 0 #A8102E,0 10px 22px rgba(0,0,30,.45),0 0 26px rgba(255,255,255,.45)}
+  #intro.fx-christmas :is(.in-title,.intro-title) span:nth-child(3n+2){color:#FFB800;text-shadow:0 6px 0 #B86E00,0 10px 22px rgba(0,0,30,.45),0 0 26px rgba(255,255,255,.45)}
+  #intro.fx-christmas :is(.in-title,.intro-title) span:nth-child(3n){color:#18B85E;text-shadow:0 6px 0 #0B6B35,0 10px 22px rgba(0,0,30,.45),0 0 26px rgba(255,255,255,.45)}
+  #intro.fx-christmas :is(.in-sub,.intro-tag,.intro-hint){color:#fff;text-shadow:0 2px 8px rgba(0,10,60,.55)}
+  #intro.fx-christmas .fx-hello{display:inline-block;margin-top:6px;padding:5px 16px;border-radius:99px;color:#fff;font-weight:700;background:linear-gradient(90deg,#E8243F,#FF7A1A 50%,#18B85E);box-shadow:0 4px 0 rgba(0,0,0,.18),0 0 18px rgba(255,180,60,.5);text-shadow:0 1px 2px rgba(0,0,0,.3)}
+  #intro.fx-christmas :is(.in-go,.intro-go){color:#fff;background:repeating-linear-gradient(-45deg,rgba(255,255,255,.2) 0 12px,transparent 12px 24px),linear-gradient(135deg,#FF2E55,#FF6A2E 55%,#FFB020);box-shadow:0 8px 0 #A8102E,0 14px 34px rgba(255,60,80,.55),0 0 0 4px #fff}
+  #intro.fx-christmas .in-skip{background:rgba(255,255,255,.2);color:#fff}
+  #intro.fx-christmas .hill{background:radial-gradient(ellipse at 50% 30%,rgba(255,255,255,.65),rgba(255,255,255,.15) 60%,transparent 72%)}
+  #intro .fx-bell{position:absolute;z-index:6;left:14px;top:calc(env(safe-area-inset-top,0px) + 54px);display:inline-flex;align-items:center;gap:6px;border:0;border-radius:99px;padding:9px 16px;font:700 15px/1.2 inherit;font-family:inherit;color:#7A1020;cursor:pointer;background:linear-gradient(135deg,#FFF06B,#FFC21A);box-shadow:0 4px 0 #C98A00,0 8px 22px rgba(0,0,40,.35);animation:fx-ring 1.4s ease-in-out infinite}
+  #intro .fx-bell.on{color:#fff;background:linear-gradient(135deg,#25C46B,#13924B);box-shadow:0 4px 0 #0B6B35,0 8px 22px rgba(0,0,40,.35);animation:none}
+  #intro .fx-bell:focus-visible{outline:3px solid #fff;outline-offset:3px}
+  @keyframes fx-ring{0%,60%,100%{transform:rotate(0)}70%{transform:rotate(-7deg)}80%{transform:rotate(6deg)}90%{transform:rotate(-3deg)}}
   #intro.fx .gf-snow{position:absolute}
   #intro.fx-war{background:linear-gradient(180deg,#56653A 0%,#83915A 38%,#C4BC88 72%,#E6DCB4 100%)!important}
   #intro.fx-war .in-title span{color:#FFF4D6;text-shadow:0 4px 0 #3E4A22,0 8px 22px rgba(40,50,20,.45)}#intro.fx-war .in-title span:nth-child(n+7){color:#FFC56B}
@@ -424,7 +437,7 @@
     if (f === 'rain') return `${clouds(N(phone, 4, 7), '#EEF2F9', .95)}${[...Array(N(phone, 40, 80))].map((_, i) => `<i class="gf-drop" style="left:${((i * 41) % 104)}%;--d:${(.7 + (i % 5) * .12).toFixed(2)}s;--w:${-(i * .19).toFixed(2)}s"></i>`).join('')}<div class="gf-puddle"></div>${[...Array(N(phone, 5, 9))].map((_, i) => `<i class="gf-rip" style="left:${(6 + i * 29) % 92}%;--b:${8 + (i % 3) * 14}px;--w:${-(i * .6).toFixed(1)}s"></i>`).join('')}`;
     if (f === 'war') return `<i class="gf-beam" style="left:8%;--w:-1s"></i><i class="gf-beam" style="left:70%;--w:-5s;animation-direction:alternate-reverse"></i>${clouds(N(phone, 2, 4), '#EFEADB', .9)}${[...Array(N(phone, 2, 3))].map((_, i) => `<div class="gf-plane" style="top:${10 + i * 12}%;--d:${14 + i * 5}s;--w:${-(i * 4)}s">${plane}</div>`).join('')}<div class="gf-hills">${hills}</div><div class="gf-flag" style="left:5%">${flag('#C2410C')}</div><div class="gf-flag" style="right:6%">${flag('#6B7F3A')}</div><div class="gf-tank" style="--d:30s;--w:-8s;--l:20vw">${tank}</div>`;
     if (f === 'mono') return `<div class="gf-grain"></div>${scratches(N(phone, 3, 5))}`;
-    if (f === 'christmas') return `${stars(N(phone, 16, 30), 'gf-star', 50)}${xmasScene(phone, true)}`;
+    if (f === 'christmas') return `<i class="gf-aur"></i><i class="gf-aur a2"></i><i class="gf-glow"></i>${stars(N(phone, 18, 34), 'gf-star', 50)}${xmasScene(phone, true)}`;
     return '';
   }
 
@@ -453,12 +466,34 @@
     } else {
       const tag = intro.querySelector('.intro-tag'); if (tag) tag.insertAdjacentHTML('beforeend', `<span class="fx-hello">${FESTS[f].playHello}</span>`);
     }
+    if (f === 'christmas') bellBtn(intro);
     window.dispatchEvent(new CustomEvent('gc-fest-intro', { detail: { fest: f, lines: hub ? FESTS[f].hub : FESTS[f].play } }));
+  }
+  /* ปุ่ม 🔔 เปิดเพลง Jingle Bells (เบราว์เซอร์เล่นเสียงได้หลังผู้ใช้แตะเท่านั้น) · ปิดเองเมื่อออกจาก INTRO */
+  let bellObs = null;
+  function bellBtn(intro) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'fx-bell';
+    const set = (on) => { b.classList.toggle('on', on); b.textContent = on ? '🔕 หยุดเพลง' : '🔔 เปิดเพลง Jingle Bells'; };
+    set(false);
+    let snd = null;
+    const stop = () => { if (snd && snd.currentSong() === 'jingle') snd.music(null); set(false); };
+    b.onclick = async (e) => {
+      e.stopPropagation();
+      snd = snd || await import(new URL('sound.js', SRC || location.href).href).catch(() => null);
+      if (!snd) return;
+      window.dispatchEvent(new CustomEvent('gc-intro-hold'));   // หน้าเมนูรวม: ไม่ปิด INTRO เองระหว่างฟังเพลง
+      if (snd.currentSong() === 'jingle') return stop();
+      snd.unlock(); snd.music('jingle'); set(snd.currentSong() === 'jingle');
+    };
+    intro.append(b);
+    bellObs?.disconnect();
+    bellObs = new MutationObserver(() => { if (intro.hidden || intro.classList.contains('leave')) stop(); });
+    bellObs.observe(intro, { attributes: true, attributeFilter: ['class', 'hidden'] });
   }
   function undoIntro() {
     const intro = document.getElementById('intro'); if (!intro) return;
     [...intro.classList].filter((c) => c === 'fx' || c.startsWith('fx-')).forEach((c) => intro.classList.remove(c));
-    intro.querySelectorAll('.fx-layer,.fx-hello').forEach((e) => e.remove());
+    intro.querySelectorAll('.fx-layer,.fx-hello,.fx-bell').forEach((e) => e.remove());
     const g = intro.querySelector('#inGhost'); if (g && g.dataset.orig) { g.innerHTML = g.dataset.orig; delete g.dataset.orig; }
   }
 

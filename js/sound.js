@@ -211,8 +211,20 @@ function parseMel(str) {
   }
   return out;
 }
+/* ทำนองแบบระบุโน้ตจริง: 'E5:4 G5:4 C5:6 D5:2' (ตัวเลขหลัง : = จำนวนช่อง, 16 ช่อง/ห้อง) · 'r:4' = เงียบ */
+const PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+function parseTune(bar) {
+  const out = Array(16).fill(null); let p = 0;
+  for (const tk of bar.trim().split(/\s+/)) {
+    const [n, l] = tk.split(':'), len = +l || 1;
+    if (n !== 'r') { const m = /^([A-G])(#?)(\d)$/.exec(n); out[p] = { midi: 12 * (+m[3] + 1) + PC[m[1]] + (m[2] ? 1 : 0), len }; }
+    p += len;
+  }
+  return out;
+}
 function make(c) {
   const mels = [].concat(c.mel || []).map(parseMel);
+  const tune = c.tune && c.tune.map(parseTune);
   const fx = [].concat(c.fx || []).map((k) => FX[k]);
   return {
     bpm: c.bpm, prog: c.prog,
@@ -222,7 +234,14 @@ function make(c) {
       c.bass && BASS[c.bass](s, t, ch);
       if (c.skank?.includes(s)) ch.forEach((n) => note(NOTE(n + 12), 0.09, { t, type: 'triangle', vol: 0.032 }));
       if (c.pad && s === 0) ch.forEach((n) => note(NOTE(n), sd * 15, { t, type: c.pad.type || 'sine', vol: c.pad.vol || 0.025, attack: 0.3, filter: c.pad.filter || null }));
-      const L = c.lead, q = mels.length && mels[bar % mels.length][s];
+      const L = c.lead, q = !tune && mels.length && mels[bar % mels.length][s];
+      const tq = tune && tune[bar % tune.length][s];
+      if (tq) {   // เสียงกระดิ่ง: ตัวหลัก + เสียงสะท้อนคู่แปด
+        const f = NOTE(tq.midi + (L.oct || 0)), d = Math.max(0.18, tq.len * sd * 0.95);
+        note(f, d, { t, type: L.type, vol: L.vol, attack: 0.003 });
+        note(f * 2, Math.min(0.5, d), { t, type: 'sine', vol: L.vol * 0.35, attack: 0.002 });
+        if (L.bell) note(f * 3, 0.25, { t, type: 'sine', vol: L.vol * 0.12, attack: 0.001 });
+      }
       if (q) {
         const f = NOTE(ch[q.n] + 12 * q.o + (L.oct || 0));
         note(f, q.len * sd * 0.92, { t, type: L.type, vol: L.vol, filter: L.filter || null, attack: L.attack || 0.006 });
@@ -232,6 +251,12 @@ function make(c) {
     },
   };
 }
+const JB_CHORUS = ['E5:4 E5:4 E5:8', 'E5:4 E5:4 E5:8', 'E5:4 G5:4 C5:6 D5:2', 'E5:16', 'F5:4 F5:4 F5:6 F5:2', 'F5:4 E5:4 E5:4 E5:2 E5:2', 'E5:4 D5:4 D5:4 E5:4', 'D5:8 G5:8',
+  'E5:4 E5:4 E5:8', 'E5:4 E5:4 E5:8', 'E5:4 G5:4 C5:6 D5:2', 'E5:16', 'F5:4 F5:4 F5:6 F5:2', 'F5:4 E5:4 E5:4 E5:2 E5:2', 'G5:4 G5:4 F5:4 D5:4', 'C5:16'];
+const JB_CHORUS_CH = ['C', 'C', 'C', 'C', 'F', 'C', 'D', 'G', 'C', 'C', 'C', 'C', 'F', 'C', 'G', 'C'];
+const JB_VERSE = ['G4:4 E5:4 D5:4 C5:4', 'G4:12 G4:2 G4:2', 'G4:4 E5:4 D5:4 C5:4', 'A4:16', 'A4:4 F5:4 E5:4 D5:4', 'B4:16', 'G5:4 G5:4 F5:4 D5:4', 'E5:16',
+  'G4:4 E5:4 D5:4 C5:4', 'G4:16', 'G4:4 E5:4 D5:4 C5:4', 'A4:12 A4:4', 'A4:4 F5:4 E5:4 D5:4', 'G5:4 G5:4 G5:4 G5:4', 'A5:4 G5:4 F5:4 D5:4', 'C5:8 G5:8'];
+const JB_VERSE_CH = ['C', 'C', 'C', 'F', 'F', 'G', 'G', 'C', 'C', 'C', 'C', 'F', 'F', 'G', 'G', 'C'];
 const THEME_SONGS = {
   candy: {
     lobby: { bpm: 128, prog: ['C', 'Am', 'F', 'G'], drum: 'pop', bass: 'bounce', lead: { type: 'square', vol: 0.03, filter: 3200 }, mel: ['0.1.2.4.2-1.0.2.', '4.3.2.1.2---0...'], fx: 'sparkle' },
@@ -293,9 +318,10 @@ const THEME_SONGS = {
     question: { bpm: 150, prog: ['Am', 'Dm', 'E', 'Am'], drum: 'drive', bass: 'walk', lead: { type: 'triangle', vol: 0.05, attack: 0.002 }, mel: '0.1.2.1.0.1.2.4.', fx: 'tick' },
   },
   /* ───── ชุดเพลงเพิ่มเติม (เลือกได้จากปุ่ม 🎼 เลือกเพลง) ───── */
+  // คริสต์มาส: เพลง Jingle Bells (ท่อน Dashing through the snow + ท่อนฮุก) + กระดิ่งเลื่อน
   christmas: {
-    lobby: { bpm: 120, prog: ['C', 'Am', 'F', 'G'], drum: 'pop', bass: 'oompah', skank: [4, 12], lead: { type: 'sine', vol: 0.06, oct: 12, attack: 0.002 }, mel: ['0.2.4.3.2---1.2.', '3.2.1.2.0-------'], fx: ['sleigh', 'chime'] },
-    question: { bpm: 146, prog: ['Am', 'F', 'C', 'G'], drum: 'drive', bass: 'eighth', lead: { type: 'sine', vol: 0.055, oct: 12, attack: 0.002 }, mel: '0.1.2.4.2.1.0.1.', fx: ['tick', 'sleigh'] },
+    lobby: { bpm: 116, prog: [...JB_VERSE_CH, ...JB_CHORUS_CH], tune: [...JB_VERSE, ...JB_CHORUS], drum: 'pop', bass: 'oompah', skank: [4, 12], lead: { type: 'triangle', vol: 0.075, bell: true }, fx: ['sleigh', 'chime'] },
+    question: { bpm: 148, prog: JB_CHORUS_CH, tune: JB_CHORUS, drum: 'drive', bass: 'eighth', lead: { type: 'triangle', vol: 0.065, bell: true }, fx: ['tick', 'sleigh'] },
   },
   calm: {
     lobby: { bpm: 76, prog: ['C', 'G', 'Am', 'F'], bass: 'root', pad: { vol: 0.022 }, lead: { type: 'triangle', vol: 0.05, attack: 0.004 }, mel: ['2...1...0...1...', '2...4...2-------'] },
@@ -327,13 +353,15 @@ const THEME_SONGS = {
     question: { bpm: 152, prog: ['Am', 'G', 'F', 'E'], drum: 'rock', bass: 'power', lead: { type: 'sawtooth', vol: 0.028, filter: 2200, fifth: true }, mel: '0.0.2.0.3.0.2.1.', fx: 'tick' },
   },
 };
-THEME_SONGS.plain = THEME_SONGS.calm;   // ธีมเรียบง่าย ใช้เพลงเปียโนเบา ๆ
+THEME_SONGS.plain = THEME_SONGS.calm;
+// เพลงหน้า INTRO คริสต์มาส (กดปุ่ม 🔔 เปิดเพลง)
+SONGS.jingle = make({ bpm: 128, prog: [...JB_CHORUS_CH, ...JB_VERSE_CH], tune: [...JB_CHORUS, ...JB_VERSE], drum: 'pop', bass: 'oompah', skank: [4, 12], lead: { type: 'triangle', vol: 0.08, bell: true }, fx: ['sleigh', 'chime'] });   // ธีมเรียบง่าย ใช้เพลงเปียโนเบา ๆ
 for (const [th, v] of Object.entries(THEME_SONGS)) for (const [k, c] of Object.entries(v)) SONGS[`${th}:${k}`] = make(c);
 
 /* ───── ชุดเพลงที่ครูเลือกได้ (จำไว้ในเครื่อง) · 'auto' = เปลี่ยนตามธีม ───── */
 export const MUSIC_PACKS = [
   { id: 'auto', emoji: '🎨', name: 'ตามธีม', desc: 'เปลี่ยนเพลงตามธีมที่เลือก' },
-  { id: 'christmas', emoji: '🎄', name: 'คริสต์มาส', desc: 'กระดิ่งเลื่อน ระฆังใส' },
+  { id: 'christmas', emoji: '🎄', name: 'คริสต์มาส', desc: 'Jingle Bells กระดิ่งเลื่อน' },
   { id: 'calm', emoji: '🎹', name: 'เปียโนเบา ๆ', desc: 'สงบ สบาย ไม่รบกวน' },
   { id: 'lofi', emoji: '☕', name: 'โลไฟชิล ๆ', desc: 'จังหวะช้า ผ่อนคลาย' },
   { id: 'chip', emoji: '👾', name: 'เกม 8 บิต', desc: 'เสียงเกมตู้ย้อนยุค' },
@@ -367,6 +395,7 @@ export function setMusicPick(id, { remember = true } = {}) {
   if (loopH && base) music(base);
 }
 function resolve(name) {
+  if (name === 'jingle') return SONGS.jingle;
   if (mPick !== 'auto') {
     if (mPick === 'lobby') return SONGS[name];   // ชุดเดิมของเว็บ
     return SONGS[`${mPick}:${name}`] || (name === 'classroom' && SONGS[`${mPick}:lobby`]) || SONGS[name];
